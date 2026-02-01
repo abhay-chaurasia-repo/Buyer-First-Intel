@@ -1,4 +1,4 @@
-import { Link, Redirect } from "wouter";
+import { Link } from "wouter";
 import { Search, Star, ClipboardCheck, MapPin, ArrowRight, ShieldCheck, LogOut } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -43,22 +43,7 @@ const features = [
 ];
 
 export default function Home() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/20" />
-          <div className="h-4 w-32 bg-muted rounded" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Redirect to="/" />;
-  }
+  const { user } = useAuth();
 
   const userName = user?.firstName 
     ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`

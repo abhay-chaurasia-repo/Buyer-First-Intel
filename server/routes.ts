@@ -437,5 +437,103 @@ export async function registerRoutes(
     }
   });
 
+  // Audit Score - Calculate letter grade based on checklist completion
+  app.get("/api/audit-score/:propertyId", async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const checklist = await storage.getChecklist(propertyId);
+      const visits = await storage.getVisits(propertyId);
+      
+      if (checklist.length === 0) {
+        return res.json({
+          score: null,
+          grade: null,
+          completedItems: 0,
+          totalItems: 0,
+          hasVerifiedVisit: false,
+          message: "No audit started",
+        });
+      }
+
+      const completedItems = checklist.filter(item => item.isCompleted).length;
+      const totalItems = checklist.length;
+      const hasVerifiedVisit = visits.some(v => v.verified);
+      
+      // Base score from checklist completion (0-100)
+      let score = Math.round((completedItems / totalItems) * 100);
+      
+      // Bonus points for verified visit (+5%)
+      if (hasVerifiedVisit) {
+        score = Math.min(100, score + 5);
+      }
+
+      // Calculate letter grade
+      let grade: string;
+      if (score >= 90) grade = "A";
+      else if (score >= 80) grade = "B";
+      else if (score >= 70) grade = "C";
+      else if (score >= 60) grade = "D";
+      else grade = "F";
+
+      res.json({
+        score,
+        grade,
+        completedItems,
+        totalItems,
+        hasVerifiedVisit,
+        message: `${completedItems}/${totalItems} items completed`,
+      });
+    } catch (error) {
+      console.error("Error calculating audit score:", error);
+      res.status(500).json({ error: "Failed to calculate audit score" });
+    }
+  });
+
+  // Watchlist status update
+  const updateWatchlistStatusSchema = z.object({
+    status: z.enum(["researching", "visited", "audited", "decision"]),
+  });
+
+  app.patch("/api/watchlist/:propertyId/status", async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const data = updateWatchlistStatusSchema.parse(req.body);
+      const item = await storage.updateWatchlistStatus(propertyId, data.status);
+      if (!item) {
+        return res.status(404).json({ error: "Watchlist item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating watchlist status:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid status", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update status" });
+    }
+  });
+
+  // Visit notes update
+  const updateVisitNotesSchema = z.object({
+    notes: z.string(),
+  });
+
+  app.patch("/api/visits/:id/notes", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = updateVisitNotesSchema.parse(req.body);
+      const visit = await storage.updateVisitNotes(id, data.notes);
+      if (!visit) {
+        return res.status(404).json({ error: "Visit not found" });
+      }
+      res.json(visit);
+    } catch (error) {
+      console.error("Error updating visit notes:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid notes", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update notes" });
+    }
+  });
+
   return httpServer;
 }

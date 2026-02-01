@@ -69,6 +69,10 @@ export const insertPropertySchema = createInsertSchema(properties).omit({
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
 export type Property = typeof properties.$inferSelect;
 
+// Progress status for buyer journey
+export const progressStatuses = ["researching", "visited", "audited", "decision"] as const;
+export type ProgressStatus = typeof progressStatuses[number];
+
 // Watchlist for saved properties
 export const watchlistItems = pgTable("watchlist_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -76,6 +80,7 @@ export const watchlistItems = pgTable("watchlist_items", {
   notes: text("notes"),
   addedAt: timestamp("added_at").defaultNow(),
   priority: integer("priority").default(0),
+  status: text("status").default("researching"), // researching, visited, audited, decision
 });
 
 export const insertWatchlistItemSchema = createInsertSchema(watchlistItems).omit({
@@ -117,6 +122,7 @@ export const propertyVisits = pgTable("property_visits", {
   longitude: text("longitude").notNull(),
   verified: boolean("verified").default(false),
   distanceMeters: integer("distance_meters"),
+  notes: text("notes"),
 });
 
 export const insertPropertyVisitSchema = createInsertSchema(propertyVisits).omit({

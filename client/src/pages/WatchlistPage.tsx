@@ -2,13 +2,22 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Header } from "@/components/layout/Header";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { PropertyCard } from "@/components/property/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, Search, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Star, Search, MapPin, Bed, Bath, Square, ChevronRight } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Property, WatchlistItem } from "@shared/schema";
+import { AuditScoreBadge } from "@/components/audit/AuditScoreBadge";
+import { ProgressStatusBadge } from "@/components/property/ProgressStatusBadge";
+import type { Property, WatchlistItem, ProgressStatus } from "@shared/schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface WatchlistWithProperty extends WatchlistItem {
   property: Property;
@@ -28,6 +37,15 @@ export default function WatchlistPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/watchlist"] });
       queryClient.invalidateQueries({ queryKey: ["/api/watchlist/ids"] });
+    },
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ propertyId, status }: { propertyId: string; status: string }) => {
+      return apiRequest("PATCH", `/api/watchlist/${propertyId}/status`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/watchlist"] });
     },
   });
 
@@ -76,13 +94,92 @@ export default function WatchlistPage() {
                 {watchlist.length} saved {watchlist.length === 1 ? "property" : "properties"}
               </p>
               {watchlist.map((item) => (
-                <PropertyCard
+                <Card 
                   key={item.id}
-                  property={item.property}
-                  isWatchlisted={true}
-                  onToggleWatchlist={() => removeFromWatchlist.mutate(item.propertyId)}
-                  onSelect={() => handleSelectProperty(item.propertyId)}
-                />
+                  className="hover-elevate cursor-pointer transition-all"
+                  onClick={() => handleSelectProperty(item.propertyId)}
+                  data-testid={`card-watchlist-${item.propertyId}`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                          <h3 className="font-semibold text-foreground truncate">
+                            {item.property.address}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {item.property.city}, {item.property.state} {item.property.zipCode}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-3 mb-3">
+                          {item.property.bedrooms && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Bed className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="font-medium">{item.property.bedrooms}</span>
+                              <span className="text-muted-foreground text-xs">bd</span>
+                            </div>
+                          )}
+                          {item.property.bathrooms && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Bath className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="font-medium">{item.property.bathrooms}</span>
+                              <span className="text-muted-foreground text-xs">ba</span>
+                            </div>
+                          )}
+                          {item.property.sqft && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Square className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="font-medium">{item.property.sqft.toLocaleString()}</span>
+                              <span className="text-muted-foreground text-xs">sqft</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={item.status || "researching"}
+                            onValueChange={(value) => {
+                              updateStatus.mutate({ propertyId: item.propertyId, status: value });
+                            }}
+                          >
+                            <SelectTrigger 
+                              className="w-[130px] h-7 text-xs"
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid={`select-status-${item.propertyId}`}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="researching">Researching</SelectItem>
+                              <SelectItem value="visited">Visited</SelectItem>
+                              <SelectItem value="audited">Audited</SelectItem>
+                              <SelectItem value="decision">Decision</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <AuditScoreBadge propertyId={item.propertyId} size="sm" />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromWatchlist.mutate(item.propertyId);
+                          }}
+                          className="text-warning"
+                          data-testid={`button-remove-watchlist-${item.propertyId}`}
+                        >
+                          <Star className="h-5 w-5 fill-current" />
+                        </Button>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}

@@ -23,6 +23,7 @@ export interface IStorage {
   addToWatchlist(item: InsertWatchlistItem): Promise<WatchlistItem>;
   removeFromWatchlist(propertyId: string): Promise<void>;
   isInWatchlist(propertyId: string): Promise<boolean>;
+  updateWatchlistStatus(propertyId: string, status: string): Promise<WatchlistItem | undefined>;
   
   // Checklist
   getChecklist(propertyId: string): Promise<ChecklistItem[]>;
@@ -32,6 +33,7 @@ export interface IStorage {
   // Visits
   getVisits(propertyId: string): Promise<PropertyVisit[]>;
   recordVisit(visit: InsertPropertyVisit): Promise<PropertyVisit>;
+  updateVisitNotes(id: string, notes: string): Promise<PropertyVisit | undefined>;
   
   // Seed data
   seedData(): Promise<void>;
@@ -207,6 +209,23 @@ export class DatabaseStorage implements IStorage {
   async recordVisit(visit: InsertPropertyVisit): Promise<PropertyVisit> {
     const [created] = await db.insert(propertyVisits).values(visit).returning();
     return created;
+  }
+
+  async updateVisitNotes(id: string, notes: string): Promise<PropertyVisit | undefined> {
+    const [updated] = await db.update(propertyVisits)
+      .set({ notes })
+      .where(eq(propertyVisits.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Watchlist status update
+  async updateWatchlistStatus(propertyId: string, status: string): Promise<WatchlistItem | undefined> {
+    const [updated] = await db.update(watchlistItems)
+      .set({ status })
+      .where(eq(watchlistItems.propertyId, propertyId))
+      .returning();
+    return updated;
   }
 
   // Seed data

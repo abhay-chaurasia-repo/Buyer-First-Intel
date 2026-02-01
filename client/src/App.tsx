@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/hooks/use-auth";
 import LandingPage from "@/pages/LandingPage";
 import Home from "@/pages/Home";
@@ -18,14 +19,30 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
-      <Route path="/home" component={Home} />
-      <Route path="/search" component={SearchPage} />
-      <Route path="/property/:id" component={PropertyPage} />
-      <Route path="/watchlist" component={WatchlistPage} />
-      <Route path="/audit" component={AuditPage} />
-      <Route path="/audit/:id" component={AuditPage} />
-      <Route path="/verify" component={VerifyPage} />
-      <Route path="/verify/:id" component={VerifyPage} />
+      <Route path="/home">
+        <ProtectedRoute><Home /></ProtectedRoute>
+      </Route>
+      <Route path="/search">
+        <ProtectedRoute><SearchPage /></ProtectedRoute>
+      </Route>
+      <Route path="/property/:id">
+        {(params) => <ProtectedRoute><PropertyPage /></ProtectedRoute>}
+      </Route>
+      <Route path="/watchlist">
+        <ProtectedRoute><WatchlistPage /></ProtectedRoute>
+      </Route>
+      <Route path="/audit">
+        <ProtectedRoute><AuditPage /></ProtectedRoute>
+      </Route>
+      <Route path="/audit/:id">
+        {(params) => <ProtectedRoute><AuditPage /></ProtectedRoute>}
+      </Route>
+      <Route path="/verify">
+        <ProtectedRoute><VerifyPage /></ProtectedRoute>
+      </Route>
+      <Route path="/verify/:id">
+        {(params) => <ProtectedRoute><VerifyPage /></ProtectedRoute>}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

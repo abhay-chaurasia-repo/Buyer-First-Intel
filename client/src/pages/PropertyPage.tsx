@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PropertyFactSheet } from "@/components/property/PropertyFactSheet";
 import { GPSVerification } from "@/components/gps/GPSVerification";
+import { AuditScoreBadge } from "@/components/audit/AuditScoreBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -127,6 +128,18 @@ export default function PropertyPage() {
       />
       <PageContainer>
         <div className="space-y-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Audit Score</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Based on 14-point checklist</p>
+                </div>
+                <AuditScoreBadge propertyId={property.id} size="lg" showDetails />
+              </div>
+            </CardContent>
+          </Card>
+
           <PropertyFactSheet property={property} />
 
           <div className="grid grid-cols-2 gap-3">
