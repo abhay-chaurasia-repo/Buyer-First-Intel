@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Flag } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
-interface FlagCountBadgeProps {
+interface NoteCountBadgeProps {
   propertyId: string;
 }
 
-export function FlagCountBadge({ propertyId }: FlagCountBadgeProps) {
+export function NoteCountBadge({ propertyId }: NoteCountBadgeProps) {
   const { data, isLoading } = useQuery<{ count: number }>({
     queryKey: ["/api/flags", propertyId, "count"],
     enabled: !!propertyId,
@@ -27,9 +27,9 @@ export function FlagCountBadge({ propertyId }: FlagCountBadgeProps) {
     <Badge 
       variant="outline" 
       className="flex items-center gap-1"
-      data-testid={`badge-flag-count-${propertyId}`}
+      data-testid={`badge-note-count-${propertyId}`}
     >
-      <Flag className="h-3 w-3" />
+      <MessageCircle className="h-3 w-3" />
       {count}
     </Badge>
   );

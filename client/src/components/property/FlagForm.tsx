@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,14 +25,15 @@ import {
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import type { PropertyVisit } from "@shared/schema";
 
-interface FlagFormProps {
+interface NoteFormProps {
   propertyId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function FlagForm({ propertyId, open, onOpenChange }: FlagFormProps) {
+export function NoteForm({ propertyId, open, onOpenChange }: NoteFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -40,7 +43,15 @@ export function FlagForm({ propertyId, open, onOpenChange }: FlagFormProps) {
   const [description, setDescription] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(true);
 
-  const createFlag = useMutation({
+  // Check if user has visited this property
+  const { data: visits } = useQuery<PropertyVisit[]>({
+    queryKey: ["/api/visits", propertyId],
+    enabled: !!propertyId && !!user,
+  });
+
+  const hasVisited = visits && visits.some(v => v.verified);
+
+  const createNote = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/flags", {
         propertyId,
@@ -50,14 +61,15 @@ export function FlagForm({ propertyId, open, onOpenChange }: FlagFormProps) {
         title,
         description,
         isAnonymous,
+        contributorHasVisited: hasVisited,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/flags", propertyId] });
       queryClient.invalidateQueries({ queryKey: ["/api/flags", propertyId, "count"] });
       toast({
-        title: "Issue Reported",
-        description: "Your report has been shared with other buyers.",
+        title: "Insight Shared",
+        description: "Your insight has been shared with other buyers.",
       });
       resetForm();
       onOpenChange(false);
@@ -65,7 +77,7 @@ export function FlagForm({ propertyId, open, onOpenChange }: FlagFormProps) {
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to submit report. Please try again.",
+        description: "Failed to share insight. Please try again.",
         variant: "destructive",
       });
     },
@@ -85,39 +97,46 @@ export function FlagForm({ propertyId, open, onOpenChange }: FlagFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Report an Issue</DialogTitle>
+          <DialogTitle>Share a Buyer Insight</DialogTitle>
           <DialogDescription>
-            Help other buyers by sharing what you found. Your report will be visible to everyone viewing this property.
+            Help other buyers by sharing what you observed. Your insight will be visible to everyone viewing this property.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {hasVisited && (
+            <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
+              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <span className="text-sm text-green-700 dark:text-green-300">You've visited this property - your insight will be marked as verified</span>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger data-testid="select-flag-category">
+              <SelectTrigger data-testid="select-category">
                 <SelectValue placeholder="Select category..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="structural">Structural Issue</SelectItem>
-                <SelectItem value="condition">Condition/Damage</SelectItem>
-                <SelectItem value="legal">Legal/Permit Concern</SelectItem>
-                <SelectItem value="neighborhood">Neighborhood Issue</SelectItem>
+                <SelectItem value="structural">Structural</SelectItem>
+                <SelectItem value="condition">Condition</SelectItem>
+                <SelectItem value="legal">Legal/Permits</SelectItem>
+                <SelectItem value="neighborhood">Neighborhood</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="severity">Severity</Label>
+            <Label htmlFor="severity">Type</Label>
             <Select value={severity} onValueChange={setSeverity}>
-              <SelectTrigger data-testid="select-flag-severity">
-                <SelectValue placeholder="Select severity..." />
+              <SelectTrigger data-testid="select-severity">
+                <SelectValue placeholder="Select type..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="minor">Minor - Cosmetic or small issue</SelectItem>
-                <SelectItem value="moderate">Moderate - Needs attention</SelectItem>
-                <SelectItem value="major">Major - Significant concern</SelectItem>
+                <SelectItem value="info">Info - Good to know</SelectItem>
+                <SelectItem value="note">Note - Worth checking</SelectItem>
+                <SelectItem value="concern">Concern - Needs attention</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -128,9 +147,9 @@ export function FlagForm({ propertyId, open, onOpenChange }: FlagFormProps) {
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Brief summary of the issue"
+              placeholder="Brief summary of your observation"
               maxLength={100}
-              data-testid="input-flag-title"
+              data-testid="input-title"
             />
           </div>
 
@@ -140,10 +159,10 @@ export function FlagForm({ propertyId, open, onOpenChange }: FlagFormProps) {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe what you found and where..."
+              placeholder="Describe what you observed and where..."
               maxLength={1000}
               rows={4}
-              data-testid="input-flag-description"
+              data-testid="textarea-description"
             />
           </div>
 
@@ -166,11 +185,11 @@ export function FlagForm({ propertyId, open, onOpenChange }: FlagFormProps) {
             Cancel
           </Button>
           <Button
-            onClick={() => createFlag.mutate()}
-            disabled={!isValid || createFlag.isPending}
-            data-testid="button-submit-flag"
+            onClick={() => createNote.mutate()}
+            disabled={!isValid || createNote.isPending}
+            data-testid="button-submit-note"
           >
-            {createFlag.isPending ? "Submitting..." : "Submit Report"}
+            {createNote.isPending ? "Sharing..." : "Share Insight"}
           </Button>
         </DialogFooter>
       </DialogContent>

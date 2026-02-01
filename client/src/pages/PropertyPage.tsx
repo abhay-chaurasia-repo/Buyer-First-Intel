@@ -1,16 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Header } from "@/components/layout/Header";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PropertyFactSheet } from "@/components/property/PropertyFactSheet";
 import { GPSVerification } from "@/components/gps/GPSVerification";
-import { CommunityFlags } from "@/components/property/CommunityFlags";
-import { FlagForm } from "@/components/property/FlagForm";
+import { CommunityNotes } from "@/components/property/CommunityFlags";
+import { NoteForm } from "@/components/property/FlagForm";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, ClipboardCheck, MapPin, AlertCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Star, ClipboardCheck, MapPin, AlertCircle, Calendar } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Property } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -18,7 +26,9 @@ import { cn } from "@/lib/utils";
 export default function PropertyPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const [showFlagForm, setShowFlagForm] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [showVisitPrompt, setShowVisitPrompt] = useState(false);
+  const [hasSeenPrompt, setHasSeenPrompt] = useState(false);
 
   const { data: property, isLoading, error } = useQuery<Property>({
     queryKey: ["/api/properties", id],
@@ -29,6 +39,17 @@ export default function PropertyPage() {
   });
 
   const isWatchlisted = watchlistIds?.includes(id || "");
+
+  // Show visit prompt when viewing a property not on watchlist
+  useEffect(() => {
+    if (property && !isWatchlisted && !hasSeenPrompt && watchlistIds !== undefined) {
+      const timer = setTimeout(() => {
+        setShowVisitPrompt(true);
+        setHasSeenPrompt(true);
+      }, 2000); // Show after 2 seconds of viewing
+      return () => clearTimeout(timer);
+    }
+  }, [property, isWatchlisted, hasSeenPrompt, watchlistIds]);
 
   const addToWatchlist = useMutation({
     mutationFn: async () => {
@@ -68,6 +89,11 @@ export default function PropertyPage() {
     } else {
       addToWatchlist.mutate();
     }
+  };
+
+  const handlePlanVisit = () => {
+    addToWatchlist.mutate();
+    setShowVisitPrompt(false);
   };
 
   if (isLoading) {
@@ -133,9 +159,9 @@ export default function PropertyPage() {
         <div className="space-y-4">
           <PropertyFactSheet property={property} />
 
-          <CommunityFlags 
+          <CommunityNotes 
             propertyId={property.id} 
-            onAddFlag={() => setShowFlagForm(true)} 
+            onAddNote={() => setShowNoteForm(true)} 
           />
 
           <div className="grid grid-cols-2 gap-3">
@@ -166,11 +192,35 @@ export default function PropertyPage() {
         </div>
       </PageContainer>
 
-      <FlagForm 
+      <NoteForm 
         propertyId={property.id}
-        open={showFlagForm}
-        onOpenChange={setShowFlagForm}
+        open={showNoteForm}
+        onOpenChange={setShowNoteForm}
       />
+
+      {/* Planning to Visit prompt */}
+      <Dialog open={showVisitPrompt} onOpenChange={setShowVisitPrompt}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Planning to Visit?
+            </DialogTitle>
+            <DialogDescription>
+              Add this property to your watchlist to track your visit and get reminders to share your insights after you see it in person.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setShowVisitPrompt(false)}>
+              Just Browsing
+            </Button>
+            <Button onClick={handlePlanVisit} data-testid="button-plan-visit">
+              <Star className="h-4 w-4 mr-1" />
+              Yes, Add to Watchlist
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

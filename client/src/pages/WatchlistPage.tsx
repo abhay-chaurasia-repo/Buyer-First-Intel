@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Header } from "@/components/layout/Header";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { FlagCountBadge } from "@/components/property/FlagCountBadge";
+import { NoteCountBadge } from "@/components/property/FlagCountBadge";
+import { NoteForm } from "@/components/property/FlagForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, Search, MapPin, Bed, Bath, Square, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Star, Search, MapPin, Bed, Bath, Square, ChevronRight, MessageCircle, CheckCircle2 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Property, WatchlistItem } from "@shared/schema";
 import {
@@ -23,6 +26,8 @@ interface WatchlistWithProperty extends WatchlistItem {
 
 export default function WatchlistPage() {
   const [, setLocation] = useLocation();
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
 
   const { data: watchlist, isLoading } = useQuery<WatchlistWithProperty[]>({
     queryKey: ["/api/watchlist"],
@@ -51,6 +56,14 @@ export default function WatchlistPage() {
     setLocation(`/property/${propertyId}`);
   };
 
+  const handleShareInsight = (propertyId: string) => {
+    setSelectedPropertyId(propertyId);
+    setShowNoteForm(true);
+  };
+
+  // Filter for properties that have been visited and might benefit from sharing insights
+  const visitedProperties = watchlist?.filter(item => item.status === "visited") || [];
+
   return (
     <div className="min-h-screen bg-background">
       <Header title="My Watchlist" showBack />
@@ -67,6 +80,45 @@ export default function WatchlistPage() {
               Track properties you're interested in
             </p>
           </div>
+
+          {/* Visit Reminder Banner */}
+          {visitedProperties.length > 0 && (
+            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                      You've visited {visitedProperties.length} {visitedProperties.length === 1 ? "property" : "properties"}!
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                      Share what you observed to help other buyers and add credibility to your insights.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {visitedProperties.slice(0, 2).map((item) => (
+                        <Button
+                          key={item.id}
+                          size="sm"
+                          variant="outline"
+                          className="bg-white dark:bg-blue-900 border-blue-300 dark:border-blue-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShareInsight(item.propertyId);
+                          }}
+                          data-testid={`button-share-insight-${item.propertyId}`}
+                        >
+                          <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                          Share about {item.property.address.split(",")[0]}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {isLoading && (
             <div className="space-y-3">
@@ -156,7 +208,22 @@ export default function WatchlistPage() {
                               <SelectItem value="decision">Decision</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FlagCountBadge propertyId={item.propertyId} />
+                          <NoteCountBadge propertyId={item.propertyId} />
+                          {item.status === "visited" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShareInsight(item.propertyId);
+                              }}
+                              data-testid={`button-quick-share-${item.propertyId}`}
+                            >
+                              <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                              Share
+                            </Button>
+                          )}
                         </div>
                       </div>
 
@@ -204,6 +271,18 @@ export default function WatchlistPage() {
           )}
         </div>
       </PageContainer>
+
+      {/* Note Form Dialog */}
+      {selectedPropertyId && (
+        <NoteForm
+          propertyId={selectedPropertyId}
+          open={showNoteForm}
+          onOpenChange={(open) => {
+            setShowNoteForm(open);
+            if (!open) setSelectedPropertyId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

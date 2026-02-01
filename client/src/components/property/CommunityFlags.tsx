@@ -4,21 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Flag, ThumbsUp, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageCircle, ThumbsUp, Plus, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import type { PropertyFlag } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 
-interface CommunityFlagsProps {
+interface CommunityNotesProps {
   propertyId: string;
-  onAddFlag?: () => void;
+  onAddNote?: () => void;
 }
 
-const severityConfig = {
-  minor: { label: "Minor", className: "bg-yellow-500 dark:bg-yellow-600" },
-  moderate: { label: "Moderate", className: "bg-orange-500 dark:bg-orange-600" },
-  major: { label: "Major", className: "bg-red-500 dark:bg-red-600" },
+const severityConfig: Record<string, { label: string; className: string }> = {
+  info: { label: "Info", className: "bg-blue-500 dark:bg-blue-600" },
+  note: { label: "Note", className: "bg-yellow-500 dark:bg-yellow-600" },
+  concern: { label: "Concern", className: "bg-orange-500 dark:bg-orange-600" },
+  // Keep legacy values for existing data
+  minor: { label: "Info", className: "bg-blue-500 dark:bg-blue-600" },
+  moderate: { label: "Note", className: "bg-yellow-500 dark:bg-yellow-600" },
+  major: { label: "Concern", className: "bg-orange-500 dark:bg-orange-600" },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -29,18 +33,18 @@ const categoryLabels: Record<string, string> = {
   other: "Other",
 };
 
-export function CommunityFlags({ propertyId, onAddFlag }: CommunityFlagsProps) {
+export function CommunityNotes({ propertyId, onAddNote }: CommunityNotesProps) {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(true);
 
-  const { data: flags, isLoading } = useQuery<PropertyFlag[]>({
+  const { data: notes, isLoading } = useQuery<PropertyFlag[]>({
     queryKey: ["/api/flags", propertyId],
     enabled: !!propertyId,
   });
 
   const markHelpful = useMutation({
-    mutationFn: async (flagId: string) => {
-      return apiRequest("POST", `/api/flags/${flagId}/helpful`, { userId: user?.id });
+    mutationFn: async (noteId: string) => {
+      return apiRequest("POST", `/api/flags/${noteId}/helpful`, { userId: user?.id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/flags", propertyId] });
@@ -60,18 +64,18 @@ export function CommunityFlags({ propertyId, onAddFlag }: CommunityFlagsProps) {
     );
   }
 
-  const flagCount = flags?.length || 0;
+  const noteCount = notes?.length || 0;
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Flag className="h-4 w-4" />
-            Community Reports
-            {flagCount > 0 && (
+            <MessageCircle className="h-4 w-4" />
+            Buyer Insights
+            {noteCount > 0 && (
               <Badge variant="secondary" className="ml-1">
-                {flagCount}
+                {noteCount}
               </Badge>
             )}
           </CardTitle>
@@ -79,18 +83,18 @@ export function CommunityFlags({ propertyId, onAddFlag }: CommunityFlagsProps) {
             <Button
               size="sm"
               variant="outline"
-              onClick={onAddFlag}
-              data-testid="button-add-flag"
+              onClick={onAddNote}
+              data-testid="button-add-note"
             >
               <Plus className="h-4 w-4 mr-1" />
-              Report Issue
+              Share Insight
             </Button>
-            {flagCount > 0 && (
+            {noteCount > 0 && (
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => setExpanded(!expanded)}
-                data-testid="button-toggle-flags"
+                data-testid="button-toggle-notes"
               >
                 {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
@@ -99,21 +103,21 @@ export function CommunityFlags({ propertyId, onAddFlag }: CommunityFlagsProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {flagCount === 0 ? (
+        {noteCount === 0 ? (
           <div className="text-center py-4 text-muted-foreground">
-            <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No issues reported yet</p>
-            <p className="text-xs mt-1">Be the first to help other buyers</p>
+            <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No buyer insights yet</p>
+            <p className="text-xs mt-1">Be the first to share what you found</p>
           </div>
         ) : expanded ? (
           <div className="space-y-3">
-            {flags?.map((flag) => {
-              const severity = severityConfig[flag.severity as keyof typeof severityConfig] || severityConfig.minor;
+            {notes?.map((note) => {
+              const severity = severityConfig[note.severity] || severityConfig.info;
               return (
                 <div
-                  key={flag.id}
+                  key={note.id}
                   className="border rounded-md p-3 space-y-2"
-                  data-testid={`flag-item-${flag.id}`}
+                  data-testid={`note-item-${note.id}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -122,27 +126,33 @@ export function CommunityFlags({ propertyId, onAddFlag }: CommunityFlagsProps) {
                           {severity.label}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {categoryLabels[flag.category] || flag.category}
+                          {categoryLabels[note.category] || note.category}
                         </Badge>
+                        {note.contributorHasVisited && (
+                          <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Visited
+                          </Badge>
+                        )}
                       </div>
-                      <h4 className="font-medium mt-1.5">{flag.title}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">{flag.description}</p>
+                      <h4 className="font-medium mt-1.5">{note.title}</h4>
+                      <p className="text-sm text-muted-foreground mt-1">{note.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-xs text-muted-foreground">
-                      {flag.isAnonymous ? "Anonymous" : "A buyer"} • {new Date(flag.createdAt!).toLocaleDateString()}
+                      {note.isAnonymous ? "Anonymous buyer" : "A buyer"} • {new Date(note.createdAt!).toLocaleDateString()}
                     </span>
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => markHelpful.mutate(flag.id)}
+                      onClick={() => markHelpful.mutate(note.id)}
                       disabled={!user}
                       className="h-7"
-                      data-testid={`button-helpful-${flag.id}`}
+                      data-testid={`button-helpful-${note.id}`}
                     >
                       <ThumbsUp className="h-3.5 w-3.5 mr-1" />
-                      Helpful ({flag.helpfulCount || 0})
+                      Helpful ({note.helpfulCount || 0})
                     </Button>
                   </div>
                 </div>
@@ -151,7 +161,7 @@ export function CommunityFlags({ propertyId, onAddFlag }: CommunityFlagsProps) {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            {flagCount} issue{flagCount !== 1 ? "s" : ""} reported by other buyers
+            {noteCount} insight{noteCount !== 1 ? "s" : ""} from other buyers
           </p>
         )}
       </CardContent>

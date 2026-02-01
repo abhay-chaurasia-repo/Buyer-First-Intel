@@ -6,7 +6,7 @@ A mobile-first property audit platform for U.S. home buyers to research properti
 
 Buyer-First Intel is a buyer-only platform focused on property due diligence. It provides:
 - Property fact sheets from public records
-- Community-driven discrepancy flagging for negotiation leverage
+- Community-driven buyer insights (observations shared by other buyers)
 - GPS visit verification
 - Private watchlist with progress tracking (Researching → Visited → Audited → Decision)
 
@@ -58,7 +58,7 @@ shared/
 
 1. **Address Search** - Search for properties by address with normalization
 2. **Property Fact Sheet** - View public records (sqft, bed/bath, year built)
-3. **Community Flags** - Flag discrepancies visible to other buyers for negotiation leverage
+3. **Community Insights** - Share observations visible to other buyers for negotiation leverage
 4. **GPS Verification** - Confirm presence within 100m of property
 5. **Watchlist** - Save and track properties of interest
 
@@ -97,10 +97,10 @@ shared/
 - **watchlistItems** - User's saved properties
 - **checklistItems** - 14-point due diligence items per property
 - **propertyVisits** - GPS verification records
-- **propertyFlags** - Community discrepancy reports:
+- **propertyFlags** - Community buyer insights:
   - category: structural, legal, condition, neighborhood, other
-  - severity: minor, moderate, major
-  - description, isAnonymous, helpfulCount
+  - severity: info, note, concern
+  - description, isAnonymous, contributorHasVisited, helpfulCount
 
 ## External API Integrations
 

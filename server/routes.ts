@@ -562,10 +562,11 @@ export async function registerRoutes(
     propertyId: z.string().min(1),
     userId: z.string().min(1),
     category: z.enum(["structural", "legal", "condition", "neighborhood", "other"]),
-    severity: z.enum(["minor", "moderate", "major"]),
+    severity: z.enum(["info", "note", "concern", "minor", "moderate", "major"]), // New + legacy values
     title: z.string().min(1).max(100),
     description: z.string().min(1).max(1000),
     isAnonymous: z.boolean().optional().default(false),
+    contributorHasVisited: z.boolean().optional().default(false),
   });
 
   app.post("/api/flags", async (req, res) => {
