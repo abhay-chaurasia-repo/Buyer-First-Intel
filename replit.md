@@ -69,6 +69,8 @@ shared/
 - `PATCH /api/checklist/:id` - Update checklist item
 - `GET /api/visits/:propertyId` - Get visit history
 - `POST /api/visits` - Record visit verification
+- `GET /api/places/autocomplete?input=<query>` - Google Places address autocomplete
+- `GET /api/places/details/:placeId` - Get full address details from Google Places
 
 ## Database Schema
 
