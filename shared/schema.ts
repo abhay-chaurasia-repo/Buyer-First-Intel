@@ -35,6 +35,41 @@ export const properties = pgTable("properties", {
   longitude: text("longitude"),
   dataSource: text("data_source"),
   lastUpdated: timestamp("last_updated").defaultNow(),
+  // Extended ATTOM data
+  attomId: text("attom_id"),
+  apn: text("apn"),
+  // Building details
+  bathsFull: integer("baths_full"),
+  bathsHalf: integer("baths_half"),
+  totalRooms: integer("total_rooms"),
+  stories: integer("stories"),
+  basementSqft: integer("basement_sqft"),
+  garageSqft: integer("garage_sqft"),
+  garageType: text("garage_type"),
+  fireplaceCount: integer("fireplace_count"),
+  hasFireplace: boolean("has_fireplace"),
+  poolType: text("pool_type"),
+  // Construction
+  constructionType: text("construction_type"),
+  roofType: text("roof_type"),
+  condition: text("condition"),
+  quality: text("quality"),
+  architecturalStyle: text("architectural_style"),
+  yearBuiltEffective: integer("year_built_effective"),
+  // Utilities
+  heatingType: text("heating_type"),
+  heatingFuel: text("heating_fuel"),
+  coolingType: text("cooling_type"),
+  // Lot details
+  lotSizeSqft: integer("lot_size_sqft"),
+  lotSizeAcres: text("lot_size_acres"),
+  // Ownership
+  ownerOccupied: boolean("owner_occupied"),
+  subdivision: text("subdivision"),
+  legalDescription: text("legal_description"),
+  zoning: text("zoning"),
+  // View/Features
+  viewType: text("view_type"),
 });
 
 export const insertPropertySchema = createInsertSchema(properties).omit({

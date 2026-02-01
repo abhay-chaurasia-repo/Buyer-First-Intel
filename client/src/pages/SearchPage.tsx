@@ -73,18 +73,54 @@ export default function SearchPage() {
       
       // Build property data - use ATTOM data if available, fallback to Google Places
       const propertyData = attomData.success && attomData.property ? {
+        // Basic info
         address: attomData.property.address || streetAddress,
         city: attomData.property.city || details.city,
         state: attomData.property.state || details.state,
         zipCode: attomData.property.zipCode || details.zipCode,
-        sqft: attomData.property.sqft || undefined,
-        bedrooms: attomData.property.bedrooms || undefined,
-        bathrooms: attomData.property.bathrooms || undefined,
-        yearBuilt: attomData.property.yearBuilt || undefined,
-        lotSize: attomData.property.lotSize || undefined,
-        propertyType: attomData.property.propertyType || undefined,
+        // Size & rooms
+        sqft: attomData.property.sqft,
+        bedrooms: attomData.property.bedrooms,
+        bathrooms: attomData.property.bathrooms,
+        bathsFull: attomData.property.bathsFull,
+        bathsHalf: attomData.property.bathsHalf,
+        totalRooms: attomData.property.totalRooms,
+        // Building
+        yearBuilt: attomData.property.yearBuilt,
+        yearBuiltEffective: attomData.property.yearBuiltEffective,
+        stories: attomData.property.stories,
+        basementSqft: attomData.property.basementSqft,
+        garageSqft: attomData.property.garageSqft,
+        garageType: attomData.property.garageType,
+        fireplaceCount: attomData.property.fireplaceCount,
+        hasFireplace: attomData.property.hasFireplace,
+        poolType: attomData.property.poolType,
+        // Construction
+        constructionType: attomData.property.constructionType,
+        condition: attomData.property.condition,
+        quality: attomData.property.quality,
+        architecturalStyle: attomData.property.architecturalStyle,
+        // Utilities
+        heatingType: attomData.property.heatingType,
+        heatingFuel: attomData.property.heatingFuel,
+        coolingType: attomData.property.coolingType,
+        // Lot
+        lotSize: attomData.property.lotSize,
+        lotSizeSqft: attomData.property.lotSizeSqft,
+        lotSizeAcres: attomData.property.lotSizeAcres,
+        // Property type & location
+        propertyType: attomData.property.propertyType,
         latitude: attomData.property.latitude || details.latitude,
         longitude: attomData.property.longitude || details.longitude,
+        // IDs
+        attomId: attomData.property.attomId,
+        apn: attomData.property.apn,
+        // Ownership & legal
+        ownerOccupied: attomData.property.ownerOccupied,
+        subdivision: attomData.property.subdivision,
+        legalDescription: attomData.property.legalDescription,
+        zoning: attomData.property.zoning,
+        viewType: attomData.property.viewType,
         dataSource: "attom",
       } : {
         address: streetAddress,

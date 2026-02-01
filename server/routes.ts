@@ -149,24 +149,67 @@ export async function registerRoutes(
         const address = prop.address || {};
         const location = prop.location || {};
         const summary = prop.summary || {};
+        const utilities = prop.utilities || {};
+        const area = prop.area || {};
+        const interior = building.interior || {};
+        const construction = building.construction || {};
+        const parking = building.parking || {};
+        const buildingSummary = building.summary || {};
+        const rooms = building.rooms || {};
+        const size = building.size || {};
         
         res.json({
           success: true,
           property: {
+            // Basic info
             address: address.line1 || address1,
             city: address.locality || "",
             state: address.countrySubd || "",
             zipCode: address.postal1 || "",
-            sqft: building.size?.livingSize || building.size?.universalSize || null,
-            bedrooms: building.rooms?.beds || null,
-            bathrooms: building.rooms?.bathsTotal || null,
+            // Size & rooms
+            sqft: size.livingSize || size.universalSize || null,
+            bedrooms: rooms.beds || null,
+            bathrooms: rooms.bathsTotal || null,
+            bathsFull: rooms.bathsFull || null,
+            bathsHalf: rooms.bathsTotal && rooms.bathsFull ? Math.round((rooms.bathsTotal - rooms.bathsFull) * 2) : null,
+            totalRooms: rooms.roomsTotal || null,
+            // Building
             yearBuilt: summary.yearBuilt || null,
-            lotSize: lot.lotSize1 ? `${lot.lotSize1} ${lot.lotSize1Units || "sqft"}` : null,
-            propertyType: summary.propType || summary.propSubType || null,
+            yearBuiltEffective: buildingSummary.yearbuilteffective || null,
+            stories: buildingSummary.levels || null,
+            basementSqft: interior.bsmtsize || null,
+            garageSqft: parking.prkgSize || null,
+            garageType: parking.garagetype || parking.prkgType || null,
+            fireplaceCount: interior.fplccount || null,
+            hasFireplace: interior.fplcind === "Y" || interior.fplccount > 0 || false,
+            poolType: lot.pooltype || null,
+            // Construction
+            constructionType: construction.wallType || null,
+            condition: construction.condition || null,
+            quality: buildingSummary.quality || null,
+            architecturalStyle: buildingSummary.archStyle || null,
+            // Utilities
+            heatingType: utilities.heatingtype || null,
+            heatingFuel: utilities.heatingfuel || null,
+            coolingType: utilities.coolingtype || null,
+            // Lot
+            lotSize: lot.lotsize1 ? `${lot.lotsize1.toFixed(2)} acres` : null,
+            lotSizeSqft: lot.lotsize2 || null,
+            lotSizeAcres: lot.lotsize1?.toString() || null,
+            // Property type
+            propertyType: summary.propertyType || summary.propType || summary.propclass || null,
+            // Location
             latitude: location.latitude?.toString() || null,
             longitude: location.longitude?.toString() || null,
-            attomId: prop.identifier?.obPropId || null,
+            // IDs
+            attomId: prop.identifier?.attomId?.toString() || prop.identifier?.Id?.toString() || null,
             apn: prop.identifier?.apn || null,
+            // Ownership & legal
+            ownerOccupied: summary.absenteeInd === "OWNER OCCUPIED",
+            subdivision: area.subdname || null,
+            legalDescription: summary.legal1 || null,
+            zoning: area.countyuse1?.trim() || null,
+            viewType: buildingSummary.view || null,
           },
         });
       } else {
@@ -201,15 +244,44 @@ export async function registerRoutes(
     city: z.string().min(1),
     state: z.string().min(1),
     zipCode: z.string().min(1),
-    sqft: z.number().optional(),
-    bedrooms: z.number().optional(),
-    bathrooms: z.number().optional(),
-    yearBuilt: z.number().optional(),
-    lotSize: z.string().optional(),
-    propertyType: z.string().optional(),
-    latitude: z.string().optional(),
-    longitude: z.string().optional(),
-    dataSource: z.string().optional(),
+    sqft: z.number().optional().nullable(),
+    bedrooms: z.number().optional().nullable(),
+    bathrooms: z.number().optional().nullable(),
+    yearBuilt: z.number().optional().nullable(),
+    lotSize: z.string().optional().nullable(),
+    propertyType: z.string().optional().nullable(),
+    latitude: z.string().optional().nullable(),
+    longitude: z.string().optional().nullable(),
+    dataSource: z.string().optional().nullable(),
+    // Extended ATTOM fields
+    attomId: z.string().optional().nullable(),
+    apn: z.string().optional().nullable(),
+    bathsFull: z.number().optional().nullable(),
+    bathsHalf: z.number().optional().nullable(),
+    totalRooms: z.number().optional().nullable(),
+    stories: z.number().optional().nullable(),
+    basementSqft: z.number().optional().nullable(),
+    garageSqft: z.number().optional().nullable(),
+    garageType: z.string().optional().nullable(),
+    fireplaceCount: z.number().optional().nullable(),
+    hasFireplace: z.boolean().optional().nullable(),
+    poolType: z.string().optional().nullable(),
+    constructionType: z.string().optional().nullable(),
+    roofType: z.string().optional().nullable(),
+    condition: z.string().optional().nullable(),
+    quality: z.string().optional().nullable(),
+    architecturalStyle: z.string().optional().nullable(),
+    yearBuiltEffective: z.number().optional().nullable(),
+    heatingType: z.string().optional().nullable(),
+    heatingFuel: z.string().optional().nullable(),
+    coolingType: z.string().optional().nullable(),
+    lotSizeSqft: z.number().optional().nullable(),
+    lotSizeAcres: z.string().optional().nullable(),
+    ownerOccupied: z.boolean().optional().nullable(),
+    subdivision: z.string().optional().nullable(),
+    legalDescription: z.string().optional().nullable(),
+    zoning: z.string().optional().nullable(),
+    viewType: z.string().optional().nullable(),
   });
 
   app.post("/api/properties", async (req, res) => {
