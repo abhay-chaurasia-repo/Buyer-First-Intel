@@ -1,9 +1,11 @@
-import { Link } from "wouter";
-import { Search, Star, ClipboardCheck, MapPin, ArrowRight, ShieldCheck } from "lucide-react";
+import { Link, Redirect } from "wouter";
+import { Search, Star, ClipboardCheck, MapPin, ArrowRight, ShieldCheck, LogOut } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const features = [
   {
@@ -41,21 +43,54 @@ const features = [
 ];
 
 export default function Home() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-primary/20" />
+          <div className="h-4 w-32 bg-muted rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect to="/" />;
+  }
+
+  const userName = user?.firstName 
+    ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`
+    : user?.email?.split('@')[0] || 'User';
+  
+  const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <Header />
       <PageContainer>
         <div className="space-y-6">
-          <div className="text-center py-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
-              <ShieldCheck className="h-8 w-8 text-primary-foreground" />
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={user?.profileImageUrl || undefined} alt={userName} />
+                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm text-muted-foreground">Welcome back,</p>
+                <h2 className="text-lg font-semibold text-foreground" data-testid="text-username">
+                  {userName}
+                </h2>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              Buyer-First Intel
-            </h2>
-            <p className="text-muted-foreground max-w-xs mx-auto">
-              Your private property audit platform. Research before you buy.
-            </p>
+            <a href="/api/logout">
+              <Button variant="ghost" size="icon" data-testid="button-logout">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </a>
           </div>
 
           <div className="space-y-3">

@@ -3,7 +3,7 @@ import { Search, Star, ClipboardCheck, MapPin, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", icon: Home, label: "Home" },
+  { href: "/home", icon: Home, label: "Home" },
   { href: "/search", icon: Search, label: "Search" },
   { href: "/watchlist", icon: Star, label: "Watchlist" },
   { href: "/audit", icon: ClipboardCheck, label: "Audit" },
@@ -21,7 +21,7 @@ export function MobileNav() {
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {navItems.map((item) => {
           const isActive = location === item.href || 
-            (item.href !== "/" && location.startsWith(item.href));
+            (item.href !== "/home" && location.startsWith(item.href));
           const Icon = item.icon;
           
           return (

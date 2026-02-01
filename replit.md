@@ -29,8 +29,11 @@ client/src/
 │   ├── property/       # AddressSearch, PropertyCard, PropertyFactSheet
 │   ├── audit/          # ChecklistSection
 │   └── gps/            # GPSVerification
+├── hooks/
+│   └── use-auth.ts     # Authentication hook for Replit Auth
 ├── pages/
-│   ├── Home.tsx        # Landing page
+│   ├── LandingPage.tsx # Dating app-style login page (unauthenticated)
+│   ├── Home.tsx        # Dashboard (authenticated users)
 │   ├── SearchPage.tsx  # Property search
 │   ├── PropertyPage.tsx # Property details
 │   ├── WatchlistPage.tsx # Saved properties
@@ -41,10 +44,14 @@ client/src/
 server/
 ├── routes.ts           # API endpoints
 ├── storage.ts          # Database operations
-└── db.ts               # Database connection
+├── db.ts               # Database connection
+└── replit_integrations/
+    └── auth/           # Replit Auth OIDC integration
 
 shared/
-└── schema.ts           # Data models (Drizzle schemas)
+├── schema.ts           # Data models (Drizzle schemas)
+└── models/
+    └── auth.ts         # User and session schemas
 ```
 
 ## Core Features

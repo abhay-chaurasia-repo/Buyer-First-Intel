@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const ATTOM_API_KEY = process.env.ATTOM_API_KEY;
@@ -10,6 +11,10 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Setup Replit Auth (BEFORE other routes)
+  await setupAuth(app);
+  registerAuthRoutes(app);
   
   // Seed data on startup
   await storage.seedData();
