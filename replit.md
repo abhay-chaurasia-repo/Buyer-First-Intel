@@ -75,10 +75,22 @@ shared/
 
 ## Database Schema
 
-- **properties** - Property records with address, facts, coordinates
+- **properties** - Property records with comprehensive ATTOM data:
+  - Basic: address, city, state, zipCode, latitude, longitude
+  - Size & Rooms: sqft, bedrooms, bathrooms, bathsFull, bathsHalf, totalRooms
+  - Building: stories, basementSqft, garageSqft, garageType, fireplaceCount, hasFireplace, poolType
+  - Construction: yearBuilt, yearBuiltEffective, constructionType, roofType, condition, quality, architecturalStyle
+  - Utilities: heatingType, heatingFuel, coolingType
+  - Lot: lotSize, lotSizeSqft, lotSizeAcres
+  - Legal: attomId, apn, ownerOccupied, subdivision, legalDescription, zoning, viewType
 - **watchlistItems** - User's saved properties
 - **checklistItems** - 14-point due diligence items per property
 - **propertyVisits** - GPS verification records
+
+## External API Integrations
+
+- **Google Places API** - Address autocomplete with 300ms debounce
+- **ATTOM API** - Comprehensive property data from public records
 
 ## Running the Project
 
