@@ -1,0 +1,77 @@
+Project Identity: Build "Buyer-First Intel" (BFI), a buyer-only, mobile-first platform for U.S. home buyers to audit property facts before making an offer.
++1
+
+Core Constraint: Strictly buyer-only. No MLS data, no property prices, and no agent/seller tools. The UI must be mobile-first with high-contrast elements for outdoor use.
++3
+
+Tech Stack:
+
+Frontend: Vite + React + TypeScript.
+
+Styling: Tailwind CSS.
+
+Icons: Lucide-React.
+
+Backend/Auth: Supabase.
+
+1. Project Structure & Initialization: Initialize a project with this directory structure:
+
+src/components/: Generic UI (Button, Card, Input).
+
+src/features/search/: Address normalization & search module.
++2
+
+src/features/property/: Public record display & comparison engine.
++2
+
+src/features/audit/: 14-point Due Diligence Checklist.
++1
+
+src/features/visit/: GPS verification logic.
++1
+
+src/features/watchlist/: Private workspace.
++1
+
+src/lib/: Supabase client and utilities.
+
+2. Core Features (Phase 1):
+
+Address Search: Implement a search bar that normalizes addresses and handles manual entry fallback.
++1
+
+Property Fact Sheet: A mobile-optimized view showing public records (SqFt, Bed/Bath, Year Built) with source/timestamp indicators.
++1
+
+Due Diligence Checklist: A persistent, 14-point interactive checklist (Physical Audit, Legal, Neighborhood).
+
+GPS Visit Verification: A feature that checks device coordinates to verify the user is within 100m of the property.
++1
+
+Watchlist: A private view where users can save and track multiple properties.
++1
+
+3. Supabase Integration:
+
+Configure src/lib/supabase.ts to use VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
+
+Ensure all data fetching/saving uses Supabase RLS logic (users only see their own properties).
++1
+
+4. UI/UX Style:
+
+High-contrast palette (Slate 900 for text, Blue 600 for actions).
+
+Large touch targets for field use.
+
+Use a clean, functional design with no distracting banners or marketing fluff.
+
+Instructions for the Agent:
+
+Initialize the Vite React project and install supabase-js, lucide-react, clsx, and tailwind-merge.
+
+Set up the folder structure.
+
+Build the App.tsx layout with a mobile bottom navigation bar (Watchlist, Search, Audit).
+
+Implement the Address Search component as the landing page entry point
