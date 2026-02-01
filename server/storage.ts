@@ -93,6 +93,32 @@ export class DatabaseStorage implements IStorage {
       eq(properties.normalizedAddress, property.normalizedAddress)
     );
     if (existing.length > 0) {
+      // Update existing property with any new ATTOM data
+      const updateData: Partial<InsertProperty> = {};
+      const fieldsToUpdate = [
+        'sqft', 'bedrooms', 'bathrooms', 'yearBuilt', 'lotSize', 'propertyType',
+        'latitude', 'longitude', 'dataSource', 'attomId', 'apn', 'bathsFull', 
+        'bathsHalf', 'totalRooms', 'stories', 'basementSqft', 'garageSqft', 
+        'garageType', 'fireplaceCount', 'hasFireplace', 'poolType', 'constructionType',
+        'roofType', 'condition', 'quality', 'architecturalStyle', 'yearBuiltEffective',
+        'heatingType', 'heatingFuel', 'coolingType', 'lotSizeSqft', 'lotSizeAcres',
+        'ownerOccupied', 'subdivision', 'legalDescription', 'zoning', 'viewType'
+      ] as const;
+      
+      for (const field of fieldsToUpdate) {
+        const newValue = property[field];
+        if (newValue !== undefined && newValue !== null) {
+          (updateData as any)[field] = newValue;
+        }
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        const [updated] = await db.update(properties)
+          .set({ ...updateData, lastUpdated: new Date() })
+          .where(eq(properties.id, existing[0].id))
+          .returning();
+        return updated;
+      }
       return existing[0];
     }
     return this.createProperty(property);
