@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const ATTOM_API_KEY = process.env.ATTOM_API_KEY;
 
 export async function registerRoutes(
   httpServer: Server,
@@ -114,6 +115,70 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching place details:", error);
       res.status(500).json({ error: "Failed to fetch place details" });
+    }
+  });
+
+  // ATTOM API - Fetch property details by address
+  app.get("/api/attom/property", async (req, res) => {
+    try {
+      const { address1, address2 } = req.query;
+      
+      if (!address1 || !address2 || typeof address1 !== "string" || typeof address2 !== "string") {
+        return res.status(400).json({ error: "Missing address1 or address2 parameters" });
+      }
+      
+      if (!ATTOM_API_KEY) {
+        return res.status(500).json({ error: "ATTOM API key not configured" });
+      }
+
+      const url = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address1=${encodeURIComponent(address1)}&address2=${encodeURIComponent(address2)}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          "Accept": "application/json",
+          "apikey": ATTOM_API_KEY,
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.status?.code === 0 && data.property?.[0]) {
+        const prop = data.property[0];
+        const building = prop.building || {};
+        const lot = prop.lot || {};
+        const address = prop.address || {};
+        const location = prop.location || {};
+        const summary = prop.summary || {};
+        
+        res.json({
+          success: true,
+          property: {
+            address: address.line1 || address1,
+            city: address.locality || "",
+            state: address.countrySubd || "",
+            zipCode: address.postal1 || "",
+            sqft: building.size?.livingSize || building.size?.universalSize || null,
+            bedrooms: building.rooms?.beds || null,
+            bathrooms: building.rooms?.bathsTotal || null,
+            yearBuilt: summary.yearBuilt || null,
+            lotSize: lot.lotSize1 ? `${lot.lotSize1} ${lot.lotSize1Units || "sqft"}` : null,
+            propertyType: summary.propType || summary.propSubType || null,
+            latitude: location.latitude?.toString() || null,
+            longitude: location.longitude?.toString() || null,
+            attomId: prop.identifier?.obPropId || null,
+            apn: prop.identifier?.apn || null,
+          },
+        });
+      } else {
+        console.error("ATTOM API error:", data.status?.msg || "Unknown error");
+        res.json({
+          success: false,
+          error: data.status?.msg || "Property not found",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching ATTOM property:", error);
+      res.status(500).json({ error: "Failed to fetch property details from ATTOM" });
     }
   });
 

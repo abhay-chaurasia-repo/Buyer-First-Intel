@@ -71,6 +71,7 @@ shared/
 - `POST /api/visits` - Record visit verification
 - `GET /api/places/autocomplete?input=<query>` - Google Places address autocomplete
 - `GET /api/places/details/:placeId` - Get full address details from Google Places
+- `GET /api/attom/property?address1=<street>&address2=<city,state>` - Get property details from ATTOM
 
 ## Database Schema
 

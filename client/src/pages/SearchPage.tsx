@@ -58,19 +58,45 @@ export default function SearchPage() {
 
   const createPropertyMutation = useMutation({
     mutationFn: async (details: PlaceDetails) => {
-      const address = details.streetNumber 
+      const streetAddress = details.streetNumber 
         ? `${details.streetNumber} ${details.street}`
         : details.street || details.formattedAddress.split(",")[0];
       
-      return apiRequest("POST", "/api/properties", {
-        address,
+      // First, fetch property details from ATTOM API
+      const address1 = streetAddress;
+      const address2 = `${details.city}, ${details.state}`;
+      
+      const attomResponse = await fetch(
+        `/api/attom/property?address1=${encodeURIComponent(address1)}&address2=${encodeURIComponent(address2)}`
+      );
+      const attomData = await attomResponse.json();
+      
+      // Build property data - use ATTOM data if available, fallback to Google Places
+      const propertyData = attomData.success && attomData.property ? {
+        address: attomData.property.address || streetAddress,
+        city: attomData.property.city || details.city,
+        state: attomData.property.state || details.state,
+        zipCode: attomData.property.zipCode || details.zipCode,
+        sqft: attomData.property.sqft || undefined,
+        bedrooms: attomData.property.bedrooms || undefined,
+        bathrooms: attomData.property.bathrooms || undefined,
+        yearBuilt: attomData.property.yearBuilt || undefined,
+        lotSize: attomData.property.lotSize || undefined,
+        propertyType: attomData.property.propertyType || undefined,
+        latitude: attomData.property.latitude || details.latitude,
+        longitude: attomData.property.longitude || details.longitude,
+        dataSource: "attom",
+      } : {
+        address: streetAddress,
         city: details.city,
         state: details.state,
         zipCode: details.zipCode,
         latitude: details.latitude,
         longitude: details.longitude,
         dataSource: "google_places",
-      });
+      };
+      
+      return apiRequest("POST", "/api/properties", propertyData);
     },
     onSuccess: async (response) => {
       const property = await response.json();
