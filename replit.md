@@ -6,9 +6,9 @@ A mobile-first property audit platform for U.S. home buyers to research properti
 
 Buyer-First Intel is a buyer-only platform focused on property due diligence. It provides:
 - Property fact sheets from public records
-- 14-point due diligence checklist
+- Community-driven discrepancy flagging for negotiation leverage
 - GPS visit verification
-- Private watchlist for tracking properties
+- Private watchlist with progress tracking (Researching → Visited → Audited → Decision)
 
 **Key Constraint:** No MLS data, no prices, no agent/seller tools.
 
@@ -58,7 +58,7 @@ shared/
 
 1. **Address Search** - Search for properties by address with normalization
 2. **Property Fact Sheet** - View public records (sqft, bed/bath, year built)
-3. **14-Point Checklist** - Physical, Legal, and Neighborhood audit items
+3. **Community Flags** - Flag discrepancies visible to other buyers for negotiation leverage
 4. **GPS Verification** - Confirm presence within 100m of property
 5. **Watchlist** - Save and track properties of interest
 
@@ -79,6 +79,10 @@ shared/
 - `GET /api/places/autocomplete?input=<query>` - Google Places address autocomplete
 - `GET /api/places/details/:placeId` - Get full address details from Google Places
 - `GET /api/attom/property?address1=<street>&address2=<city,state>` - Get property details from ATTOM
+- `GET /api/flags/:propertyId` - Get community flags for a property
+- `POST /api/flags/:propertyId` - Submit a new flag
+- `GET /api/flags/:propertyId/count` - Get flag count for a property
+- `POST /api/flags/:flagId/helpful` - Mark a flag as helpful
 
 ## Database Schema
 
@@ -93,6 +97,10 @@ shared/
 - **watchlistItems** - User's saved properties
 - **checklistItems** - 14-point due diligence items per property
 - **propertyVisits** - GPS verification records
+- **propertyFlags** - Community discrepancy reports:
+  - category: structural, legal, condition, neighborhood, other
+  - severity: minor, moderate, major
+  - description, isAnonymous, helpfulCount
 
 ## External API Integrations
 
