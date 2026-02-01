@@ -535,5 +535,80 @@ export async function registerRoutes(
     }
   });
 
+  // Property Flags (Community Discrepancy Reports)
+  app.get("/api/flags/:propertyId", async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const flags = await storage.getPropertyFlags(propertyId);
+      res.json(flags);
+    } catch (error) {
+      console.error("Error fetching property flags:", error);
+      res.status(500).json({ error: "Failed to fetch property flags" });
+    }
+  });
+
+  app.get("/api/flags/:propertyId/count", async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const count = await storage.getFlagCount(propertyId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching flag count:", error);
+      res.status(500).json({ error: "Failed to fetch flag count" });
+    }
+  });
+
+  const createFlagSchema = z.object({
+    propertyId: z.string().min(1),
+    userId: z.string().min(1),
+    category: z.enum(["structural", "legal", "condition", "neighborhood", "other"]),
+    severity: z.enum(["minor", "moderate", "major"]),
+    title: z.string().min(1).max(100),
+    description: z.string().min(1).max(1000),
+    isAnonymous: z.boolean().optional().default(false),
+  });
+
+  app.post("/api/flags", async (req, res) => {
+    try {
+      const data = createFlagSchema.parse(req.body);
+      const flag = await storage.createFlag(data);
+      res.status(201).json(flag);
+    } catch (error) {
+      console.error("Error creating flag:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid flag data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create flag" });
+    }
+  });
+
+  app.post("/api/flags/:flagId/helpful", async (req, res) => {
+    try {
+      const { flagId } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      
+      await storage.markFlagHelpful(flagId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking flag helpful:", error);
+      res.status(500).json({ error: "Failed to mark flag as helpful" });
+    }
+  });
+
+  app.get("/api/flags/:flagId/helpful/:userId", async (req, res) => {
+    try {
+      const { flagId, userId } = req.params;
+      const hasMarked = await storage.hasUserMarkedHelpful(flagId, userId);
+      res.json({ hasMarked });
+    } catch (error) {
+      console.error("Error checking helpful status:", error);
+      res.status(500).json({ error: "Failed to check helpful status" });
+    }
+  });
+
   return httpServer;
 }
