@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { CheckCircle } from "lucide-react";
 
 interface AuditScore {
   score: number | null;
@@ -13,70 +15,62 @@ interface AuditScore {
 
 interface AuditScoreBadgeProps {
   propertyId: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "lg";
   showDetails?: boolean;
 }
 
-const gradeColors: Record<string, string> = {
-  A: "bg-emerald-500 text-white",
-  B: "bg-green-500 text-white",
-  C: "bg-yellow-500 text-white",
-  D: "bg-orange-500 text-white",
-  F: "bg-red-500 text-white",
+const gradeVariants: Record<string, string> = {
+  A: "bg-emerald-600 dark:bg-emerald-500",
+  B: "bg-green-600 dark:bg-green-500",
+  C: "bg-yellow-600 dark:bg-yellow-500",
+  D: "bg-orange-600 dark:bg-orange-500",
+  F: "bg-red-600 dark:bg-red-500",
 };
 
-export function AuditScoreBadge({ propertyId, size = "md", showDetails = false }: AuditScoreBadgeProps) {
+export function AuditScoreBadge({ propertyId, size = "sm", showDetails = false }: AuditScoreBadgeProps) {
   const { data: auditScore, isLoading } = useQuery<AuditScore>({
     queryKey: ["/api/audit-score", propertyId],
     enabled: !!propertyId,
   });
 
   if (isLoading) {
-    return (
-      <div className={cn(
-        "animate-pulse bg-muted rounded",
-        size === "sm" ? "h-5 w-8" : size === "lg" ? "h-10 w-14" : "h-6 w-10"
-      )} />
-    );
+    return <Skeleton className="w-8 h-5 rounded" />;
   }
 
   if (!auditScore?.grade) {
     return (
       <Badge 
-        variant="outline" 
-        className={cn(
-          "font-medium",
-          size === "sm" ? "text-xs px-1.5 py-0" : size === "lg" ? "text-base px-3 py-1" : "text-xs px-2 py-0.5"
-        )}
+        variant="outline"
         data-testid={`badge-audit-score-${propertyId}`}
       >
-        {size === "sm" ? "—" : "No Audit"}
+        {size === "lg" ? "Not Started" : "—"}
       </Badge>
     );
   }
 
-  const gradeColor = gradeColors[auditScore.grade] || "bg-muted";
+  const gradeColor = gradeVariants[auditScore.grade] || "";
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn("flex items-center gap-2", size === "lg" && "gap-3")}>
       <Badge 
         className={cn(
-          "font-bold",
+          "font-bold text-white",
           gradeColor,
-          size === "sm" ? "text-xs px-1.5 py-0 h-5 min-w-[24px]" : 
-          size === "lg" ? "text-lg px-3 py-1 h-10 min-w-[40px]" : 
-          "text-sm px-2 py-0.5 h-6 min-w-[28px]",
-          "flex items-center justify-center"
+          size === "lg" && "text-lg"
         )}
         data-testid={`badge-audit-score-${propertyId}`}
       >
         {auditScore.grade}
       </Badge>
       {showDetails && (
-        <span className="text-xs text-muted-foreground">
-          {auditScore.message}
-          {auditScore.hasVerifiedVisit && " ✓ Visited"}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm text-muted-foreground">
+            {auditScore.completedItems}/{auditScore.totalItems} items
+          </span>
+          {auditScore.hasVerifiedVisit && (
+            <CheckCircle className="h-4 w-4 text-primary" />
+          )}
+        </div>
       )}
     </div>
   );

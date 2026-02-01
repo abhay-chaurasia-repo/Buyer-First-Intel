@@ -137,7 +137,7 @@ export default function WatchlistPage() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Select
                             value={item.status || "researching"}
                             onValueChange={(value) => {
@@ -145,7 +145,7 @@ export default function WatchlistPage() {
                             }}
                           >
                             <SelectTrigger 
-                              className="w-[130px] h-7 text-xs"
+                              className="w-[130px]"
                               onClick={(e) => e.stopPropagation()}
                               data-testid={`select-status-${item.propertyId}`}
                             >
@@ -158,7 +158,7 @@ export default function WatchlistPage() {
                               <SelectItem value="decision">Decision</SelectItem>
                             </SelectContent>
                           </Select>
-                          <AuditScoreBadge propertyId={item.propertyId} size="sm" />
+                          <AuditScoreBadge propertyId={item.propertyId} />
                         </div>
                       </div>
 

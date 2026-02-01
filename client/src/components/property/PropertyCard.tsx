@@ -104,7 +104,7 @@ export function PropertyCard({
               </Badge>
             )}
             {showAuditScore && (
-              <AuditScoreBadge propertyId={property.id} size="sm" />
+              <AuditScoreBadge propertyId={property.id} />
             )}
           </div>
         )}
