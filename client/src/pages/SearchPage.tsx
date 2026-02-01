@@ -11,6 +11,17 @@ import { Search, MapPin } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Property } from "@shared/schema";
 
+interface PlaceDetails {
+  formattedAddress: string;
+  streetNumber: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  latitude: string;
+  longitude: string;
+}
+
 export default function SearchPage() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,9 +56,40 @@ export default function SearchPage() {
     },
   });
 
+  const createPropertyMutation = useMutation({
+    mutationFn: async (details: PlaceDetails) => {
+      const address = details.streetNumber 
+        ? `${details.streetNumber} ${details.street}`
+        : details.street || details.formattedAddress.split(",")[0];
+      
+      return apiRequest("POST", "/api/properties", {
+        address,
+        city: details.city,
+        state: details.state,
+        zipCode: details.zipCode,
+        latitude: details.latitude,
+        longitude: details.longitude,
+        dataSource: "google_places",
+      });
+    },
+    onSuccess: async (response) => {
+      const property = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
+      setLocation(`/property/${property.id}`);
+    },
+    onError: (error) => {
+      console.error("Error creating property:", error);
+      setSearchError("Failed to create property. Please try again.");
+    },
+  });
+
   const handleSearch = async (query: string) => {
     setSearchError(undefined);
     setSearchQuery(query);
+  };
+
+  const handlePlaceSelected = (details: PlaceDetails) => {
+    createPropertyMutation.mutate(details);
   };
 
   const handleToggleWatchlist = (propertyId: string) => {
@@ -81,7 +123,8 @@ export default function SearchPage() {
 
           <AddressSearch 
             onSearch={handleSearch}
-            isLoading={isLoading}
+            onPlaceSelected={handlePlaceSelected}
+            isLoading={isLoading || createPropertyMutation.isPending}
             error={searchError}
           />
 

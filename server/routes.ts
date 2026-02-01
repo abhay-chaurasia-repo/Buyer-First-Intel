@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -30,6 +32,88 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error searching properties:", error);
       res.status(500).json({ error: "Failed to search properties" });
+    }
+  });
+
+  // Google Places Autocomplete API proxy
+  app.get("/api/places/autocomplete", async (req, res) => {
+    try {
+      const { input } = req.query;
+      
+      if (!input || typeof input !== "string") {
+        return res.status(400).json({ error: "Missing input parameter" });
+      }
+      
+      if (!GOOGLE_PLACES_API_KEY) {
+        return res.status(500).json({ error: "Google Places API key not configured" });
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=address&components=country:us&key=${GOOGLE_PLACES_API_KEY}`
+      );
+      
+      const data = await response.json();
+      
+      if (data.status === "OK" || data.status === "ZERO_RESULTS") {
+        res.json({
+          predictions: data.predictions?.map((p: any) => ({
+            placeId: p.place_id,
+            description: p.description,
+            mainText: p.structured_formatting?.main_text,
+            secondaryText: p.structured_formatting?.secondary_text,
+          })) || []
+        });
+      } else {
+        console.error("Google Places API error:", data.status, data.error_message);
+        res.status(500).json({ error: "Places API error", status: data.status });
+      }
+    } catch (error) {
+      console.error("Error fetching place autocomplete:", error);
+      res.status(500).json({ error: "Failed to fetch address suggestions" });
+    }
+  });
+
+  // Google Places Details API proxy (to get full address components)
+  app.get("/api/places/details/:placeId", async (req, res) => {
+    try {
+      const { placeId } = req.params;
+      
+      if (!GOOGLE_PLACES_API_KEY) {
+        return res.status(500).json({ error: "Google Places API key not configured" });
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=formatted_address,address_components,geometry&key=${GOOGLE_PLACES_API_KEY}`
+      );
+      
+      const data = await response.json();
+      
+      if (data.status === "OK" && data.result) {
+        const result = data.result;
+        const components = result.address_components || [];
+        
+        const getComponent = (type: string) => 
+          components.find((c: any) => c.types.includes(type))?.long_name || "";
+        const getShortComponent = (type: string) =>
+          components.find((c: any) => c.types.includes(type))?.short_name || "";
+        
+        res.json({
+          formattedAddress: result.formatted_address,
+          streetNumber: getComponent("street_number"),
+          street: getComponent("route"),
+          city: getComponent("locality") || getComponent("sublocality") || getComponent("administrative_area_level_2"),
+          state: getShortComponent("administrative_area_level_1"),
+          zipCode: getComponent("postal_code"),
+          latitude: result.geometry?.location?.lat?.toString(),
+          longitude: result.geometry?.location?.lng?.toString(),
+        });
+      } else {
+        console.error("Google Places Details API error:", data.status);
+        res.status(500).json({ error: "Places Details API error", status: data.status });
+      }
+    } catch (error) {
+      console.error("Error fetching place details:", error);
+      res.status(500).json({ error: "Failed to fetch place details" });
     }
   });
 
