@@ -2,15 +2,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Header } from "@/components/layout/Header";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { FlagCountBadge } from "@/components/property/FlagCountBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Star, Search, MapPin, Bed, Bath, Square, ChevronRight } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { AuditScoreBadge } from "@/components/audit/AuditScoreBadge";
-import { ProgressStatusBadge } from "@/components/property/ProgressStatusBadge";
-import type { Property, WatchlistItem, ProgressStatus } from "@shared/schema";
+import type { Property, WatchlistItem } from "@shared/schema";
 import {
   Select,
   SelectContent,
@@ -158,7 +156,7 @@ export default function WatchlistPage() {
                               <SelectItem value="decision">Decision</SelectItem>
                             </SelectContent>
                           </Select>
-                          <AuditScoreBadge propertyId={item.propertyId} />
+                          <FlagCountBadge propertyId={item.propertyId} />
                         </div>
                       </div>
 

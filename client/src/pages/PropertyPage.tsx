@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Header } from "@/components/layout/Header";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PropertyFactSheet } from "@/components/property/PropertyFactSheet";
 import { GPSVerification } from "@/components/gps/GPSVerification";
-import { AuditScoreBadge } from "@/components/audit/AuditScoreBadge";
+import { CommunityFlags } from "@/components/property/CommunityFlags";
+import { FlagForm } from "@/components/property/FlagForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,7 @@ import { cn } from "@/lib/utils";
 export default function PropertyPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const [showFlagForm, setShowFlagForm] = useState(false);
 
   const { data: property, isLoading, error } = useQuery<Property>({
     queryKey: ["/api/properties", id],
@@ -128,19 +131,12 @@ export default function PropertyPage() {
       />
       <PageContainer>
         <div className="space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Audit Score</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Based on 14-point checklist</p>
-                </div>
-                <AuditScoreBadge propertyId={property.id} size="lg" showDetails />
-              </div>
-            </CardContent>
-          </Card>
-
           <PropertyFactSheet property={property} />
+
+          <CommunityFlags 
+            propertyId={property.id} 
+            onAddFlag={() => setShowFlagForm(true)} 
+          />
 
           <div className="grid grid-cols-2 gap-3">
             <Button
@@ -169,6 +165,12 @@ export default function PropertyPage() {
           />
         </div>
       </PageContainer>
+
+      <FlagForm 
+        propertyId={property.id}
+        open={showFlagForm}
+        onOpenChange={setShowFlagForm}
+      />
     </div>
   );
 }

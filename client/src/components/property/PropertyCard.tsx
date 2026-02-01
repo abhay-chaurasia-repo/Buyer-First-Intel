@@ -2,7 +2,7 @@ import { MapPin, Bed, Bath, Square, Calendar, Star, ChevronRight } from "lucide-
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AuditScoreBadge } from "@/components/audit/AuditScoreBadge";
+import { FlagCountBadge } from "@/components/property/FlagCountBadge";
 import type { Property } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ interface PropertyCardProps {
   onToggleWatchlist?: () => void;
   onSelect?: () => void;
   showDetails?: boolean;
-  showAuditScore?: boolean;
+  showFlagCount?: boolean;
 }
 
 export function PropertyCard({ 
@@ -21,7 +21,7 @@ export function PropertyCard({
   onToggleWatchlist, 
   onSelect,
   showDetails = true,
-  showAuditScore = false 
+  showFlagCount = false 
 }: PropertyCardProps) {
   return (
     <Card 
@@ -96,15 +96,15 @@ export function PropertyCard({
           </div>
         </div>
 
-        {(property.propertyType || showAuditScore) && (
+        {(property.propertyType || showFlagCount) && (
           <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">
             {property.propertyType && (
               <Badge variant="secondary" className="text-xs">
                 {property.propertyType}
               </Badge>
             )}
-            {showAuditScore && (
-              <AuditScoreBadge propertyId={property.id} />
+            {showFlagCount && (
+              <FlagCountBadge propertyId={property.id} />
             )}
           </div>
         )}
