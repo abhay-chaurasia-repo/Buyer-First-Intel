@@ -3,11 +3,14 @@ import {
   type WatchlistItem, type InsertWatchlistItem,
   type ChecklistItem, type InsertChecklistItem,
   type PropertyVisit, type InsertPropertyVisit,
+  type PropertyFlag, type InsertPropertyFlag,
+  type FlagHelpful, type InsertFlagHelpful,
   properties, watchlistItems, checklistItems, propertyVisits,
+  propertyFlags, flagHelpful,
   defaultChecklistTemplate
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, ilike, or, desc } from "drizzle-orm";
+import { eq, ilike, or, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Properties
@@ -34,6 +37,13 @@ export interface IStorage {
   getVisits(propertyId: string): Promise<PropertyVisit[]>;
   recordVisit(visit: InsertPropertyVisit): Promise<PropertyVisit>;
   updateVisitNotes(id: string, notes: string): Promise<PropertyVisit | undefined>;
+  
+  // Property Flags (Community Discrepancy Reports)
+  getPropertyFlags(propertyId: string): Promise<PropertyFlag[]>;
+  getFlagCount(propertyId: string): Promise<number>;
+  createFlag(flag: InsertPropertyFlag): Promise<PropertyFlag>;
+  markFlagHelpful(flagId: string, userId: string): Promise<void>;
+  hasUserMarkedHelpful(flagId: string, userId: string): Promise<boolean>;
   
   // Seed data
   seedData(): Promise<void>;
@@ -226,6 +236,49 @@ export class DatabaseStorage implements IStorage {
       .where(eq(watchlistItems.propertyId, propertyId))
       .returning();
     return updated;
+  }
+
+  // Property Flags (Community Discrepancy Reports)
+  async getPropertyFlags(propertyId: string): Promise<PropertyFlag[]> {
+    return db.select().from(propertyFlags)
+      .where(eq(propertyFlags.propertyId, propertyId))
+      .orderBy(desc(propertyFlags.createdAt));
+  }
+
+  async getFlagCount(propertyId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(propertyFlags)
+      .where(eq(propertyFlags.propertyId, propertyId));
+    return Number(result[0]?.count || 0);
+  }
+
+  async createFlag(flag: InsertPropertyFlag): Promise<PropertyFlag> {
+    const [created] = await db.insert(propertyFlags).values(flag).returning();
+    return created;
+  }
+
+  async markFlagHelpful(flagId: string, userId: string): Promise<void> {
+    // Check if already marked
+    const existing = await db.select().from(flagHelpful).where(
+      and(eq(flagHelpful.flagId, flagId), eq(flagHelpful.userId, userId))
+    );
+    
+    if (existing.length > 0) return;
+    
+    // Add helpful mark
+    await db.insert(flagHelpful).values({ flagId, userId });
+    
+    // Increment helpful count on the flag
+    await db.update(propertyFlags)
+      .set({ helpfulCount: sql`${propertyFlags.helpfulCount} + 1` })
+      .where(eq(propertyFlags.id, flagId));
+  }
+
+  async hasUserMarkedHelpful(flagId: string, userId: string): Promise<boolean> {
+    const result = await db.select().from(flagHelpful).where(
+      and(eq(flagHelpful.flagId, flagId), eq(flagHelpful.userId, userId))
+    );
+    return result.length > 0;
   }
 
   // Seed data

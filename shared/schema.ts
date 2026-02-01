@@ -133,6 +133,51 @@ export const insertPropertyVisitSchema = createInsertSchema(propertyVisits).omit
 export type InsertPropertyVisit = z.infer<typeof insertPropertyVisitSchema>;
 export type PropertyVisit = typeof propertyVisits.$inferSelect;
 
+// Community property flags for discrepancy reporting
+export const flagCategories = ["structural", "legal", "condition", "neighborhood", "other"] as const;
+export type FlagCategory = typeof flagCategories[number];
+
+export const flagSeverities = ["minor", "moderate", "major"] as const;
+export type FlagSeverity = typeof flagSeverities[number];
+
+export const propertyFlags = pgTable("property_flags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").notNull().references(() => properties.id),
+  userId: text("user_id").notNull(),
+  category: text("category").notNull(), // structural, legal, condition, neighborhood, other
+  severity: text("severity").notNull(), // minor, moderate, major
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  isAnonymous: boolean("is_anonymous").default(false),
+  helpfulCount: integer("helpful_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPropertyFlagSchema = createInsertSchema(propertyFlags).omit({
+  id: true,
+  helpfulCount: true,
+  createdAt: true,
+});
+
+export type InsertPropertyFlag = z.infer<typeof insertPropertyFlagSchema>;
+export type PropertyFlag = typeof propertyFlags.$inferSelect;
+
+// Track which users found a flag helpful
+export const flagHelpful = pgTable("flag_helpful", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  flagId: varchar("flag_id").notNull().references(() => propertyFlags.id),
+  userId: text("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFlagHelpfulSchema = createInsertSchema(flagHelpful).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertFlagHelpful = z.infer<typeof insertFlagHelpfulSchema>;
+export type FlagHelpful = typeof flagHelpful.$inferSelect;
+
 // Default checklist template (14 points)
 export const defaultChecklistTemplate = [
   // Physical Audit (6 items)
