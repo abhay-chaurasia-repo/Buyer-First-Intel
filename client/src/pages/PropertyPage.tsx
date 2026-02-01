@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Star, ClipboardCheck, MapPin, AlertCircle, Calendar } from "lucide-react";
+import { Star, ClipboardCheck, MapPin, AlertCircle, Calendar, Users } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Property } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,11 @@ export default function PropertyPage() {
 
   const { data: watchlistIds } = useQuery<string[]>({
     queryKey: ["/api/watchlist/ids"],
+  });
+
+  const { data: visitCountData } = useQuery<{ count: number }>({
+    queryKey: ["/api/visits", id, "count"],
+    enabled: !!id,
   });
 
   const isWatchlisted = watchlistIds?.includes(id || "");
@@ -157,6 +162,17 @@ export default function PropertyPage() {
       />
       <PageContainer>
         <div className="space-y-4">
+          {visitCountData && visitCountData.count > 0 && (
+            <div 
+              className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-md text-sm"
+              data-testid="visit-count-badge"
+            >
+              <Users className="h-4 w-4 text-primary" />
+              <span className="text-foreground">
+                <strong>{visitCountData.count}</strong> {visitCountData.count === 1 ? 'buyer has' : 'buyers have'} verified visits to this property
+              </span>
+            </div>
+          )}
           <PropertyFactSheet property={property} />
 
           <CommunityNotes 

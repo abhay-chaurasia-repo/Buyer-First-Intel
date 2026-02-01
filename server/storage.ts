@@ -35,6 +35,7 @@ export interface IStorage {
   
   // Visits
   getVisits(propertyId: string): Promise<PropertyVisit[]>;
+  getVisitCount(propertyId: string): Promise<number>;
   recordVisit(visit: InsertPropertyVisit): Promise<PropertyVisit>;
   updateVisitNotes(id: string, notes: string): Promise<PropertyVisit | undefined>;
   
@@ -214,6 +215,15 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(propertyVisits)
       .where(eq(propertyVisits.propertyId, propertyId))
       .orderBy(desc(propertyVisits.visitedAt));
+  }
+
+  async getVisitCount(propertyId: string): Promise<number> {
+    const visits = await db.select().from(propertyVisits)
+      .where(and(
+        eq(propertyVisits.propertyId, propertyId),
+        eq(propertyVisits.verified, true)
+      ));
+    return visits.length;
   }
 
   async recordVisit(visit: InsertPropertyVisit): Promise<PropertyVisit> {

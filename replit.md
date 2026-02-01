@@ -75,6 +75,7 @@ shared/
 - `GET /api/checklist/:propertyId` - Get checklist for property
 - `PATCH /api/checklist/:id` - Update checklist item
 - `GET /api/visits/:propertyId` - Get visit history
+- `GET /api/visits/:propertyId/count` - Get count of verified visits
 - `POST /api/visits` - Record visit verification
 - `GET /api/places/autocomplete?input=<query>` - Google Places address autocomplete
 - `GET /api/places/details/:placeId` - Get full address details from Google Places

@@ -415,6 +415,17 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/visits/:propertyId/count", async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const count = await storage.getVisitCount(propertyId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching visit count:", error);
+      res.status(500).json({ error: "Failed to fetch visit count" });
+    }
+  });
+
   const recordVisitSchema = z.object({
     propertyId: z.string().min(1),
     latitude: z.string(),
