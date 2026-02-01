@@ -72,7 +72,7 @@ export function PropertyFactSheet({ property }: PropertyFactSheetProps) {
   const hasRoomDetails = property.bedrooms || property.bathrooms || property.totalRooms || property.sqft;
   const hasBuildingDetails = property.stories || property.basementSqft || property.garageSqft || 
     property.garageType || property.hasFireplace || property.poolType;
-  const hasConstructionDetails = property.constructionType || property.condition || property.quality || 
+  const hasConstructionDetails = property.constructionType || property.roofType || property.condition || property.quality || 
     property.architecturalStyle || property.yearBuilt;
   const hasUtilities = property.heatingType || property.heatingFuel || property.coolingType;
   const hasLotDetails = property.lotSize || property.lotSizeSqft;
@@ -211,6 +211,11 @@ export function PropertyFactSheet({ property }: PropertyFactSheetProps) {
             icon={<Building className="h-5 w-5" />}
             label="Construction"
             value={property.constructionType}
+          />
+          <FactRow 
+            icon={<Building className="h-5 w-5" />}
+            label="Roof"
+            value={property.roofType}
           />
           <FactRow 
             icon={<Home className="h-5 w-5" />}

@@ -97,6 +97,7 @@ export default function SearchPage() {
         poolType: attomData.property.poolType,
         // Construction
         constructionType: attomData.property.constructionType,
+        roofType: attomData.property.roofType,
         condition: attomData.property.condition,
         quality: attomData.property.quality,
         architecturalStyle: attomData.property.architecturalStyle,

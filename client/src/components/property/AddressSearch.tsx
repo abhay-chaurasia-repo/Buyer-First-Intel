@@ -96,8 +96,9 @@ export function AddressSearch({ onSearch, onPlaceSelected, isLoading, error }: A
         const details: PlaceDetails = await response.json();
         if (onPlaceSelected) {
           onPlaceSelected(details);
+        } else {
+          onSearch(prediction.mainText);
         }
-        onSearch(prediction.mainText);
       } else {
         onSearch(prediction.mainText);
       }

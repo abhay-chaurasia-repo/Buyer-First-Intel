@@ -157,6 +157,13 @@ export async function registerRoutes(
         const buildingSummary = building.summary || {};
         const rooms = building.rooms || {};
         const size = building.size || {};
+        const roof = building.roof || {};
+        
+        const toNumber = (val: any): number | null => {
+          if (val === null || val === undefined || val === "") return null;
+          const num = Number(val);
+          return isNaN(num) ? null : num;
+        };
         
         res.json({
           success: true,
@@ -166,38 +173,39 @@ export async function registerRoutes(
             city: address.locality || "",
             state: address.countrySubd || "",
             zipCode: address.postal1 || "",
-            // Size & rooms
-            sqft: size.livingSize || size.universalSize || null,
-            bedrooms: rooms.beds || null,
-            bathrooms: rooms.bathsTotal || null,
-            bathsFull: rooms.bathsFull || null,
-            bathsHalf: rooms.bathsTotal && rooms.bathsFull ? Math.round((rooms.bathsTotal - rooms.bathsFull) * 2) : null,
-            totalRooms: rooms.roomsTotal || null,
+            // Size & rooms - using toNumber for type safety
+            sqft: toNumber(size.livingSize) || toNumber(size.universalSize),
+            bedrooms: toNumber(rooms.beds),
+            bathrooms: toNumber(rooms.bathsTotal),
+            bathsFull: toNumber(rooms.bathsFull),
+            bathsHalf: rooms.bathsTotal && rooms.bathsFull ? Math.round((Number(rooms.bathsTotal) - Number(rooms.bathsFull)) * 2) : null,
+            totalRooms: toNumber(rooms.roomsTotal),
             // Building
-            yearBuilt: summary.yearBuilt || null,
-            yearBuiltEffective: buildingSummary.yearbuilteffective || null,
-            stories: buildingSummary.levels || null,
-            basementSqft: interior.bsmtsize || null,
-            garageSqft: parking.prkgSize || null,
-            garageType: parking.garagetype || parking.prkgType || null,
-            fireplaceCount: interior.fplccount || null,
-            hasFireplace: interior.fplcind === "Y" || interior.fplccount > 0 || false,
-            poolType: lot.pooltype || null,
+            yearBuilt: toNumber(summary.yearBuilt),
+            yearBuiltEffective: toNumber(buildingSummary.yearBuiltEffective) || toNumber(buildingSummary.yearbuilteffective),
+            stories: toNumber(buildingSummary.levels),
+            basementSqft: toNumber(interior.bsmtSize) || toNumber(interior.bsmtsize),
+            garageSqft: toNumber(parking.prkgSize),
+            garageType: parking.garageType || parking.garagetype || parking.prkgType || null,
+            fireplaceCount: toNumber(interior.fplcCount) || toNumber(interior.fplccount),
+            hasFireplace: interior.fplcInd === "Y" || interior.fplcind === "Y" || (toNumber(interior.fplccount) || 0) > 0,
+            poolType: lot.poolType || lot.pooltype || null,
             // Construction
             constructionType: construction.wallType || null,
+            roofType: roof.roofType || roof.roofCover || null,
             condition: construction.condition || null,
             quality: buildingSummary.quality || null,
             architecturalStyle: buildingSummary.archStyle || null,
             // Utilities
-            heatingType: utilities.heatingtype || null,
-            heatingFuel: utilities.heatingfuel || null,
-            coolingType: utilities.coolingtype || null,
-            // Lot
-            lotSize: lot.lotsize1 ? `${lot.lotsize1.toFixed(2)} acres` : null,
-            lotSizeSqft: lot.lotsize2 || null,
-            lotSizeAcres: lot.lotsize1?.toString() || null,
+            heatingType: utilities.heatingType || utilities.heatingtype || null,
+            heatingFuel: utilities.heatingFuel || utilities.heatingfuel || null,
+            coolingType: utilities.coolingType || utilities.coolingtype || null,
+            // Lot - handle both camelCase and lowercase from ATTOM
+            lotSize: (lot.lotSize1 || lot.lotsize1) ? `${Number(lot.lotSize1 || lot.lotsize1).toFixed(2)} acres` : null,
+            lotSizeSqft: toNumber(lot.lotSize2) || toNumber(lot.lotsize2),
+            lotSizeAcres: (lot.lotSize1 || lot.lotsize1)?.toString() || null,
             // Property type
-            propertyType: summary.propertyType || summary.propType || summary.propclass || null,
+            propertyType: summary.propType || summary.propSubType || summary.propclass || null,
             // Location
             latitude: location.latitude?.toString() || null,
             longitude: location.longitude?.toString() || null,
@@ -206,9 +214,9 @@ export async function registerRoutes(
             apn: prop.identifier?.apn || null,
             // Ownership & legal
             ownerOccupied: summary.absenteeInd === "OWNER OCCUPIED",
-            subdivision: area.subdname || null,
+            subdivision: area.subdName || area.subdname || null,
             legalDescription: summary.legal1 || null,
-            zoning: area.countyuse1?.trim() || null,
+            zoning: (area.countyUse1 || area.countyuse1)?.trim() || null,
             viewType: buildingSummary.view || null,
           },
         });
