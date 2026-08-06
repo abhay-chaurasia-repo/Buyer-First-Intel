@@ -34,9 +34,10 @@ export type MetricCard = {
   id: MetricCardId
   title: string
   subtitle: string
-  value: string
+  /** Compact Slack-style corner badge (count or short status) */
+  badge?: string
   detail: string
-  tone: 'alert' | 'info' | 'neutral' | 'verified'
+  accent: 'catch-up' | 'huddles' | 'later' | 'verified'
 }
 
 export type ChannelField = {
@@ -215,43 +216,42 @@ export const SEARCH_HISTORY: HistoryAddress[] = [
 ]
 
 export function getMetricCards(property: MockProperty): MetricCard[] {
-  const delta =
-    property.claimedSqft && property.sqft
-      ? Math.round(((property.sqft - property.claimedSqft) / property.claimedSqft) * 100)
-      : 0
+  const hasDiscrepancy = Boolean(
+    property.claimedSqft && property.sqft && property.claimedSqft !== property.sqft,
+  )
 
   return [
     {
       id: 'catch-up',
-      title: 'Catch Up',
-      subtitle: 'Size Discrepancies',
-      value: `${delta}%`,
+      title: 'Catch up',
+      subtitle: 'Size discrepancies',
+      badge: hasDiscrepancy ? '1' : undefined,
       detail: `County ${property.sqft.toLocaleString()} vs claimed ${property.claimedSqft?.toLocaleString() ?? '—'}`,
-      tone: 'alert',
+      accent: 'catch-up',
     },
     {
       id: 'huddles',
       title: 'Huddles',
-      subtitle: 'Full Specs',
-      value: `${property.bedrooms}/${property.bathrooms}`,
-      detail: `${property.sqft.toLocaleString()} sqft · Built ${property.yearBuilt}`,
-      tone: 'info',
+      subtitle: 'Full specs',
+      badge: undefined,
+      detail: `${property.bedrooms} bd / ${property.bathrooms} ba · ${property.sqft.toLocaleString()} sqft · Built ${property.yearBuilt}`,
+      accent: 'huddles',
     },
     {
       id: 'later',
       title: 'Later',
-      subtitle: 'Sales/Legal',
-      value: property.deedType.split(' ')[0] ?? 'Deed',
-      detail: `Last sale ${property.lastSaleDate}`,
-      tone: 'neutral',
+      subtitle: 'Sales / legal',
+      badge: '1',
+      detail: `${property.deedType} · Last sale ${property.lastSaleDate}`,
+      accent: 'later',
     },
     {
       id: 'verified',
       title: 'Verified',
-      subtitle: 'GPS Visit Count',
-      value: String(property.verifiedVisits),
+      subtitle: 'GPS visits',
+      badge: String(property.verifiedVisits),
       detail: 'Within 100m presence confirms',
-      tone: 'verified',
+      accent: 'verified',
     },
   ]
 }

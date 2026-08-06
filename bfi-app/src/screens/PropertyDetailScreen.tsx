@@ -1,11 +1,16 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
+  Bookmark,
   ChevronDown,
   Crosshair,
+  Headphones,
+  Layers,
+  ShieldCheck,
   StickyNote,
   Star,
   X,
+  type LucideIcon,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import {
@@ -20,11 +25,18 @@ import {
 } from '@/data/mockProperty'
 import { cn } from '@/lib/utils'
 
-const metricToneClass: Record<MetricCard['tone'], string> = {
-  alert: 'border-alert/25 bg-alert-soft text-alert',
-  info: 'border-action/20 bg-action-soft text-action',
-  neutral: 'border-line bg-paper text-ink',
-  verified: 'border-verified/25 bg-verified-soft text-verified',
+const metricIcons: Record<MetricCard['accent'], LucideIcon> = {
+  'catch-up': Layers,
+  huddles: Headphones,
+  later: Bookmark,
+  verified: ShieldCheck,
+}
+
+const metricIconWrap: Record<MetricCard['accent'], string> = {
+  'catch-up': 'bg-[#5b6abf]/25 text-[#aab4f5]',
+  huddles: 'bg-[#2bac76]/20 text-[#6fd6a8]',
+  later: 'bg-[#e5672d]/20 text-[#f0a37a]',
+  verified: 'bg-[#1d9bd1]/20 text-[#7ec8ea]',
 }
 
 const metricToDetail: Record<MetricCard['id'], PropertyChannelId> = {
@@ -235,31 +247,41 @@ export function PropertyDetailScreen() {
       </header>
 
       <div className="flex-1 overflow-y-auto pb-4">
-        <section className="px-3 pt-4" aria-label="Metric summaries" data-testid="metric-cards">
-          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {metrics.map((card) => (
-              <button
-                key={card.id}
-                type="button"
-                onClick={() => setActiveDetail(metricToDetail[card.id])}
-                className={cn(
-                  'min-h-[5.75rem] w-[8.35rem] shrink-0 rounded-2xl border px-3 py-3 text-left shadow-sm transition-transform active:scale-[0.98] touch-manipulation',
-                  metricToneClass[card.tone],
-                )}
-                data-testid={`metric-${card.id}`}
-              >
-                <p className="text-[10px] font-bold tracking-[0.12em] uppercase opacity-80">
-                  {card.title}
-                </p>
-                <p className="mt-1 font-display text-xl font-bold leading-none tracking-tight">
-                  {card.value}
-                </p>
-                <p className="mt-1.5 text-[11px] font-semibold leading-snug opacity-90">
-                  {card.subtitle}
-                </p>
-                <p className="mt-1 line-clamp-2 text-[10px] leading-snug opacity-70">{card.detail}</p>
-              </button>
-            ))}
+        <section className="px-3 pt-4" aria-label="Quick actions" data-testid="metric-cards">
+          <div className="flex gap-3 overflow-x-auto px-0.5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {metrics.map((card) => {
+              const Icon = metricIcons[card.accent]
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => setActiveDetail(metricToDetail[card.id])}
+                  className="relative flex w-[4.75rem] shrink-0 flex-col items-center gap-2 rounded-2xl bg-transparent px-1 py-1 text-center transition-opacity active:opacity-70 touch-manipulation"
+                  aria-label={`${card.title}. ${card.subtitle}`}
+                  title={card.detail}
+                  data-testid={`metric-${card.id}`}
+                >
+                  <span className="relative flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#2c2d31] shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]">
+                    <span
+                      className={cn(
+                        'flex h-10 w-10 items-center justify-center rounded-[14px]',
+                        metricIconWrap[card.accent],
+                      )}
+                    >
+                      <Icon className="h-5 w-5" strokeWidth={2.25} />
+                    </span>
+                    {card.badge ? (
+                      <span className="absolute -top-1 -right-1 max-w-[2.75rem] truncate rounded-full bg-[#e01e5a] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
+                        {card.badge}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="w-full truncate text-[12px] font-medium leading-tight text-[#d1d2d3]">
+                    {card.title}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </section>
 
