@@ -244,14 +244,14 @@ export function PropertyDetailScreen() {
       <div className="flex-1 overflow-y-auto pb-4">
         {/* 2. Top Row Cards — 4 metric summary boxes */}
         <section className="px-3 pt-4" aria-label="Metric summaries" data-testid="metric-cards">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {metrics.map((card) => (
               <button
                 key={card.id}
                 type="button"
                 onClick={() => setActiveChannel(metricToChannel[card.id])}
                 className={cn(
-                  'min-h-[5.5rem] rounded-2xl border px-3 py-3 text-left shadow-sm transition-transform active:scale-[0.98] touch-manipulation',
+                  'min-h-[5.75rem] w-[8.35rem] shrink-0 rounded-2xl border px-3 py-3 text-left shadow-sm transition-transform active:scale-[0.98] touch-manipulation',
                   metricToneClass[card.tone],
                 )}
                 data-testid={`metric-${card.id}`}
