@@ -11,19 +11,23 @@ import {
   StickyNote,
   Star,
   Trash2,
-  X,
   type LucideIcon,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { CatchUpFlow, type CatchUpSurface } from '@/components/catchup/CatchUpFlow'
+import {
+  fetchCatchUpApi,
+  fetchHuddlesApi,
+  fetchLaterApi,
+  fetchVerifiedApi,
+} from '@/data/catchUpApi'
 import {
   DEMO_PROPERTY,
   SEARCH_HISTORY,
-  getChannelCanvas,
   getMetricCards,
   resolvePropertyFromQuery,
   type HistoryAddress,
   type MetricCard,
-  type PropertyChannelId,
 } from '@/data/mockProperty'
 import { cn } from '@/lib/utils'
 
@@ -71,108 +75,16 @@ const metricIconWrap: Record<MetricCard['accent'], string> = {
   verified: 'bg-[#1d9bd1]/20 text-[#7ec8ea]',
 }
 
-const metricToDetail: Record<MetricCard['id'], PropertyChannelId> = {
-  'catch-up': '01-property-summary',
-  huddles: '01-property-summary',
-  later: '03-sales-and-deed',
-  verified: '07-verified-buyer-insights',
+const metricToSurface: Record<MetricCard['id'], CatchUpSurface> = {
+  'catch-up': 'catch-up',
+  huddles: 'huddles',
+  later: 'later',
+  verified: 'verified',
 }
 
 function truncateAddress(address: string, max = 22) {
   if (address.length <= max) return address
   return `${address.slice(0, max - 1)}…`
-}
-
-function DetailCanvasOverlay({
-  detailId,
-  property,
-  onClose,
-}: {
-  detailId: PropertyChannelId
-  property: ReturnType<typeof resolvePropertyFromQuery>
-  onClose: () => void
-}) {
-  const canvas = getChannelCanvas(detailId, property)
-
-  return (
-    <div
-      className="animate-bfi-fade fixed inset-0 z-[60] flex justify-center bg-black/45"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="detail-canvas-title"
-      data-testid="detail-canvas-overlay"
-    >
-      <div className="flex h-full w-full max-w-lg flex-col bg-paper-elevated shadow-2xl">
-        <header className="flex items-center gap-2 border-b border-line px-3 py-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-ink-muted transition-colors hover:bg-paper hover:text-ink touch-manipulation"
-            aria-label="Close detail"
-            data-testid="button-close-detail"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h2
-              id="detail-canvas-title"
-              className="truncate font-display text-lg font-semibold tracking-tight text-ink"
-            >
-              {canvas.title}
-            </h2>
-          </div>
-        </header>
-
-        <div className="animate-bfi-channel-in flex-1 overflow-y-auto px-4 py-5">
-          <p className="text-sm leading-relaxed text-ink-muted">{canvas.subtitle}</p>
-
-          {canvas.apiStub ? (
-            <p
-              className="mt-3 rounded-xl border border-dashed border-line bg-paper px-3 py-2 font-mono text-[11px] text-ink-faint"
-              data-testid="detail-api-stub"
-            >
-              {canvas.apiStub.method} {canvas.apiStub.endpoint}
-              <span className="mx-1.5 text-line-strong">·</span>
-              {canvas.apiStub.resourceKey}
-            </p>
-          ) : null}
-
-          <dl className="mt-5 space-y-3">
-            {canvas.fields.map((field) => (
-              <div
-                key={`${field.label}-${field.value}`}
-                className="rounded-2xl border border-line bg-paper-elevated px-4 py-3 shadow-sm"
-              >
-                <dt className="text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
-                  {field.label}
-                </dt>
-                <dd className="mt-1 text-[0.95rem] font-semibold text-ink">{field.value}</dd>
-                {field.source ? (
-                  <p className="mt-1 text-xs text-ink-faint">Source: {field.source}</p>
-                ) : null}
-              </div>
-            ))}
-          </dl>
-
-          {canvas.notes && canvas.notes.length > 0 ? (
-            <div className="mt-6">
-              <h3 className="font-display text-sm font-semibold text-ink">Notes</h3>
-              <ul className="mt-3 space-y-2">
-                {canvas.notes.map((note) => (
-                  <li
-                    key={note}
-                    className="rounded-2xl border border-line bg-paper px-4 py-3 text-sm leading-relaxed text-ink-muted"
-                  >
-                    {note}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function HistoryRow({
@@ -225,7 +137,7 @@ export function PropertyDetailScreen() {
   const [starred, setStarred] = useState(property.starred)
   const [notesOpen, setNotesOpen] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(true)
-  const [activeDetail, setActiveDetail] = useState<PropertyChannelId | null>(null)
+  const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
   const [notes, setNotes] = useState<SavedNote[]>(() => loadNotes(propertyKey))
   const [draftNote, setDraftNote] = useState('')
 
@@ -240,7 +152,7 @@ export function PropertyDetailScreen() {
   function openHistoryAddress(item: HistoryAddress) {
     const full = `${item.address}, ${item.city}, ${item.state}`
     navigate(`/property/${encodeURIComponent(full)}`)
-    setActiveDetail(null)
+    setActiveSurface(null)
   }
 
   function handleSaveNote(event: FormEvent<HTMLFormElement>) {
@@ -320,7 +232,7 @@ export function PropertyDetailScreen() {
                 <button
                   key={card.id}
                   type="button"
-                  onClick={() => setActiveDetail(metricToDetail[card.id])}
+                  onClick={() => setActiveSurface(metricToSurface[card.id])}
                   className="relative flex w-[4.75rem] shrink-0 flex-col items-center gap-2 rounded-2xl bg-transparent px-1 py-1 text-center transition-opacity active:opacity-70 touch-manipulation"
                   aria-label={`${card.title}. ${card.subtitle}`}
                   title={card.detail}
@@ -477,11 +389,20 @@ export function PropertyDetailScreen() {
         </section>
       </div>
 
-      {activeDetail ? (
-        <DetailCanvasOverlay
-          detailId={activeDetail}
-          property={property}
-          onClose={() => setActiveDetail(null)}
+      {activeSurface ? (
+        <CatchUpFlow
+          key={activeSurface}
+          surface={activeSurface}
+          response={
+            activeSurface === 'catch-up'
+              ? fetchCatchUpApi(property)
+              : activeSurface === 'huddles'
+                ? fetchHuddlesApi(property)
+                : activeSurface === 'later'
+                  ? fetchLaterApi(property)
+                  : fetchVerifiedApi(property)
+          }
+          onClose={() => setActiveSurface(null)}
         />
       ) : null}
     </AppShell>
