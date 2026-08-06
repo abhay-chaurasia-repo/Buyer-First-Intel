@@ -14,7 +14,7 @@ function PlaceholderScreen({
     <AppShell>
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
         <div className="animate-bfi-rise max-w-sm">
-          <p className="font-display text-[11px] font-semibold tracking-[0.16em] text-action uppercase">
+          <p className="font-display text-[11px] font-semibold tracking-[0.16em] text-saffron uppercase">
             BFI
           </p>
           <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-ink">{title}</h1>

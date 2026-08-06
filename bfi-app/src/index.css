@@ -5,26 +5,43 @@
   --font-display: "Outfit", ui-sans-serif, sans-serif;
   --font-sans: "Source Sans 3", ui-sans-serif, sans-serif;
 
-  --color-ink: #0f172a;
-  --color-ink-muted: #475569;
-  --color-ink-faint: #64748b;
-  --color-paper: #f4f7fb;
+  /* Warm ink on parchment-light surfaces */
+  --color-ink: #1c1410;
+  --color-ink-muted: #6b5344;
+  --color-ink-faint: #9a7f6a;
+  --color-paper: #fff8f0;
   --color-paper-elevated: #ffffff;
-  --color-line: #d8e0ea;
-  --color-line-strong: #b8c4d4;
-  --color-action: #1d4ed8;
-  --color-action-hover: #1e40af;
-  --color-action-soft: #dbeafe;
-  --color-verified: #0f766e;
-  --color-verified-soft: #ccfbf1;
-  --color-alert: #b45309;
-  --color-alert-soft: #ffedd5;
-  --color-channel: #1e293b;
-  --color-channel-active: #eff6ff;
-  --color-channel-hover: #f1f5f9;
+  --color-line: #efdcc8;
+  --color-line-strong: #e0c4a8;
 
-  --shadow-search: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
-  --shadow-shell: 0 -1px 0 rgb(15 23 42 / 0.06), 0 -8px 24px rgb(15 23 42 / 0.04);
+  /* Eye-pleasing saffron system */
+  --color-saffron: #e8913a;
+  --color-saffron-bright: #f5a623;
+  --color-saffron-deep: #c46a1b;
+  --color-saffron-soft: #fff1de;
+  --color-saffron-mist: #fce8cc;
+  --color-saffron-glow: #ffd89a;
+
+  /* Map action aliases to saffron for shared components */
+  --color-action: #e8913a;
+  --color-action-hover: #c46a1b;
+  --color-action-soft: #fff1de;
+
+  --color-verified: #2f9e6a;
+  --color-verified-soft: #e4f6ec;
+  --color-alert: #c45c1b;
+  --color-alert-soft: #ffe8d6;
+
+  /* Warm Slack-like dark workspace */
+  --color-night: #1a1512;
+  --color-night-elevated: #241e19;
+  --color-night-card: #2c241e;
+  --color-night-line: rgb(255 255 255 / 0.1);
+  --color-night-muted: #b8a99a;
+  --color-night-faint: #7d7166;
+
+  --shadow-search: 0 1px 2px rgb(90 50 20 / 0.06), 0 10px 28px rgb(180 100 30 / 0.12);
+  --shadow-shell: 0 -1px 0 rgb(90 50 20 / 0.08), 0 -8px 24px rgb(90 50 20 / 0.06);
 }
 
 @layer base {
@@ -43,8 +60,9 @@
     font-family: var(--font-sans);
     color: var(--color-ink);
     background:
-      radial-gradient(ellipse 120% 80% at 50% -20%, #dbeafe 0%, transparent 55%),
-      linear-gradient(180deg, #eef3f9 0%, var(--color-paper) 42%, #e8eef6 100%);
+      radial-gradient(ellipse 110% 70% at 50% -15%, #ffd89a 0%, transparent 55%),
+      radial-gradient(ellipse 80% 50% at 100% 20%, #ffe8c8 0%, transparent 45%),
+      linear-gradient(180deg, #fff4e6 0%, var(--color-paper) 45%, #f7ebe0 100%);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -63,10 +81,17 @@
 
   .bfi-grid-wash {
     background-image:
-      linear-gradient(rgb(148 163 184 / 0.12) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(148 163 184 / 0.12) 1px, transparent 1px);
+      linear-gradient(rgb(200 140 70 / 0.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(200 140 70 / 0.14) 1px, transparent 1px);
     background-size: 28px 28px;
     mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+  }
+
+  .bfi-night-wash {
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.22) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 40% at 100% 0%, rgb(245 166 35 / 0.12) 0%, transparent 50%),
+      var(--color-night);
   }
 }
 

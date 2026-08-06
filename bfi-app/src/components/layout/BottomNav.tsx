@@ -11,7 +11,7 @@ const navItems = [
 export function BottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#1a1d21] safe-area-pb"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-night-line bg-night safe-area-pb"
       aria-label="Primary"
       data-testid="nav-bottom"
     >
@@ -24,7 +24,7 @@ export function BottomNav() {
             className={({ isActive }) =>
               cn(
                 'flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-2 transition-colors touch-manipulation',
-                isActive ? 'text-white' : 'text-[#ababad] hover:text-[#d1d2d3]',
+                isActive ? 'text-saffron-bright' : 'text-night-muted hover:text-saffron-glow',
               )
             }
             data-testid={`nav-${label.toLowerCase()}`}

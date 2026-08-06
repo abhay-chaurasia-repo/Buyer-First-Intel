@@ -69,10 +69,10 @@ const metricIcons: Record<MetricCard['accent'], LucideIcon> = {
 }
 
 const metricIconWrap: Record<MetricCard['accent'], string> = {
-  'catch-up': 'bg-[#5b6abf]/25 text-[#aab4f5]',
-  huddles: 'bg-[#2bac76]/20 text-[#6fd6a8]',
-  later: 'bg-[#e5672d]/20 text-[#f0a37a]',
-  verified: 'bg-[#1d9bd1]/20 text-[#7ec8ea]',
+  'catch-up': 'bg-saffron/20 text-saffron-glow',
+  huddles: 'bg-saffron-bright/20 text-saffron-bright',
+  later: 'bg-[#ffc978]/15 text-[#ffc978]',
+  verified: 'bg-saffron/15 text-[#f0c27a]',
 }
 
 const metricToSurface: Record<MetricCard['id'], CatchUpSurface> = {
@@ -98,25 +98,25 @@ function HistoryRow({
     <button
       type="button"
       onClick={() => onSelect(item)}
-      className="flex w-full min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors hover:bg-white/10 touch-manipulation"
+      className="flex w-full min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors hover:bg-saffron/10 touch-manipulation"
       data-testid={`history-${item.id}`}
     >
-      <span className="min-w-0 flex-1 truncate text-sm text-slate-200">
+      <span className="min-w-0 flex-1 truncate text-sm text-[#eadfd3]">
         {item.address}
-        <span className="text-slate-500">
+        <span className="text-night-faint">
           {' '}
           · {item.city}, {item.state}
         </span>
       </span>
       {item.hasPrivateNotes ? (
         <StickyNote
-          className="h-3.5 w-3.5 shrink-0 text-amber-300"
+          className="h-3.5 w-3.5 shrink-0 text-saffron-bright"
           aria-label="Has private notes"
           data-testid={`history-notes-${item.id}`}
         />
       ) : null}
       {item.saved ? (
-        <span className="shrink-0 text-[10px] font-semibold tracking-wide text-slate-500 uppercase">
+        <span className="shrink-0 text-[10px] font-semibold tracking-wide text-saffron/80 uppercase">
           Saved
         </span>
       ) : null}
@@ -181,24 +181,24 @@ export function PropertyDetailScreen() {
 
   return (
     <AppShell
-      className="bg-[#1a1d21]"
-      contentClassName="min-h-0 bg-[#1a1d21] text-white"
+      className="bfi-night-wash"
+      contentClassName="min-h-0 bfi-night-wash text-white"
     >
       <header
-        className="sticky top-0 z-20 border-b border-white/10 bg-[#1a1d21]/95 backdrop-blur-md"
+        className="sticky top-0 z-20 border-b border-saffron/15 bg-night/90 backdrop-blur-md"
         data-testid="property-top-bar"
       >
         <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-3 py-2.5">
           <button
             type="button"
             onClick={() => setStarred((value) => !value)}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-slate-300 transition-colors hover:bg-white/10 hover:text-white touch-manipulation"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-saffron/15 hover:text-saffron-glow touch-manipulation"
             aria-label={starred ? 'Unstar property' : 'Star property'}
             aria-pressed={starred}
             data-testid="button-star-property"
           >
             <Star
-              className={cn('h-5 w-5', starred && 'fill-amber-300 text-amber-300')}
+              className={cn('h-5 w-5', starred && 'fill-saffron-bright text-saffron-bright')}
               strokeWidth={starred ? 0 : 2}
             />
           </button>
@@ -213,7 +213,7 @@ export function PropertyDetailScreen() {
 
           <button
             type="button"
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-teal-400/40 bg-teal-400/15 px-3 text-xs font-bold tracking-wide text-teal-200 transition-colors hover:bg-teal-400/25 touch-manipulation"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-saffron/40 bg-saffron/15 px-3 text-xs font-bold tracking-wide text-saffron-glow transition-colors hover:bg-saffron/25 touch-manipulation"
             aria-label="GPS Verify"
             data-testid="badge-gps-verify"
           >
@@ -238,7 +238,7 @@ export function PropertyDetailScreen() {
                   title={card.detail}
                   data-testid={`metric-${card.id}`}
                 >
-                  <span className="relative flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#2c2d31] shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]">
+                  <span className="relative flex h-14 w-14 items-center justify-center rounded-[18px] bg-night-card shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_0_0_1px_rgb(232_145_58/0.12)]">
                     <span
                       className={cn(
                         'flex h-10 w-10 items-center justify-center rounded-[14px]',
@@ -248,12 +248,12 @@ export function PropertyDetailScreen() {
                       <Icon className="h-5 w-5" strokeWidth={2.25} />
                     </span>
                     {card.badge ? (
-                      <span className="absolute -top-1 -right-1 max-w-[2.75rem] truncate rounded-full bg-[#e01e5a] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
+                      <span className="absolute -top-1 -right-1 max-w-[2.75rem] truncate rounded-full bg-saffron px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-[0_4px_10px_rgb(232_145_58/0.4)]">
                         {card.badge}
                       </span>
                     ) : null}
                   </span>
-                  <span className="w-full truncate text-[12px] font-medium leading-tight text-[#d1d2d3]">
+                  <span className="w-full truncate text-[12px] font-medium leading-tight text-[#eadfd3]">
                     {card.title}
                   </span>
                 </button>
@@ -273,22 +273,22 @@ export function PropertyDetailScreen() {
           >
             <ChevronDown
               className={cn(
-                'h-4 w-4 text-slate-400 transition-transform',
+                'h-4 w-4 text-saffron-glow transition-transform',
                 !notesOpen && '-rotate-90',
               )}
             />
-            <StickyNote className="h-3.5 w-3.5 text-amber-300" aria-hidden />
-            <span className="font-display text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+            <StickyNote className="h-3.5 w-3.5 text-saffron-bright" aria-hidden />
+            <span className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
               Notes
             </span>
-            <span className="ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
+            <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-bright">
               {notes.length}
             </span>
           </button>
 
           {notesOpen ? (
-            <div className="animate-bfi-fade mt-1 space-y-2 rounded-2xl border border-white/10 bg-[#12151a] p-3">
-              <p className="px-0.5 text-[11px] text-slate-500">
+            <div className="animate-bfi-fade mt-1 space-y-2 rounded-2xl border border-saffron/20 bg-night-elevated p-3">
+              <p className="px-0.5 text-[11px] text-night-muted">
                 Save private details about this address
               </p>
               <form onSubmit={handleSaveNote} className="space-y-2" data-testid="notes-form">
@@ -297,7 +297,7 @@ export function PropertyDetailScreen() {
                   onChange={(event) => setDraftNote(event.target.value)}
                   rows={3}
                   placeholder="Add a note for this property…"
-                  className="w-full resize-none rounded-xl border border-white/10 bg-[#1a1d21] px-3 py-2.5 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-[#1d9bd1]/60"
+                  className="w-full resize-none rounded-xl border border-saffron/15 bg-night px-3 py-2.5 text-sm text-[#eadfd3] outline-none placeholder:text-night-faint focus:border-saffron/60"
                   data-testid="input-property-note"
                 />
                 <button
@@ -306,8 +306,8 @@ export function PropertyDetailScreen() {
                   className={cn(
                     'inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-colors touch-manipulation',
                     draftNote.trim()
-                      ? 'bg-[#1d9bd1] text-white hover:bg-[#1590c4]'
-                      : 'bg-white/10 text-slate-500',
+                      ? 'bg-saffron text-white hover:bg-saffron-deep shadow-[0_6px_16px_rgb(232_145_58/0.3)]'
+                      : 'bg-white/10 text-night-faint',
                   )}
                   data-testid="button-save-note"
                 >
@@ -321,21 +321,21 @@ export function PropertyDetailScreen() {
                   {notes.map((note) => (
                     <li
                       key={note.id}
-                      className="flex gap-2 rounded-xl border border-white/10 bg-[#1a1d21] px-3 py-2.5"
+                      className="flex gap-2 rounded-xl border border-saffron/15 bg-night px-3 py-2.5"
                     >
-                      <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" aria-hidden />
+                      <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-bright" aria-hidden />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm leading-relaxed text-slate-200 whitespace-pre-wrap">
+                        <p className="text-sm leading-relaxed text-[#eadfd3] whitespace-pre-wrap">
                           {note.text}
                         </p>
-                        <p className="mt-1 text-[10px] text-slate-500">
+                        <p className="mt-1 text-[10px] text-night-faint">
                           {new Date(note.createdAt).toLocaleString()}
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleDeleteNote(note.id)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-white/10 hover:text-slate-200 touch-manipulation"
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-night-faint transition-colors hover:bg-saffron/15 hover:text-saffron-glow touch-manipulation"
                         aria-label="Delete note"
                         data-testid={`button-delete-note-${note.id}`}
                       >
@@ -345,7 +345,7 @@ export function PropertyDetailScreen() {
                   ))}
                 </ul>
               ) : (
-                <p className="px-0.5 pb-1 text-[12px] text-slate-500">
+                <p className="px-0.5 pb-1 text-[12px] text-night-faint">
                   No notes yet for {property.address}.
                 </p>
               )}
@@ -364,21 +364,21 @@ export function PropertyDetailScreen() {
           >
             <ChevronDown
               className={cn(
-                'h-4 w-4 text-slate-400 transition-transform',
+                'h-4 w-4 text-saffron-glow transition-transform',
                 !historyOpen && '-rotate-90',
               )}
             />
-            <span className="font-display text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+            <span className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
               Searched History
             </span>
-            <span className="ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
+            <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-bright">
               {SEARCH_HISTORY.length}
             </span>
           </button>
 
           {historyOpen ? (
-            <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/10 bg-[#12151a] p-2">
-              <p className="px-2 pb-1 text-[11px] text-slate-500">
+            <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-saffron/20 bg-night-elevated p-2">
+              <p className="px-2 pb-1 text-[11px] text-night-muted">
                 Previously searched and saved addresses
               </p>
               {SEARCH_HISTORY.map((item) => (
