@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ChevronDown,
   Crosshair,
-  Hash,
   StickyNote,
   Star,
   X,
@@ -12,7 +11,6 @@ import { AppShell } from '@/components/layout/AppShell'
 import {
   DEMO_PROPERTY,
   SEARCH_HISTORY,
-  PROPERTY_CHANNELS,
   getChannelCanvas,
   getMetricCards,
   resolvePropertyFromQuery,
@@ -29,7 +27,7 @@ const metricToneClass: Record<MetricCard['tone'], string> = {
   verified: 'border-verified/25 bg-verified-soft text-verified',
 }
 
-const metricToChannel: Record<MetricCard['id'], PropertyChannelId> = {
+const metricToDetail: Record<MetricCard['id'], PropertyChannelId> = {
   'catch-up': '01-property-summary',
   huddles: '01-property-summary',
   later: '03-sales-and-deed',
@@ -41,24 +39,24 @@ function truncateAddress(address: string, max = 22) {
   return `${address.slice(0, max - 1)}…`
 }
 
-function ChannelCanvasOverlay({
-  channelId,
+function DetailCanvasOverlay({
+  detailId,
   property,
   onClose,
 }: {
-  channelId: PropertyChannelId
+  detailId: PropertyChannelId
   property: ReturnType<typeof resolvePropertyFromQuery>
   onClose: () => void
 }) {
-  const canvas = getChannelCanvas(channelId, property)
+  const canvas = getChannelCanvas(detailId, property)
 
   return (
     <div
       className="animate-bfi-fade fixed inset-0 z-[60] flex justify-center bg-black/45"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="channel-canvas-title"
-      data-testid="channel-canvas-overlay"
+      aria-labelledby="detail-canvas-title"
+      data-testid="detail-canvas-overlay"
     >
       <div className="flex h-full w-full max-w-lg flex-col bg-paper-elevated shadow-2xl">
         <header className="flex items-center gap-2 border-b border-line px-3 py-3">
@@ -66,17 +64,14 @@ function ChannelCanvasOverlay({
             type="button"
             onClick={onClose}
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-ink-muted transition-colors hover:bg-paper hover:text-ink touch-manipulation"
-            aria-label="Close channel"
-            data-testid="button-close-channel"
+            aria-label="Close detail"
+            data-testid="button-close-detail"
           >
             <X className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-[11px] font-semibold tracking-[0.14em] text-ink-faint uppercase">
-              #{canvas.id}
-            </p>
             <h2
-              id="channel-canvas-title"
+              id="detail-canvas-title"
               className="truncate font-display text-lg font-semibold tracking-tight text-ink"
             >
               {canvas.title}
@@ -90,7 +85,7 @@ function ChannelCanvasOverlay({
           {canvas.apiStub ? (
             <p
               className="mt-3 rounded-xl border border-dashed border-line bg-paper px-3 py-2 font-mono text-[11px] text-ink-faint"
-              data-testid="channel-api-stub"
+              data-testid="detail-api-stub"
             >
               {canvas.apiStub.method} {canvas.apiStub.endpoint}
               <span className="mx-1.5 text-line-strong">·</span>
@@ -150,7 +145,6 @@ function HistoryRow({
       className="flex w-full min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors hover:bg-white/10 touch-manipulation"
       data-testid={`history-${item.id}`}
     >
-      <Hash className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden />
       <span className="min-w-0 flex-1 truncate text-sm text-slate-200">
         {item.address}
         <span className="text-slate-500">
@@ -185,7 +179,7 @@ export function PropertyDetailScreen() {
 
   const [starred, setStarred] = useState(property.starred)
   const [historyOpen, setHistoryOpen] = useState(true)
-  const [activeChannel, setActiveChannel] = useState<PropertyChannelId | null>(null)
+  const [activeDetail, setActiveDetail] = useState<PropertyChannelId | null>(null)
 
   const metrics = useMemo(() => getMetricCards(property), [property])
   const truncated = truncateAddress(property.address)
@@ -193,7 +187,7 @@ export function PropertyDetailScreen() {
   function openHistoryAddress(item: HistoryAddress) {
     const full = `${item.address}, ${item.city}, ${item.state}`
     navigate(`/property/${encodeURIComponent(full)}`)
-    setActiveChannel(null)
+    setActiveDetail(null)
   }
 
   return (
@@ -201,7 +195,6 @@ export function PropertyDetailScreen() {
       className="bg-[#1a1d21]"
       contentClassName="min-h-0 bg-[#1a1d21] text-white"
     >
-      {/* 1. Top Bar — Slack mobile style */}
       <header
         className="sticky top-0 z-20 border-b border-white/10 bg-[#1a1d21]/95 backdrop-blur-md"
         data-testid="property-top-bar"
@@ -242,14 +235,13 @@ export function PropertyDetailScreen() {
       </header>
 
       <div className="flex-1 overflow-y-auto pb-4">
-        {/* 2. Top Row Cards — 4 metric summary boxes */}
         <section className="px-3 pt-4" aria-label="Metric summaries" data-testid="metric-cards">
           <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {metrics.map((card) => (
               <button
                 key={card.id}
                 type="button"
-                onClick={() => setActiveChannel(metricToChannel[card.id])}
+                onClick={() => setActiveDetail(metricToDetail[card.id])}
                 className={cn(
                   'min-h-[5.75rem] w-[8.35rem] shrink-0 rounded-2xl border px-3 py-3 text-left shadow-sm transition-transform active:scale-[0.98] touch-manipulation',
                   metricToneClass[card.tone],
@@ -271,7 +263,6 @@ export function PropertyDetailScreen() {
           </div>
         </section>
 
-        {/* 3. Unreads / History — collapsible */}
         <section className="mt-5 px-3" data-testid="history-section">
           <button
             type="button"
@@ -287,9 +278,8 @@ export function PropertyDetailScreen() {
               )}
             />
             <span className="font-display text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
-              Unreads
+              Searched History
             </span>
-            <span className="text-[11px] font-medium text-slate-500">History</span>
             <span className="ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
               {SEARCH_HISTORY.length}
             </span>
@@ -305,46 +295,6 @@ export function PropertyDetailScreen() {
               ))}
             </div>
           ) : null}
-        </section>
-
-        {/* 4. Property Channels List */}
-        <section className="mt-5 px-3" aria-label="Property channels" data-testid="channels-list">
-          <div className="mb-2 flex items-center gap-2 px-2">
-            <span className="font-display text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
-              Channels
-            </span>
-            <span className="h-px flex-1 bg-white/10" />
-          </div>
-
-          <ul className="space-y-0.5">
-            {PROPERTY_CHANNELS.map((channel) => (
-              <li key={channel.id}>
-                <button
-                  type="button"
-                  onClick={() => setActiveChannel(channel.id)}
-                  className="flex w-full min-h-12 items-center gap-2 rounded-xl px-2.5 py-2.5 text-left text-sm text-slate-200 transition-colors hover:bg-white/10 touch-manipulation"
-                  data-testid={`channel-${channel.id}`}
-                >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-slate-400">
-                    <Hash className="h-3.5 w-3.5" aria-hidden />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-slate-100">
-                      {channel.label}
-                    </span>
-                    <span className="block truncate text-[11px] text-slate-500">
-                      {channel.description}
-                    </span>
-                  </span>
-                  {channel.unread ? (
-                    <span className="rounded-md bg-action px-1.5 py-0.5 text-[10px] font-bold text-white">
-                      {channel.unread}
-                    </span>
-                  ) : null}
-                </button>
-              </li>
-            ))}
-          </ul>
 
           <div className="mt-4 px-2">
             <Link
@@ -358,12 +308,11 @@ export function PropertyDetailScreen() {
         </section>
       </div>
 
-      {/* 5. Channel Canvas overlay */}
-      {activeChannel ? (
-        <ChannelCanvasOverlay
-          channelId={activeChannel}
+      {activeDetail ? (
+        <DetailCanvasOverlay
+          detailId={activeDetail}
           property={property}
-          onClose={() => setActiveChannel(null)}
+          onClose={() => setActiveDetail(null)}
         />
       ) : null}
     </AppShell>
