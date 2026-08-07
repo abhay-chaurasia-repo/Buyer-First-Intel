@@ -22,26 +22,26 @@ const surfaceMeta: Record<
   'catch-up': {
     title: 'Catch up',
     Icon: Layers,
-    accent: 'text-saffron-bright',
-    iconWrap: 'bg-saffron/20 text-saffron-glow',
+    accent: 'text-saffron-deep',
+    iconWrap: 'bg-saffron/20 text-saffron-deep',
   },
   huddles: {
     title: 'Huddles',
     Icon: Headphones,
-    accent: 'text-saffron-glow',
-    iconWrap: 'bg-saffron-bright/20 text-saffron-bright',
+    accent: 'text-saffron-deep',
+    iconWrap: 'bg-saffron-bright/25 text-saffron-deep',
   },
   later: {
     title: 'Later',
     Icon: Bookmark,
-    accent: 'text-[#ffc978]',
-    iconWrap: 'bg-[#ffc978]/15 text-[#ffc978]',
+    accent: 'text-saffron-deep',
+    iconWrap: 'bg-saffron-soft text-saffron-deep',
   },
   verified: {
     title: 'Verified',
     Icon: ShieldCheck,
-    accent: 'text-[#f0c27a]',
-    iconWrap: 'bg-saffron/15 text-saffron-glow',
+    accent: 'text-saffron-deep',
+    iconWrap: 'bg-white/70 text-saffron-deep',
   },
 }
 
@@ -70,7 +70,7 @@ function CatchUpCardView({
   return (
     <article
       className={cn(
-        'absolute inset-0 flex flex-col overflow-hidden rounded-[28px] border border-saffron/20 bg-night-card shadow-[0_18px_48px_rgb(0_0_0/0.45),0_0_0_1px_rgb(232_145_58/0.08)]',
+        'absolute inset-0 flex flex-col overflow-hidden rounded-[28px] border border-night-line bg-coastal-soft shadow-[0_18px_48px_rgb(30_36_40/0.18)]',
         dragging ? 'transition-none' : 'transition-transform duration-200 ease-out',
       )}
       style={{
@@ -78,54 +78,54 @@ function CatchUpCardView({
       }}
       data-testid={`catchup-card-${card.id}`}
     >
-      <div className="flex items-center gap-2 border-b border-saffron/15 bg-gradient-to-r from-saffron/10 to-transparent px-4 py-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron/20 text-saffron-glow">
+      <div className="flex items-center gap-2 border-b border-night-line bg-gradient-to-r from-saffron/10 to-transparent px-4 py-3">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron/20 text-saffron-deep">
           <Hash className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold text-white">#{card.channel}</p>
-          <p className="truncate text-[11px] text-night-muted">
+          <p className="truncate text-[15px] font-semibold text-ink">#{card.channel}</p>
+          <p className="truncate text-[11px] text-ink-faint">
             {card.unreadCount} unread · {formatRelative(card.timestamp)}
           </p>
         </div>
-        <span className="rounded-full bg-saffron px-2 py-0.5 text-[11px] font-bold text-white shadow-[0_4px_10px_rgb(232_145_58/0.35)]">
+        <span className="rounded-full bg-saffron px-2 py-0.5 text-[11px] font-bold text-white shadow-[0_4px_10px_rgb(232_145_58/0.3)]">
           {card.unreadCount}
         </span>
       </div>
 
-      <div className="relative flex-1 overflow-y-auto px-4 py-4">
+      <div className="relative flex-1 overflow-y-auto bg-white/55 px-4 py-4">
         {doneHint ? (
-          <div className="pointer-events-none absolute top-4 left-4 rounded-lg border-2 border-saffron-bright px-3 py-1 text-xs font-bold tracking-wide text-saffron-bright uppercase rotate-[-8deg]">
+          <div className="pointer-events-none absolute top-4 left-4 rounded-lg border-2 border-saffron-deep px-3 py-1 text-xs font-bold tracking-wide text-saffron-deep uppercase rotate-[-8deg]">
             Mark done
           </div>
         ) : null}
         {keepHint ? (
-          <div className="pointer-events-none absolute top-4 right-4 rounded-lg border-2 border-night-muted px-3 py-1 text-xs font-bold tracking-wide text-night-muted uppercase rotate-[8deg]">
+          <div className="pointer-events-none absolute top-4 right-4 rounded-lg border-2 border-ink-faint px-3 py-1 text-xs font-bold tracking-wide text-ink-faint uppercase rotate-[8deg]">
             Keep unread
           </div>
         ) : null}
 
-        <p className="text-[11px] font-semibold tracking-[0.14em] text-saffron-glow uppercase">
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-saffron-deep uppercase">
           {card.type.replaceAll('_', ' ')}
         </p>
-        <h3 className="mt-2 text-[1.35rem] font-bold leading-snug text-white">{card.headline}</h3>
-        <p className="mt-3 text-[15px] leading-relaxed text-[#eadfd3]">{card.preview}</p>
+        <h3 className="mt-2 text-[1.35rem] font-bold leading-snug text-ink">{card.headline}</h3>
+        <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">{card.preview}</p>
 
         {card.fields && card.fields.length > 0 ? (
           <dl className="mt-5 space-y-2">
             {card.fields.map((field) => (
               <div
                 key={`${field.label}-${field.value}`}
-                className="flex items-baseline justify-between gap-3 rounded-2xl border border-saffron/10 bg-black/25 px-3 py-2.5"
+                className="flex items-baseline justify-between gap-3 rounded-2xl border border-night-line bg-coastal-mist/80 px-3 py-2.5"
               >
-                <dt className="text-[12px] text-night-muted">{field.label}</dt>
-                <dd className="text-right text-[13px] font-semibold text-saffron-glow">{field.value}</dd>
+                <dt className="text-[12px] text-ink-faint">{field.label}</dt>
+                <dd className="text-right text-[13px] font-semibold text-saffron-deep">{field.value}</dd>
               </div>
             ))}
           </dl>
         ) : null}
 
-        <p className="mt-5 font-mono text-[10px] leading-relaxed text-night-faint">
+        <p className="mt-5 font-mono text-[10px] leading-relaxed text-ink-faint">
           source · {card.source}
         </p>
       </div>
@@ -202,12 +202,12 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
       data-surface={surface}
     >
       <div className="flex h-full w-full max-w-lg flex-col">
-        <header className="border-b border-saffron/15 bg-night/80 px-3 pt-3 pb-2 backdrop-blur-md">
+        <header className="border-b border-night-line bg-coastal/85 px-3 pt-3 pb-2 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[#eadfd3] transition-colors hover:bg-saffron/15 hover:text-saffron-glow touch-manipulation"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-ink-muted transition-colors hover:bg-white/50 hover:text-saffron-deep touch-manipulation"
               aria-label="Close"
               data-testid="button-close-catchup"
             >
@@ -218,11 +218,11 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
                 <span className={cn('flex h-7 w-7 items-center justify-center rounded-lg', meta.iconWrap)}>
                   <Icon className={cn('h-4 w-4', meta.accent)} />
                 </span>
-                <h2 id="catchup-title" className="truncate text-[17px] font-bold text-white">
+                <h2 id="catchup-title" className="truncate text-[17px] font-bold text-ink">
                   {meta.title}
                 </h2>
               </div>
-              <p className="truncate font-mono text-[10px] text-night-faint">{apiLabel}</p>
+              <p className="truncate font-mono text-[10px] text-ink-faint">{apiLabel}</p>
             </div>
             <button
               type="button"
@@ -231,8 +231,8 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
               className={cn(
                 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl touch-manipulation',
                 history.length === 0
-                  ? 'text-night-faint/50'
-                  : 'text-[#eadfd3] hover:bg-saffron/15 hover:text-saffron-glow',
+                  ? 'text-ink-faint/40'
+                  : 'text-ink-muted hover:bg-white/50 hover:text-saffron-deep',
               )}
               aria-label="Undo"
               data-testid="button-undo-catchup"
@@ -241,13 +241,13 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
             </button>
           </div>
 
-          <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
+          <div className="mt-3 h-1 overflow-hidden rounded-full bg-coastal-deep/25">
             <div
               className="h-full rounded-full bg-gradient-to-r from-saffron-deep via-saffron to-saffron-bright transition-[width] duration-300"
               style={{ width: `${Math.max(progress * 100, remaining === 0 ? 100 : 6)}%` }}
             />
           </div>
-          <p className="mt-2 text-center text-[12px] text-night-muted">
+          <p className="mt-2 text-center text-[12px] text-ink-muted">
             {remaining === 0 ? 'You are caught up' : `${remaining} remaining`}
           </p>
         </header>
@@ -267,16 +267,16 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
             {current ? (
               <CatchUpCardView card={current} offsetX={offsetX} dragging={dragging} />
             ) : (
-              <div className="flex h-full flex-col items-center justify-center rounded-[28px] border border-dashed border-saffron/25 bg-night-card/70 px-6 text-center">
-                <Check className="h-10 w-10 text-saffron-bright" />
-                <p className="mt-4 text-lg font-bold text-white">All caught up</p>
-                <p className="mt-2 text-sm text-night-muted">
+              <div className="flex h-full flex-col items-center justify-center rounded-[28px] border border-dashed border-saffron/35 bg-coastal-soft/80 px-6 text-center">
+                <Check className="h-10 w-10 text-saffron-deep" />
+                <p className="mt-4 text-lg font-bold text-ink">All caught up</p>
+                <p className="mt-2 text-sm text-ink-muted">
                   No more cards from the API queue for this property.
                 </p>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-6 inline-flex min-h-11 items-center gap-1 rounded-full bg-saffron px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgb(232_145_58/0.35)] touch-manipulation"
+                  className="mt-6 inline-flex min-h-11 items-center gap-1 rounded-full bg-saffron px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgb(232_145_58/0.3)] touch-manipulation"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Back to property
@@ -290,7 +290,7 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
               <button
                 type="button"
                 onClick={() => commit('keep')}
-                className="flex h-14 w-14 items-center justify-center rounded-full border border-night-muted/40 bg-white/5 text-night-muted transition-transform active:scale-95 touch-manipulation"
+                className="flex h-14 w-14 items-center justify-center rounded-full border border-ink-faint/35 bg-white/50 text-ink-muted transition-transform active:scale-95 touch-manipulation"
                 aria-label="Keep unread"
                 data-testid="button-keep-unread"
               >
@@ -299,7 +299,7 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
               <button
                 type="button"
                 onClick={() => commit('done')}
-                className="flex h-14 w-14 items-center justify-center rounded-full border border-saffron/50 bg-saffron/20 text-saffron-bright shadow-[0_0_24px_rgb(232_145_58/0.25)] transition-transform active:scale-95 touch-manipulation"
+                className="flex h-14 w-14 items-center justify-center rounded-full border border-saffron/50 bg-saffron/20 text-saffron-deep shadow-[0_0_24px_rgb(232_145_58/0.2)] transition-transform active:scale-95 touch-manipulation"
                 aria-label="Mark done"
                 data-testid="button-mark-done"
               >
@@ -308,7 +308,7 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
             </div>
           ) : null}
 
-          <p className="pb-1 text-center text-[11px] text-night-faint">
+          <p className="pb-1 text-center text-[11px] text-ink-faint">
             Swipe right to mark done · left to keep unread
           </p>
         </div>

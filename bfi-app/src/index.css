@@ -5,14 +5,14 @@
   --font-display: "Outfit", ui-sans-serif, sans-serif;
   --font-sans: "Source Sans 3", ui-sans-serif, sans-serif;
 
-  /* Warm ink on parchment-light surfaces */
-  --color-ink: #1c1410;
-  --color-ink-muted: #6b5344;
-  --color-ink-faint: #9a7f6a;
-  --color-paper: #fff8f0;
+  /* Warm ink for light / mid surfaces */
+  --color-ink: #1e2428;
+  --color-ink-muted: #4a5560;
+  --color-ink-faint: #6b7782;
+  --color-paper: #eef1f4;
   --color-paper-elevated: #ffffff;
-  --color-line: #efdcc8;
-  --color-line-strong: #e0c4a8;
+  --color-line: #c5ced6;
+  --color-line-strong: #aab4be;
 
   /* Eye-pleasing saffron system */
   --color-saffron: #e8913a;
@@ -20,28 +20,35 @@
   --color-saffron-deep: #c46a1b;
   --color-saffron-soft: #fff1de;
   --color-saffron-mist: #fce8cc;
-  --color-saffron-glow: #ffd89a;
+  --color-saffron-glow: #d97706;
 
-  /* Map action aliases to saffron for shared components */
+  /* Action aliases → saffron */
   --color-action: #e8913a;
   --color-action-hover: #c46a1b;
   --color-action-soft: #fff1de;
 
-  --color-verified: #2f9e6a;
+  --color-verified: #2f7d5b;
   --color-verified-soft: #e4f6ec;
   --color-alert: #c45c1b;
   --color-alert-soft: #ffe8d6;
 
-  /* Warm Slack-like dark workspace */
-  --color-night: #1a1512;
-  --color-night-elevated: #241e19;
-  --color-night-card: #2c241e;
-  --color-night-line: rgb(255 255 255 / 0.1);
-  --color-night-muted: #b8a99a;
-  --color-night-faint: #7d7166;
+  /*
+   * Intercoastal Gray workspace (Behr MQ5-23 ≈ #A5B0B9)
+   * Replaces near-black "night" surfaces; fonts are dark charcoal.
+   */
+  --color-night: #a5b0b9;
+  --color-night-elevated: #b7c0c8;
+  --color-night-card: #c5cdd4;
+  --color-night-line: rgb(30 36 40 / 0.14);
+  --color-night-muted: #3d4750;
+  --color-night-faint: #5c6770;
+  --color-coastal: #a5b0b9;
+  --color-coastal-deep: #8e9aa4;
+  --color-coastal-soft: #c5cdd4;
+  --color-coastal-mist: #d7dde3;
 
-  --shadow-search: 0 1px 2px rgb(90 50 20 / 0.06), 0 10px 28px rgb(180 100 30 / 0.12);
-  --shadow-shell: 0 -1px 0 rgb(90 50 20 / 0.08), 0 -8px 24px rgb(90 50 20 / 0.06);
+  --shadow-search: 0 1px 2px rgb(30 36 40 / 0.06), 0 10px 28px rgb(90 110 130 / 0.12);
+  --shadow-shell: 0 -1px 0 rgb(30 36 40 / 0.08), 0 -8px 24px rgb(90 110 130 / 0.08);
 }
 
 @layer base {
@@ -59,10 +66,10 @@
     margin: 0;
     font-family: var(--font-sans);
     color: var(--color-ink);
-    background:
-      radial-gradient(ellipse 110% 70% at 50% -15%, #ffd89a 0%, transparent 55%),
-      radial-gradient(ellipse 80% 50% at 100% 20%, #ffe8c8 0%, transparent 45%),
-      linear-gradient(180deg, #fff4e6 0%, var(--color-paper) 45%, #f7ebe0 100%);
+      background:
+      radial-gradient(ellipse 110% 70% at 50% -15%, #d7dde3 0%, transparent 55%),
+      radial-gradient(ellipse 80% 50% at 100% 20%, #e8ecf0 0%, transparent 45%),
+      linear-gradient(180deg, #eef1f4 0%, #e4e9ee 45%, #d7dde3 100%);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -81,17 +88,17 @@
 
   .bfi-grid-wash {
     background-image:
-      linear-gradient(rgb(200 140 70 / 0.14) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(200 140 70 / 0.14) 1px, transparent 1px);
+      linear-gradient(rgb(30 36 40 / 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(30 36 40 / 0.08) 1px, transparent 1px);
     background-size: 28px 28px;
     mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
   }
 
   .bfi-night-wash {
     background:
-      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.22) 0%, transparent 55%),
-      radial-gradient(ellipse 70% 40% at 100% 0%, rgb(245 166 35 / 0.12) 0%, transparent 50%),
-      var(--color-night);
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.14) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 40% at 100% 0%, rgb(255 255 255 / 0.35) 0%, transparent 50%),
+      linear-gradient(180deg, #b7c0c8 0%, var(--color-night) 40%, #98a4ae 100%);
   }
 }
 
