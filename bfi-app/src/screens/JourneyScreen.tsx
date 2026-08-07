@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import {
-  AUDIT_CHECKLIST,
-  AUDIT_PHASES,
-  auditStats,
-  loadAuditProgress,
-  persistAuditProgress,
-  type AuditChecklistItem,
-  type AuditProgress,
-} from '@/data/auditChecklist'
+  JOURNEY_CHECKLIST,
+  JOURNEY_PHASES,
+  journeyStats,
+  loadJourneyProgress,
+  persistJourneyProgress,
+  type JourneyChecklistItem,
+  type JourneyProgress,
+} from '@/data/journeyChecklist'
 import { cn } from '@/lib/utils'
 
 function PhaseSection({
@@ -21,8 +21,8 @@ function PhaseSection({
 }: {
   title: string
   blurb: string
-  items: AuditChecklistItem[]
-  progress: AuditProgress
+  items: JourneyChecklistItem[]
+  progress: JourneyProgress
   onToggle: (id: string) => void
 }) {
   const [open, setOpen] = useState(true)
@@ -62,7 +62,7 @@ function PhaseSection({
                   checked ? 'bg-saffron/10' : 'hover:bg-night-ink/10',
                 )}
                 aria-pressed={checked}
-                data-testid={`audit-item-${item.id}`}
+                data-testid={`journey-item-${item.id}`}
               >
                 <span
                   className={cn(
@@ -96,15 +96,15 @@ function PhaseSection({
   )
 }
 
-export function AuditScreen() {
-  const [progress, setProgress] = useState<AuditProgress>(() => loadAuditProgress())
-  const stats = useMemo(() => auditStats(progress), [progress])
+export function JourneyScreen() {
+  const [progress, setProgress] = useState<JourneyProgress>(() => loadJourneyProgress())
+  const stats = useMemo(() => journeyStats(progress), [progress])
   const percent = stats.total === 0 ? 0 : Math.round((stats.done / stats.total) * 100)
 
   function handleToggle(id: string) {
     setProgress((prev) => {
       const next = { ...prev, [id]: !prev[id] }
-      persistAuditProgress(next)
+      persistJourneyProgress(next)
       return next
     })
   }
@@ -116,17 +116,17 @@ export function AuditScreen() {
     >
       <header
         className="sticky top-0 z-20 border-b border-night-line bg-coastal/90 backdrop-blur-md"
-        data-testid="audit-top-bar"
+        data-testid="journey-top-bar"
       >
         <div className="px-4 py-3">
           <p className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
-            Audit
+            Journey
           </p>
           <h1 className="mt-0.5 font-display text-[17px] font-semibold tracking-tight text-night-ink">
-            Buying journey checklist
+            Buying checklist
           </h1>
           <p className="mt-1 text-[12px] text-night-faint">
-            A practical path from prepare → diligence → close. Tap to check off.
+            Your path from prepare → diligence → close. Tap to check off.
           </p>
         </div>
       </header>
@@ -148,18 +148,18 @@ export function AuditScreen() {
             <div
               className="h-full rounded-full bg-saffron transition-[width] duration-300"
               style={{ width: `${percent}%` }}
-              data-testid="audit-progress-bar"
+              data-testid="journey-progress-bar"
             />
           </div>
         </div>
 
         <div className="mt-4 space-y-4">
-          {AUDIT_PHASES.map((phase) => (
+          {JOURNEY_PHASES.map((phase) => (
             <PhaseSection
               key={phase.id}
               title={phase.title}
               blurb={phase.blurb}
-              items={AUDIT_CHECKLIST.filter((item) => item.phaseId === phase.id)}
+              items={JOURNEY_CHECKLIST.filter((item) => item.phaseId === phase.id)}
               progress={progress}
               onToggle={handleToggle}
             />

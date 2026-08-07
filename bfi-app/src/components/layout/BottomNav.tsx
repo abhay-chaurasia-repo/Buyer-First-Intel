@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { to: '/', icon: Search, label: 'Search', end: true },
   { to: '/watchlist', icon: Star, label: 'Watchlist', end: false },
-  { to: '/audit', icon: ClipboardCheck, label: 'Audit', end: false },
+  { to: '/journey', icon: ClipboardCheck, label: 'Journey', end: false },
 ] as const
 
 export function BottomNav() {

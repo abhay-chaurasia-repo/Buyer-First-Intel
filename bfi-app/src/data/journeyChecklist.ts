@@ -1,28 +1,30 @@
-/** Home-buying journey checklist for the Audit tab. */
+/** Home-buying journey checklist for the Journey tab. */
 
-export const AUDIT_STORAGE_KEY = 'bfi.audit-checklist'
+export const JOURNEY_STORAGE_KEY = 'bfi.journey-checklist'
+/** Legacy key — read once so existing progress is not lost after rename */
+const LEGACY_AUDIT_STORAGE_KEY = 'bfi.audit-checklist'
 
-export type AuditPhaseId =
+export type JourneyPhaseId =
   | 'prepare'
   | 'search'
   | 'diligence'
   | 'offer'
   | 'close'
 
-export type AuditPhase = {
-  id: AuditPhaseId
+export type JourneyPhase = {
+  id: JourneyPhaseId
   title: string
   blurb: string
 }
 
-export type AuditChecklistItem = {
+export type JourneyChecklistItem = {
   id: string
-  phaseId: AuditPhaseId
+  phaseId: JourneyPhaseId
   title: string
   detail: string
 }
 
-export const AUDIT_PHASES: AuditPhase[] = [
+export const JOURNEY_PHASES: JourneyPhase[] = [
   {
     id: 'prepare',
     title: 'Prepare',
@@ -50,7 +52,7 @@ export const AUDIT_PHASES: AuditPhase[] = [
   },
 ]
 
-export const AUDIT_CHECKLIST: AuditChecklistItem[] = [
+export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
   // Prepare
   {
     id: 'pre-approval',
@@ -176,29 +178,31 @@ export const AUDIT_CHECKLIST: AuditChecklistItem[] = [
   },
 ]
 
-export type AuditProgress = Record<string, boolean>
+export type JourneyProgress = Record<string, boolean>
 
-export function loadAuditProgress(): AuditProgress {
+export function loadJourneyProgress(): JourneyProgress {
   try {
-    const raw = localStorage.getItem(AUDIT_STORAGE_KEY)
+    const raw =
+      localStorage.getItem(JOURNEY_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_AUDIT_STORAGE_KEY)
     if (!raw) return {}
-    const parsed = JSON.parse(raw) as AuditProgress
+    const parsed = JSON.parse(raw) as JourneyProgress
     return parsed && typeof parsed === 'object' ? parsed : {}
   } catch {
     return {}
   }
 }
 
-export function persistAuditProgress(progress: AuditProgress) {
+export function persistJourneyProgress(progress: JourneyProgress) {
   try {
-    localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(progress))
+    localStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify(progress))
   } catch {
     // Ignore storage failures in demo shell
   }
 }
 
-export function auditStats(progress: AuditProgress) {
-  const total = AUDIT_CHECKLIST.length
-  const done = AUDIT_CHECKLIST.filter((item) => progress[item.id]).length
+export function journeyStats(progress: JourneyProgress) {
+  const total = JOURNEY_CHECKLIST.length
+  const done = JOURNEY_CHECKLIST.filter((item) => progress[item.id]).length
   return { total, done, remaining: total - done }
 }
