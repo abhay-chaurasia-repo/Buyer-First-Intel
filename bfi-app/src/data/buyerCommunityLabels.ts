@@ -6,6 +6,7 @@ export type BuyerLabelCategoryId =
   | 'structure'
   | 'lot-exterior'
   | 'surroundings'
+  | 'size-records'
   | 'deal-feel'
 
 export type BuyerLabelTone = 'positive' | 'negative'
@@ -52,6 +53,11 @@ export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
     id: 'surroundings',
     title: 'Surroundings & utilities',
     blurb: 'Power lines, towers, corridors, and nearby industrial feel',
+  },
+  {
+    id: 'size-records',
+    title: 'Size & records',
+    blurb: 'Whether listing living area lines up with county — or doesn’t',
   },
   {
     id: 'deal-feel',
@@ -121,6 +127,19 @@ export const BUYER_COMMUNITY_LABELS: BuyerCommunityLabel[] = [
   { id: 'pipeline-or-easement', categoryId: 'surroundings', text: 'Pipeline / utility easement feel', tone: 'negative', seedVotes: 0 },
   { id: 'industrial-odor', categoryId: 'surroundings', text: 'Industrial odor at times', tone: 'negative', seedVotes: 0 },
   { id: 'rail-or-freeway-adjacent', categoryId: 'surroundings', text: 'Rail or freeway adjacent', tone: 'negative', seedVotes: 1 },
+
+  // Size & records — positive
+  { id: 'listing-matches-county', categoryId: 'size-records', text: 'Listing size matches county records', tone: 'positive', seedVotes: 3 },
+  { id: 'living-area-feels-accurate', categoryId: 'size-records', text: 'Living area feels accurate on site', tone: 'positive', seedVotes: 2 },
+  { id: 'beds-baths-match-listing', categoryId: 'size-records', text: 'Beds/baths match the listing', tone: 'positive', seedVotes: 2 },
+  { id: 'layout-matches-expectations', categoryId: 'size-records', text: 'Layout matches listing expectations', tone: 'positive', seedVotes: 1 },
+  // Size & records — negative
+  { id: 'listing-differs-from-county', categoryId: 'size-records', text: 'Listing size differs from county records', tone: 'negative', seedVotes: 3 },
+  { id: 'feels-smaller-than-listed', categoryId: 'size-records', text: 'Feels smaller than listed', tone: 'negative', seedVotes: 2 },
+  { id: 'feels-larger-than-listed', categoryId: 'size-records', text: 'Feels larger than listed', tone: 'negative', seedVotes: 1 },
+  { id: 'possible-sqft-discrepancy', categoryId: 'size-records', text: 'Possible sqft discrepancy', tone: 'negative', seedVotes: 2 },
+  { id: 'finished-area-unclear', categoryId: 'size-records', text: 'Finished vs unfinished area unclear', tone: 'negative', seedVotes: 1 },
+  { id: 'garage-counted-as-living', categoryId: 'size-records', text: 'Garage may be counted as living area', tone: 'negative', seedVotes: 1 },
 
   // Deal feel — positive
   { id: 'fair-value-feel', categoryId: 'deal-feel', text: 'Feels fairly priced', tone: 'positive', seedVotes: 3 },

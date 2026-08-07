@@ -135,7 +135,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 18,
     withinRadius: true,
     platform: 'iOS',
-    communityLabelIds: ['finished-basement', 'updated-interior-feel', 'well-kept-exterior'],
+    communityLabelIds: ['finished-basement', 'updated-interior-feel', 'listing-differs-from-county'],
   },
   {
     id: 'vv-4',
@@ -155,7 +155,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 31,
     withinRadius: true,
     platform: 'iOS',
-    communityLabelIds: ['quiet-at-night', 'roomy-driveway', 'no-overhead-power-lines'],
+    communityLabelIds: ['quiet-at-night', 'roomy-driveway', 'no-overhead-power-lines', 'possible-sqft-discrepancy'],
   },
   {
     id: 'vv-6',
