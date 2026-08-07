@@ -80,6 +80,8 @@ export type MockProperty = {
   yearBuilt: number
   claimedSqft?: number
   verifiedVisits: number
+  /** When the active sale listing was posted (ISO) — used for visit timing context */
+  listingPostedAt: string
   ownerName: string
   ownerOccupied: boolean
   lastSaleDate: string
@@ -166,7 +168,8 @@ export const DEMO_PROPERTY: MockProperty = {
   bathrooms: 2.5,
   yearBuilt: 1998,
   claimedSqft: 2924,
-  verifiedVisits: 3,
+  verifiedVisits: 6,
+  listingPostedAt: '2026-07-12T09:00:00',
   ownerName: 'Rivera Family Trust',
   ownerOccupied: true,
   lastSaleDate: '2019-06-14',
@@ -258,7 +261,7 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
       title: 'Verified Visits',
       subtitle: 'GPS presence',
       badge: String(property.verifiedVisits),
-      detail: 'Within 100m presence confirms',
+      detail: 'Dated GPS presence · compare to listing post',
       accent: 'verified-visits',
     },
     {

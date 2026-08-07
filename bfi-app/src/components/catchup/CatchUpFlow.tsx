@@ -18,6 +18,9 @@ import {
 } from '@/data/catchUpApi'
 import { BUYER_COMMUNITY_LABELS } from '@/data/buyerCommunityLabels'
 import { BuyerCommunityPanel } from '@/components/catchup/BuyerCommunityPanel'
+import { VerifiedVisitsPanel } from '@/components/catchup/VerifiedVisitsPanel'
+import type { MockProperty } from '@/data/mockProperty'
+import { getVerifiedVisitsBundle } from '@/data/verifiedVisits'
 import { cn } from '@/lib/utils'
 
 export type { CatchUpSurface }
@@ -48,7 +51,7 @@ const surfaceMeta: Record<
     title: 'Verified Visits',
     Icon: ShieldCheck,
     iconWrap: 'bg-night-ink/15 text-saffron-glow',
-    blurb: 'GPS-verified site visits and diligence checks',
+    blurb: 'Dated GPS presence — compare timing to the listing post',
   },
   'buyer-insights': {
     title: 'Buyer Community',
@@ -133,6 +136,7 @@ type CatchUpFlowProps = {
   response: CatchUpApiResponse
   address: string
   propertyId: string
+  property: MockProperty
   onClose: () => void
 }
 
@@ -145,6 +149,7 @@ export function CatchUpFlow({
   response,
   address,
   propertyId,
+  property,
   onClose,
 }: CatchUpFlowProps) {
   const meta = surfaceMeta[surface]
@@ -152,7 +157,12 @@ export function CatchUpFlow({
   const items = response.items
   const truncated = truncateAddress(address)
   const isBuyerCommunity = surface === 'buyer-insights'
-  const headerCount = isBuyerCommunity ? BUYER_COMMUNITY_LABELS.length : items.length
+  const isVerifiedVisits = surface === 'verified-visits'
+  const headerCount = isBuyerCommunity
+    ? BUYER_COMMUNITY_LABELS.length
+    : isVerifiedVisits
+      ? getVerifiedVisitsBundle(property).visits.length
+      : items.length
 
   return (
     <div
@@ -224,6 +234,8 @@ export function CatchUpFlow({
 
         {isBuyerCommunity ? (
           <BuyerCommunityPanel propertyId={propertyId} />
+        ) : isVerifiedVisits ? (
+          <VerifiedVisitsPanel property={property} />
         ) : (
           <div className="mt-3 space-y-4 px-3">
             {items.length > 0 ? (

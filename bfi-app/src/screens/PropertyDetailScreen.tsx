@@ -196,6 +196,7 @@ export function PropertyDetailScreen() {
           response={fetchSurfaceApi(activeSurface, property)}
           address={fullAddress}
           propertyId={property.id}
+          property={property}
           onClose={() => setActiveSurface(null)}
         />
       ) : (
