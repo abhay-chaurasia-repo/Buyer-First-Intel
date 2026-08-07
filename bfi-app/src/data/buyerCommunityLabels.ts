@@ -1,12 +1,12 @@
 /** Pre-developed Buyer Community labels — curated, not free-text. */
 
 export type BuyerLabelCategoryId =
-  | 'noise-access'
-  | 'parking'
-  | 'structure'
-  | 'lot-exterior'
-  | 'surroundings'
   | 'size-records'
+  | 'surroundings'
+  | 'structure'
+  | 'parking'
+  | 'noise-access'
+  | 'lot-exterior'
   | 'deal-feel'
 
 export type BuyerLabelTone = 'positive' | 'negative'
@@ -28,26 +28,12 @@ export type BuyerCommunityLabel = {
   seedVotes: number
 }
 
+/** Display order for Buyer Community sections */
 export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
   {
-    id: 'noise-access',
-    title: 'Noise & access',
-    blurb: 'Balanced signals — quiet wins and noise concerns',
-  },
-  {
-    id: 'parking',
-    title: 'Parking',
-    blurb: 'What’s easy about parking — and what isn’t',
-  },
-  {
-    id: 'structure',
-    title: 'Structure & condition',
-    blurb: 'Observable upsides and care items — not a formal inspection',
-  },
-  {
-    id: 'lot-exterior',
-    title: 'Lot & exterior',
-    blurb: 'Curb appeal strengths alongside outdoor watch-outs',
+    id: 'size-records',
+    title: 'Size & records',
+    blurb: 'Whether listing living area lines up with county — or doesn’t',
   },
   {
     id: 'surroundings',
@@ -55,9 +41,24 @@ export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
     blurb: 'Power lines, towers, corridors, and nearby industrial feel',
   },
   {
-    id: 'size-records',
-    title: 'Size & records',
-    blurb: 'Whether listing living area lines up with county — or doesn’t',
+    id: 'structure',
+    title: 'Structure & condition',
+    blurb: 'Observable upsides and care items — not a formal inspection',
+  },
+  {
+    id: 'parking',
+    title: 'Parking',
+    blurb: 'What’s easy about parking — and what isn’t',
+  },
+  {
+    id: 'noise-access',
+    title: 'Noise',
+    blurb: 'Balanced signals — quiet wins and noise concerns',
+  },
+  {
+    id: 'lot-exterior',
+    title: 'Lot & exterior',
+    blurb: 'Curb appeal strengths alongside outdoor watch-outs',
   },
   {
     id: 'deal-feel',
@@ -71,47 +72,18 @@ export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
  * Visitors cannot invent free-text — they only upvote these.
  */
 export const BUYER_COMMUNITY_LABELS: BuyerCommunityLabel[] = [
-  // Noise & access — positive
-  { id: 'quiet-at-night', categoryId: 'noise-access', text: 'Quiet at night', tone: 'positive', seedVotes: 4 },
-  { id: 'calm-street-feel', categoryId: 'noise-access', text: 'Calm street feel', tone: 'positive', seedVotes: 3 },
-  { id: 'easy-walkability', categoryId: 'noise-access', text: 'Easy walkability nearby', tone: 'positive', seedVotes: 2 },
-  // Noise & access — negative
-  { id: 'evening-street-noise', categoryId: 'noise-access', text: 'Evening street noise', tone: 'negative', seedVotes: 2 },
-  { id: 'busy-morning-traffic', categoryId: 'noise-access', text: 'Busy morning traffic', tone: 'negative', seedVotes: 1 },
-  { id: 'nearby-construction', categoryId: 'noise-access', text: 'Nearby construction', tone: 'negative', seedVotes: 0 },
-  { id: 'plane-or-train-noise', categoryId: 'noise-access', text: 'Plane or train noise', tone: 'negative', seedVotes: 0 },
-
-  // Parking — positive
-  { id: 'easy-guest-parking', categoryId: 'parking', text: 'Easy guest parking', tone: 'positive', seedVotes: 4 },
-  { id: 'roomy-driveway', categoryId: 'parking', text: 'Roomy driveway', tone: 'positive', seedVotes: 3 },
-  { id: 'two-car-friendly', categoryId: 'parking', text: 'Comfortable for two cars', tone: 'positive', seedVotes: 2 },
-  // Parking — negative
-  { id: 'tight-driveway', categoryId: 'parking', text: 'Tight driveway', tone: 'negative', seedVotes: 2 },
-  { id: 'limited-street-parking', categoryId: 'parking', text: 'Limited street parking after 6pm', tone: 'negative', seedVotes: 2 },
-  { id: 'steep-approach', categoryId: 'parking', text: 'Steep approach / incline', tone: 'negative', seedVotes: 0 },
-  { id: 'shared-or-alley-access', categoryId: 'parking', text: 'Shared or alley access', tone: 'negative', seedVotes: 0 },
-
-  // Structure — positive
-  { id: 'roof-looks-newer', categoryId: 'structure', text: 'Roof looks newer', tone: 'positive', seedVotes: 3 },
-  { id: 'updated-interior-feel', categoryId: 'structure', text: 'Updated interior feel', tone: 'positive', seedVotes: 4 },
-  { id: 'finished-basement', categoryId: 'structure', text: 'Finished basement present', tone: 'positive', seedVotes: 2 },
-  { id: 'well-kept-exterior', categoryId: 'structure', text: 'Well-kept exterior', tone: 'positive', seedVotes: 3 },
-  // Structure — negative
-  { id: 'possible-garage-conversion', categoryId: 'structure', text: 'Possible garage conversion', tone: 'negative', seedVotes: 1 },
-  { id: 'exterior-deferred-maintenance', categoryId: 'structure', text: 'Exterior deferred maintenance', tone: 'negative', seedVotes: 2 },
-  { id: 'musty-or-moisture-smell', categoryId: 'structure', text: 'Musty or moisture smell', tone: 'negative', seedVotes: 0 },
-  { id: 'dated-systems-feel', categoryId: 'structure', text: 'Dated systems feel', tone: 'negative', seedVotes: 1 },
-
-  // Lot & exterior — positive
-  { id: 'mature-trees', categoryId: 'lot-exterior', text: 'Mature trees', tone: 'positive', seedVotes: 4 },
-  { id: 'strong-curb-appeal', categoryId: 'lot-exterior', text: 'Strong curb appeal', tone: 'positive', seedVotes: 3 },
-  { id: 'fenced-yard', categoryId: 'lot-exterior', text: 'Fenced yard', tone: 'positive', seedVotes: 3 },
-  { id: 'usable-backyard', categoryId: 'lot-exterior', text: 'Usable backyard space', tone: 'positive', seedVotes: 2 },
-  // Lot & exterior — negative
-  { id: 'low-curb-appeal', categoryId: 'lot-exterior', text: 'Low curb appeal', tone: 'negative', seedVotes: 1 },
-  { id: 'drainage-concern', categoryId: 'lot-exterior', text: 'Drainage / standing water concern', tone: 'negative', seedVotes: 1 },
-  { id: 'hoa-restrictive-feel', categoryId: 'lot-exterior', text: 'HOA feels restrictive', tone: 'negative', seedVotes: 0 },
-  { id: 'small-or-awkward-lot', categoryId: 'lot-exterior', text: 'Small or awkward lot', tone: 'negative', seedVotes: 0 },
+  // Size & records — positive
+  { id: 'listing-matches-county', categoryId: 'size-records', text: 'Listing size matches county records', tone: 'positive', seedVotes: 3 },
+  { id: 'living-area-feels-accurate', categoryId: 'size-records', text: 'Living area feels accurate on site', tone: 'positive', seedVotes: 2 },
+  { id: 'beds-baths-match-listing', categoryId: 'size-records', text: 'Beds/baths match the listing', tone: 'positive', seedVotes: 2 },
+  { id: 'layout-matches-expectations', categoryId: 'size-records', text: 'Layout matches listing expectations', tone: 'positive', seedVotes: 1 },
+  // Size & records — negative
+  { id: 'listing-differs-from-county', categoryId: 'size-records', text: 'Listing size differs from county records', tone: 'negative', seedVotes: 3 },
+  { id: 'feels-smaller-than-listed', categoryId: 'size-records', text: 'Feels smaller than listed', tone: 'negative', seedVotes: 2 },
+  { id: 'feels-larger-than-listed', categoryId: 'size-records', text: 'Feels larger than listed', tone: 'negative', seedVotes: 1 },
+  { id: 'possible-sqft-discrepancy', categoryId: 'size-records', text: 'Possible sqft discrepancy', tone: 'negative', seedVotes: 2 },
+  { id: 'finished-area-unclear', categoryId: 'size-records', text: 'Finished vs unfinished area unclear', tone: 'negative', seedVotes: 1 },
+  { id: 'garage-counted-as-living', categoryId: 'size-records', text: 'Garage may be counted as living area', tone: 'negative', seedVotes: 1 },
 
   // Surroundings & utilities — positive
   { id: 'no-overhead-power-lines', categoryId: 'surroundings', text: 'No overhead power lines in view', tone: 'positive', seedVotes: 3 },
@@ -128,18 +100,47 @@ export const BUYER_COMMUNITY_LABELS: BuyerCommunityLabel[] = [
   { id: 'industrial-odor', categoryId: 'surroundings', text: 'Industrial odor at times', tone: 'negative', seedVotes: 0 },
   { id: 'rail-or-freeway-adjacent', categoryId: 'surroundings', text: 'Rail or freeway adjacent', tone: 'negative', seedVotes: 1 },
 
-  // Size & records — positive
-  { id: 'listing-matches-county', categoryId: 'size-records', text: 'Listing size matches county records', tone: 'positive', seedVotes: 3 },
-  { id: 'living-area-feels-accurate', categoryId: 'size-records', text: 'Living area feels accurate on site', tone: 'positive', seedVotes: 2 },
-  { id: 'beds-baths-match-listing', categoryId: 'size-records', text: 'Beds/baths match the listing', tone: 'positive', seedVotes: 2 },
-  { id: 'layout-matches-expectations', categoryId: 'size-records', text: 'Layout matches listing expectations', tone: 'positive', seedVotes: 1 },
-  // Size & records — negative
-  { id: 'listing-differs-from-county', categoryId: 'size-records', text: 'Listing size differs from county records', tone: 'negative', seedVotes: 3 },
-  { id: 'feels-smaller-than-listed', categoryId: 'size-records', text: 'Feels smaller than listed', tone: 'negative', seedVotes: 2 },
-  { id: 'feels-larger-than-listed', categoryId: 'size-records', text: 'Feels larger than listed', tone: 'negative', seedVotes: 1 },
-  { id: 'possible-sqft-discrepancy', categoryId: 'size-records', text: 'Possible sqft discrepancy', tone: 'negative', seedVotes: 2 },
-  { id: 'finished-area-unclear', categoryId: 'size-records', text: 'Finished vs unfinished area unclear', tone: 'negative', seedVotes: 1 },
-  { id: 'garage-counted-as-living', categoryId: 'size-records', text: 'Garage may be counted as living area', tone: 'negative', seedVotes: 1 },
+  // Structure & condition — positive
+  { id: 'roof-looks-newer', categoryId: 'structure', text: 'Roof looks newer', tone: 'positive', seedVotes: 3 },
+  { id: 'updated-interior-feel', categoryId: 'structure', text: 'Updated interior feel', tone: 'positive', seedVotes: 4 },
+  { id: 'finished-basement', categoryId: 'structure', text: 'Finished basement present', tone: 'positive', seedVotes: 2 },
+  { id: 'well-kept-exterior', categoryId: 'structure', text: 'Well-kept exterior', tone: 'positive', seedVotes: 3 },
+  // Structure & condition — negative
+  { id: 'possible-garage-conversion', categoryId: 'structure', text: 'Possible garage conversion', tone: 'negative', seedVotes: 1 },
+  { id: 'exterior-deferred-maintenance', categoryId: 'structure', text: 'Exterior deferred maintenance', tone: 'negative', seedVotes: 2 },
+  { id: 'musty-or-moisture-smell', categoryId: 'structure', text: 'Musty or moisture smell', tone: 'negative', seedVotes: 0 },
+  { id: 'dated-systems-feel', categoryId: 'structure', text: 'Dated systems feel', tone: 'negative', seedVotes: 1 },
+
+  // Parking — positive
+  { id: 'easy-guest-parking', categoryId: 'parking', text: 'Easy guest parking', tone: 'positive', seedVotes: 4 },
+  { id: 'roomy-driveway', categoryId: 'parking', text: 'Roomy driveway', tone: 'positive', seedVotes: 3 },
+  { id: 'two-car-friendly', categoryId: 'parking', text: 'Comfortable for two cars', tone: 'positive', seedVotes: 2 },
+  // Parking — negative
+  { id: 'tight-driveway', categoryId: 'parking', text: 'Tight driveway', tone: 'negative', seedVotes: 2 },
+  { id: 'limited-street-parking', categoryId: 'parking', text: 'Limited street parking after 6pm', tone: 'negative', seedVotes: 2 },
+  { id: 'steep-approach', categoryId: 'parking', text: 'Steep approach / incline', tone: 'negative', seedVotes: 0 },
+  { id: 'shared-or-alley-access', categoryId: 'parking', text: 'Shared or alley access', tone: 'negative', seedVotes: 0 },
+
+  // Noise — positive
+  { id: 'quiet-at-night', categoryId: 'noise-access', text: 'Quiet at night', tone: 'positive', seedVotes: 4 },
+  { id: 'calm-street-feel', categoryId: 'noise-access', text: 'Calm street feel', tone: 'positive', seedVotes: 3 },
+  { id: 'easy-walkability', categoryId: 'noise-access', text: 'Easy walkability nearby', tone: 'positive', seedVotes: 2 },
+  // Noise — negative
+  { id: 'evening-street-noise', categoryId: 'noise-access', text: 'Evening street noise', tone: 'negative', seedVotes: 2 },
+  { id: 'busy-morning-traffic', categoryId: 'noise-access', text: 'Busy morning traffic', tone: 'negative', seedVotes: 1 },
+  { id: 'nearby-construction', categoryId: 'noise-access', text: 'Nearby construction', tone: 'negative', seedVotes: 0 },
+  { id: 'plane-or-train-noise', categoryId: 'noise-access', text: 'Plane or train noise', tone: 'negative', seedVotes: 0 },
+
+  // Lot & exterior — positive
+  { id: 'mature-trees', categoryId: 'lot-exterior', text: 'Mature trees', tone: 'positive', seedVotes: 4 },
+  { id: 'strong-curb-appeal', categoryId: 'lot-exterior', text: 'Strong curb appeal', tone: 'positive', seedVotes: 3 },
+  { id: 'fenced-yard', categoryId: 'lot-exterior', text: 'Fenced yard', tone: 'positive', seedVotes: 3 },
+  { id: 'usable-backyard', categoryId: 'lot-exterior', text: 'Usable backyard space', tone: 'positive', seedVotes: 2 },
+  // Lot & exterior — negative
+  { id: 'low-curb-appeal', categoryId: 'lot-exterior', text: 'Low curb appeal', tone: 'negative', seedVotes: 1 },
+  { id: 'drainage-concern', categoryId: 'lot-exterior', text: 'Drainage / standing water concern', tone: 'negative', seedVotes: 1 },
+  { id: 'hoa-restrictive-feel', categoryId: 'lot-exterior', text: 'HOA feels restrictive', tone: 'negative', seedVotes: 0 },
+  { id: 'small-or-awkward-lot', categoryId: 'lot-exterior', text: 'Small or awkward lot', tone: 'negative', seedVotes: 0 },
 
   // Deal feel — positive
   { id: 'fair-value-feel', categoryId: 'deal-feel', text: 'Feels fairly priced', tone: 'positive', seedVotes: 3 },
