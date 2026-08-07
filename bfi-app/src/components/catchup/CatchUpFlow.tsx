@@ -71,8 +71,8 @@ function truncateAddress(address: string, max = 22) {
   return `${address.slice(0, max - 1)}…`
 }
 
-function DetailSection({ card, defaultOpen = true }: { card: CatchUpCard; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen)
+function DetailSection({ card }: { card: CatchUpCard }) {
+  const [open, setOpen] = useState(true)
   const fieldCount = card.fields?.length ?? 0
 
   return (
@@ -213,9 +213,7 @@ export function CatchUpFlow({ surface, response, address, onClose }: CatchUpFlow
 
         <div className="mt-3 space-y-4 px-3">
           {items.length > 0 ? (
-            items.map((card, index) => (
-              <DetailSection key={card.id} card={card} defaultOpen={index === 0} />
-            ))
+            items.map((card) => <DetailSection key={card.id} card={card} />)
           ) : (
             <div className="rounded-2xl border border-night-line bg-coastal-deep/55 p-4 text-center shadow-sm backdrop-blur-sm">
               <p className="text-sm text-night-muted">No details available for this section yet.</p>
