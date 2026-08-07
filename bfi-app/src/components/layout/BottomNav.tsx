@@ -24,7 +24,7 @@ export function BottomNav() {
             className={({ isActive }) =>
               cn(
                 'flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-2 transition-colors touch-manipulation',
-                isActive ? 'text-saffron-deep' : 'text-ink-muted hover:text-saffron',
+                isActive ? 'text-saffron-bright' : 'text-night-muted hover:text-saffron-glow',
               )
             }
             data-testid={`nav-${label.toLowerCase()}`}

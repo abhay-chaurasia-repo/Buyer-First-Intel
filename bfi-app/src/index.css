@@ -5,24 +5,23 @@
   --font-display: "Outfit", ui-sans-serif, sans-serif;
   --font-sans: "Source Sans 3", ui-sans-serif, sans-serif;
 
-  /* Warm ink for light / mid surfaces */
-  --color-ink: #1e2428;
-  --color-ink-muted: #4a5560;
-  --color-ink-faint: #6b7782;
-  --color-paper: #eef1f4;
+  /* Ink for light surfaces (Home) */
+  --color-ink: #2a1f20;
+  --color-ink-muted: #6b4f51;
+  --color-ink-faint: #8f7274;
+  --color-paper: #f7f0f0;
   --color-paper-elevated: #ffffff;
-  --color-line: #c5ced6;
-  --color-line-strong: #aab4be;
+  --color-line: #e4d4d5;
+  --color-line-strong: #d0b8b9;
 
-  /* Eye-pleasing saffron system */
+  /* Saffron accents */
   --color-saffron: #e8913a;
   --color-saffron-bright: #f5a623;
   --color-saffron-deep: #c46a1b;
   --color-saffron-soft: #fff1de;
   --color-saffron-mist: #fce8cc;
-  --color-saffron-glow: #d97706;
+  --color-saffron-glow: #ffd89a;
 
-  /* Action aliases → saffron */
   --color-action: #e8913a;
   --color-action-hover: #c46a1b;
   --color-action-soft: #fff1de;
@@ -33,22 +32,23 @@
   --color-alert-soft: #ffe8d6;
 
   /*
-   * Intercoastal Gray workspace (Behr MQ5-23 ≈ #A5B0B9)
-   * Replaces near-black "night" surfaces; fonts are dark charcoal.
+   * Spiced Potpourri workspace (Behr S130-6 ≈ #905D5F, LRV ~15)
+   * Deep dusty rose — use cream/light type for contrast.
    */
-  --color-night: #a5b0b9;
-  --color-night-elevated: #b7c0c8;
-  --color-night-card: #c5cdd4;
-  --color-night-line: rgb(30 36 40 / 0.14);
-  --color-night-muted: #3d4750;
-  --color-night-faint: #5c6770;
-  --color-coastal: #a5b0b9;
-  --color-coastal-deep: #8e9aa4;
-  --color-coastal-soft: #c5cdd4;
-  --color-coastal-mist: #d7dde3;
+  --color-night: #905d5f;
+  --color-night-elevated: #a06d6f;
+  --color-night-card: #b07e80;
+  --color-night-line: rgb(255 248 247 / 0.16);
+  --color-night-ink: #fff8f7;
+  --color-night-muted: #f0ddde;
+  --color-night-faint: #d4b8b9;
+  --color-coastal: #905d5f;
+  --color-coastal-deep: #73484a;
+  --color-coastal-soft: #a87274;
+  --color-coastal-mist: #c49a9b;
 
-  --shadow-search: 0 1px 2px rgb(30 36 40 / 0.06), 0 10px 28px rgb(90 110 130 / 0.12);
-  --shadow-shell: 0 -1px 0 rgb(30 36 40 / 0.08), 0 -8px 24px rgb(90 110 130 / 0.08);
+  --shadow-search: 0 1px 2px rgb(42 31 32 / 0.06), 0 10px 28px rgb(144 93 95 / 0.14);
+  --shadow-shell: 0 -1px 0 rgb(42 31 32 / 0.08), 0 -8px 24px rgb(144 93 95 / 0.12);
 }
 
 @layer base {
@@ -66,10 +66,10 @@
     margin: 0;
     font-family: var(--font-sans);
     color: var(--color-ink);
-      background:
-      radial-gradient(ellipse 110% 70% at 50% -15%, #d7dde3 0%, transparent 55%),
-      radial-gradient(ellipse 80% 50% at 100% 20%, #e8ecf0 0%, transparent 45%),
-      linear-gradient(180deg, #eef1f4 0%, #e4e9ee 45%, #d7dde3 100%);
+    background:
+      radial-gradient(ellipse 110% 70% at 50% -15%, #e8d4d5 0%, transparent 55%),
+      radial-gradient(ellipse 80% 50% at 100% 20%, #f3e8e8 0%, transparent 45%),
+      linear-gradient(180deg, #f7f0f0 0%, #efe4e4 45%, #e4d4d5 100%);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -88,17 +88,17 @@
 
   .bfi-grid-wash {
     background-image:
-      linear-gradient(rgb(30 36 40 / 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(30 36 40 / 0.08) 1px, transparent 1px);
+      linear-gradient(rgb(144 93 95 / 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(144 93 95 / 0.12) 1px, transparent 1px);
     background-size: 28px 28px;
     mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
   }
 
   .bfi-night-wash {
     background:
-      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.14) 0%, transparent 55%),
-      radial-gradient(ellipse 70% 40% at 100% 0%, rgb(255 255 255 / 0.35) 0%, transparent 50%),
-      linear-gradient(180deg, #b7c0c8 0%, var(--color-night) 40%, #98a4ae 100%);
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 40% at 100% 0%, rgb(255 248 247 / 0.12) 0%, transparent 50%),
+      linear-gradient(180deg, #a06d6f 0%, var(--color-night) 42%, #7a4e50 100%);
   }
 }
 
