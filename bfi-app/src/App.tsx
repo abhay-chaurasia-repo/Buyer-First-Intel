@@ -3,6 +3,7 @@ import { HomeScreen } from '@/screens/HomeScreen'
 import { PropertyDetailScreen } from '@/screens/PropertyDetailScreen'
 import { WatchlistScreen } from '@/screens/WatchlistScreen'
 import { JourneyScreen } from '@/screens/JourneyScreen'
+import { GuidanceScreen } from '@/screens/GuidanceScreen'
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
       <Route path="/property/:address" element={<PropertyDetailScreen />} />
       <Route path="/watchlist" element={<WatchlistScreen />} />
       <Route path="/journey" element={<JourneyScreen />} />
+      <Route path="/guidance/:docId" element={<GuidanceScreen />} />
       <Route path="/audit" element={<Navigate to="/journey" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -1,6 +1,14 @@
 import { useId, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Search, ShieldCheck } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  ArrowRight,
+  Banknote,
+  ClipboardCheck,
+  MapPin,
+  Scale,
+  Search,
+  ShieldCheck,
+} from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { cn } from '@/lib/utils'
 
@@ -36,7 +44,7 @@ export function HomeScreen() {
           </span>
         </header>
 
-        <div className="flex flex-1 flex-col items-center justify-center py-10">
+        <div className="flex flex-1 flex-col items-center py-10">
           <div className="animate-bfi-rise w-full max-w-md text-center">
             <p className="font-display text-[2.65rem] leading-none font-extrabold tracking-tight text-ink sm:text-5xl">
               <span className="bg-gradient-to-br from-saffron-deep via-saffron to-saffron-bright bg-clip-text text-transparent">
@@ -104,6 +112,81 @@ export function HomeScreen() {
           >
             No MLS. No prices. County records first.
           </p>
+
+          {/* Below search: NREC visit guidance + related briefs */}
+          <section
+            className="animate-bfi-rise mt-8 w-full max-w-md space-y-4 text-left"
+            style={{ animationDelay: '200ms' }}
+            aria-label="Visit guidance"
+            data-testid="home-nrec-section"
+          >
+            <div className="flex items-center gap-2 px-0.5">
+              <Scale className="h-4 w-4 text-saffron" strokeWidth={2.25} />
+              <p className="font-display text-[11px] font-bold tracking-[0.16em] text-ink-muted uppercase">
+                National Real Estate Commission
+              </p>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-line bg-paper-elevated/90 p-4 shadow-sm">
+              <p className="text-[13px] font-semibold leading-snug text-ink">
+                Verdict on visits: how they work & what they cost
+              </p>
+              <p className="text-[13px] leading-relaxed text-ink-muted">
+                Presence verification is free in BFI — GPS confirm within ~100m, no dwell timer, no
+                seller-paid visit boosts. Physical showing logistics stay outside the app; you should
+                not be charged a special fee just to verify you were there.
+              </p>
+              <Link
+                to="/guidance/nrec-visit-verdict"
+                className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-saffron-deep underline-offset-2 hover:underline touch-manipulation"
+                data-testid="link-nrec-visit-verdict"
+              >
+                Read the full NREC visit verdict
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+
+            <ul className="space-y-3">
+              <li className="flex gap-3 px-0.5">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden />
+                <p className="text-[13px] leading-relaxed text-ink-muted">
+                  <span className="font-semibold text-ink">On site:</span> tap Verify to log date and
+                  time. Compare timing yourself to when you believe the home was listed.
+                </p>
+              </li>
+              <li className="flex gap-3 px-0.5">
+                <Banknote className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden />
+                <p className="text-[13px] leading-relaxed text-ink-muted">
+                  <span className="font-semibold text-ink">Cost:</span> BFI visit confirm is $0.
+                  Inspection and other paid diligence stay optional — not a precondition of Verify.
+                </p>
+              </li>
+              <li className="flex gap-3 px-0.5">
+                <ClipboardCheck className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden />
+                <p className="text-[13px] leading-relaxed text-ink-muted">
+                  <span className="font-semibold text-ink">After a visit:</span> upvote Buyer Community
+                  labels and track steps in Journey.
+                </p>
+              </li>
+            </ul>
+
+            <div className="flex flex-wrap gap-x-4 gap-y-2 px-0.5 pt-1">
+              <Link
+                to="/guidance/nrec-cost-transparency"
+                className="inline-flex min-h-10 items-center text-[13px] font-semibold text-saffron-deep underline-offset-2 hover:underline touch-manipulation"
+                data-testid="link-nrec-cost-transparency"
+              >
+                Cost transparency brief
+              </Link>
+              <Link
+                to="/journey"
+                className="inline-flex min-h-10 items-center text-[13px] font-semibold text-saffron-deep underline-offset-2 hover:underline touch-manipulation"
+                data-testid="link-home-journey"
+              >
+                Open Journey checklist
+              </Link>
+            </div>
+          </section>
         </div>
       </div>
     </AppShell>
