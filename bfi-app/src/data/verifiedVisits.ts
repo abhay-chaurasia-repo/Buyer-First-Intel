@@ -155,7 +155,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 31,
     withinRadius: true,
     platform: 'iOS',
-    communityLabelIds: ['quiet-at-night', 'roomy-driveway', 'fair-value-feel'],
+    communityLabelIds: ['quiet-at-night', 'roomy-driveway', 'no-overhead-power-lines'],
   },
   {
     id: 'vv-6',
@@ -165,7 +165,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 47,
     withinRadius: true,
     platform: 'iOS',
-    communityLabelIds: ['exterior-deferred-maintenance', 'drainage-concern', 'usable-backyard'],
+    communityLabelIds: ['exterior-deferred-maintenance', 'drainage-concern', 'high-tension-cables-nearby'],
   },
 ]
 

@@ -5,6 +5,7 @@ export type BuyerLabelCategoryId =
   | 'parking'
   | 'structure'
   | 'lot-exterior'
+  | 'surroundings'
   | 'deal-feel'
 
 export type BuyerLabelTone = 'positive' | 'negative'
@@ -46,6 +47,11 @@ export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
     id: 'lot-exterior',
     title: 'Lot & exterior',
     blurb: 'Curb appeal strengths alongside outdoor watch-outs',
+  },
+  {
+    id: 'surroundings',
+    title: 'Surroundings & utilities',
+    blurb: 'Power lines, towers, corridors, and nearby industrial feel',
   },
   {
     id: 'deal-feel',
@@ -100,6 +106,21 @@ export const BUYER_COMMUNITY_LABELS: BuyerCommunityLabel[] = [
   { id: 'drainage-concern', categoryId: 'lot-exterior', text: 'Drainage / standing water concern', tone: 'negative', seedVotes: 1 },
   { id: 'hoa-restrictive-feel', categoryId: 'lot-exterior', text: 'HOA feels restrictive', tone: 'negative', seedVotes: 0 },
   { id: 'small-or-awkward-lot', categoryId: 'lot-exterior', text: 'Small or awkward lot', tone: 'negative', seedVotes: 0 },
+
+  // Surroundings & utilities — positive
+  { id: 'no-overhead-power-lines', categoryId: 'surroundings', text: 'No overhead power lines in view', tone: 'positive', seedVotes: 3 },
+  { id: 'clear-skyline-views', categoryId: 'surroundings', text: 'Clear skyline / open views', tone: 'positive', seedVotes: 2 },
+  { id: 'clean-air-feel', categoryId: 'surroundings', text: 'Clean air feel on site', tone: 'positive', seedVotes: 2 },
+  { id: 'quiet-utility-corridor', categoryId: 'surroundings', text: 'No obvious utility corridor', tone: 'positive', seedVotes: 1 },
+  { id: 'buried-utilities-feel', categoryId: 'surroundings', text: 'Utilities feel buried / discreet', tone: 'positive', seedVotes: 2 },
+  // Surroundings & utilities — negative
+  { id: 'high-tension-cables-nearby', categoryId: 'surroundings', text: 'High-tension cables nearby', tone: 'negative', seedVotes: 2 },
+  { id: 'power-lines-over-lot', categoryId: 'surroundings', text: 'Power lines over or beside lot', tone: 'negative', seedVotes: 1 },
+  { id: 'cell-tower-visible', categoryId: 'surroundings', text: 'Cell tower visible nearby', tone: 'negative', seedVotes: 1 },
+  { id: 'substation-nearby', categoryId: 'surroundings', text: 'Electrical substation nearby', tone: 'negative', seedVotes: 0 },
+  { id: 'pipeline-or-easement', categoryId: 'surroundings', text: 'Pipeline / utility easement feel', tone: 'negative', seedVotes: 0 },
+  { id: 'industrial-odor', categoryId: 'surroundings', text: 'Industrial odor at times', tone: 'negative', seedVotes: 0 },
+  { id: 'rail-or-freeway-adjacent', categoryId: 'surroundings', text: 'Rail or freeway adjacent', tone: 'negative', seedVotes: 1 },
 
   // Deal feel — positive
   { id: 'fair-value-feel', categoryId: 'deal-feel', text: 'Feels fairly priced', tone: 'positive', seedVotes: 3 },
