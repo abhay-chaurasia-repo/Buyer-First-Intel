@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ExternalLink, Scale } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Scale } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
-import { getGuidanceDoc } from '@/data/nrecGuidance'
+import { getGuidanceDoc, inAppBrowsePath } from '@/data/nrecGuidance'
 
 /**
  * In-app guidance reader — links open here instead of leaving the app shell.
@@ -27,6 +27,15 @@ export function GuidanceScreen() {
       </AppShell>
     )
   }
+
+  const relatedId =
+    doc.id === 'buyer-commission-brief'
+      ? 'before-you-talk-to-an-agent'
+      : 'buyer-commission-brief'
+  const relatedLabel =
+    doc.id === 'buyer-commission-brief'
+      ? 'Before you talk to an agent'
+      : 'Commission settlement buyer brief'
 
   return (
     <AppShell contentClassName="relative overflow-hidden">
@@ -75,6 +84,17 @@ export function GuidanceScreen() {
             </h1>
             <p className="mt-2 text-[0.95rem] leading-relaxed text-ink-muted">{doc.summary}</p>
 
+            {doc.sourceUrl ? (
+              <Link
+                to={inAppBrowsePath(doc.sourceUrl)}
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-saffron/35 bg-saffron-soft/80 px-4 text-sm font-semibold text-saffron-deep touch-manipulation"
+                data-testid="link-open-official-source"
+              >
+                Open official source in app
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            ) : null}
+
             <div className="mt-6 space-y-6">
               {doc.sections.map((section) => (
                 <section key={section.heading}>
@@ -94,30 +114,20 @@ export function GuidanceScreen() {
 
             <div className="mt-8 space-y-2 border-t border-line pt-5 pb-2">
               <p className="text-[12px] text-ink-faint">Related in-app guidance</p>
-              {doc.id === 'nrec-visit-verdict' ? (
-                <Link
-                  to="/guidance/nrec-cost-transparency"
-                  className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-saffron-deep touch-manipulation"
-                >
-                  Cost transparency brief
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                </Link>
-              ) : (
-                <Link
-                  to="/guidance/nrec-visit-verdict"
-                  className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-saffron-deep touch-manipulation"
-                >
-                  Visit verdict brief
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                </Link>
-              )}
+              <Link
+                to={`/guidance/${relatedId}`}
+                className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-saffron-deep touch-manipulation"
+              >
+                {relatedLabel}
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
               <div>
                 <Link
                   to="/journey"
                   className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-saffron-deep touch-manipulation"
                 >
                   Open Journey checklist
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>
               </div>
             </div>

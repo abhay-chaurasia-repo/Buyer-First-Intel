@@ -1,4 +1,11 @@
-/** In-app National Real Estate Commission (NREC) style guidance — demo content. */
+/**
+ * Buyer-facing guidance grounded in the residential real estate broker
+ * commissions antitrust settlements (NAR / related defendants).
+ * Official source: https://www.realestatecommissionlitigation.com/nar
+ */
+
+export const NAR_SETTLEMENT_URL =
+  'https://www.realestatecommissionlitigation.com/nar'
 
 export type GuidanceDoc = {
   id: string
@@ -8,87 +15,107 @@ export type GuidanceDoc = {
   summary: string
   updatedLabel: string
   sections: Array<{ heading: string; paragraphs: string[] }>
+  /** Optional official URL opened inside the in-app browser */
+  sourceUrl?: string
+  sourceLabel?: string
 }
 
-export const NREC_VISIT_VERDICT: GuidanceDoc = {
-  id: 'nrec-visit-verdict',
-  path: '/guidance/nrec-visit-verdict',
-  eyebrow: 'National Real Estate Commission',
-  title: 'Verdict on property visits & buyer costs',
+export const BUYER_COMMISSION_BRIEF: GuidanceDoc = {
+  id: 'buyer-commission-brief',
+  path: '/guidance/buyer-commission-brief',
+  eyebrow: 'For buyers · before you hire an agent',
+  title: 'What the commission settlements mean for you',
   summary:
-    'How on-site verification should work for buyers, what may be charged, and what must stay free of seller influence.',
-  updatedLabel: 'Guidance brief · 2026',
+    'Residential broker-commission antitrust settlements changed how buyer representation and compensation are disclosed. Use this before you tour, make an offer, or sign with an agent.',
+  updatedLabel: 'Buyer brief · based on public settlement materials',
+  sourceUrl: NAR_SETTLEMENT_URL,
+  sourceLabel: 'Official NAR / HomeServices settlement site',
   sections: [
     {
-      heading: 'How a visit should work',
+      heading: 'What the lawsuits were about',
       paragraphs: [
-        'A verified visit is a buyer-initiated presence confirmation at the listed address. Buyers should be able to confirm they were on site without dwelling timers, seller chaperones, or listing-agent gatekeeping of the verification itself.',
-        'In Buyer-First Intel, Verify records GPS presence within roughly 100 meters of the property pin. Date and time are logged so other buyers can judge the pattern — the app does not invent a listing-post timestamp for you.',
-        'Verified presence may unlock stronger weight on structured Buyer Community labels. Free-text marketing claims are not a substitute for these structured signals.',
+        'Several lawsuits alleged an anticompetitive agreement that resulted in home sellers paying inflated commissions to real estate brokers or agents, in violation of antitrust law.',
+        'Settlements include The National Association of REALTORS® (NAR) and HomeServices (also known as Berkshire Hathaway HomeServices), among other defendants. Public materials state the combined settlement value with NAR, HomeServices, and other defendants is over $1 billion.',
+        'The court granted final approval to the NAR and HomeServices settlements on November 27, 2024. Appeals can delay when settlements become final and when benefits are distributed — check the official site for the latest status.',
       ],
     },
     {
-      heading: 'What visiting should cost',
+      heading: 'Who the settlement class focuses on',
       paragraphs: [
-        'Presence verification inside this buyer tool is free. There is no per-visit fee, no “verification credit,” and no charge to unlock county facts after a visit.',
-        'Separate from the app: a broker or host may still set rules for physical showings (appointment windows, lockbox access). Those logistics are outside BFI. NREC guidance is that buyers should not be billed a special “due diligence visit fee” merely to stand on public right-of-way or confirm presence for their own records.',
-        'If a third party demands payment solely to allow a GPS presence check, treat that as a red flag and document it in your private notes.',
+        'Eligibility to claim settlement benefits is primarily described for people who sold a home, listed it on an MLS, and paid a commission during eligible date ranges. That is seller-side claim language on the official site.',
+        'As a buyer, you may not be filing that claim — but the practice changes that came with the settlement still affect how you hire an agent, what you sign before touring, and how compensation is negotiated.',
       ],
     },
     {
-      heading: 'Buyer-only stance',
+      heading: 'Practice changes that affect buyers',
       paragraphs: [
-        'Visit logs and community labels exist to reduce manufactured urgency and asymmetric information. Seller-paid “boosted visit counts” or paid placement of labels conflict with this verdict and should not appear in a buyer-only workspace.',
-        'Costs that are legitimate (inspection, appraisal, survey) remain the buyer’s choice after diligence — not a precondition of verifying that you visited.',
+        'Offers of compensation to buyer brokers are no longer allowed on Multiple Listing Services (MLS). Compensation can still be negotiated off-MLS between consumers and professionals.',
+        'If your agent uses an MLS, you generally need a written buyer agreement before touring a home. That agreement should state compensation in an objective way (for example a flat fee, percent, or hourly rate — not open-ended), say commissions are negotiable and not set by law, and limit the agent from collecting more than you agreed.',
+        'Seller concessions (for example help with closing costs) may still appear in marketing channels in ways that differ from old “buyer agent commission on MLS” fields. Read every number yourself.',
       ],
     },
     {
-      heading: 'Practical checklist',
+      heading: 'Why BFI puts facts first',
       paragraphs: [
-        '1. Open the address in BFI and review County’s Fact vs listing size before you go.',
-        '2. On site, tap Verify when you are within range — note the date and time yourself against when you believe the home was listed.',
-        '3. Upvote Plus / Watch labels that match what you observed; those labels surface on Verified Visits for others.',
-        '4. Keep private notes for anything sensitive; do not rely on free-text public comments.',
+        'Talking to an agent or writing an offer is easier when you already know the county record story: living area vs listing claims, tax history, sales history, schools, and what verified visitors labeled on site.',
+        'BFI is buyer-only: no MLS feed, no prices, county records and diligence tools first — so you walk into agent conversations with questions, not a blank slate.',
+        'Star properties into Watchlist, verify visits on site, and use Journey to track prepare → diligence → offer → close.',
       ],
     },
   ],
 }
 
-export const NREC_COST_TRANSPARENCY: GuidanceDoc = {
-  id: 'nrec-cost-transparency',
-  path: '/guidance/nrec-cost-transparency',
-  eyebrow: 'National Real Estate Commission',
-  title: 'Cost transparency for buyer diligence',
+export const BUYER_BEFORE_AGENT_BRIEF: GuidanceDoc = {
+  id: 'before-you-talk-to-an-agent',
+  path: '/guidance/before-you-talk-to-an-agent',
+  eyebrow: 'Buyer playbook',
+  title: 'Do this before you talk to a real estate agent',
   summary:
-    'Which diligence steps should stay free, which are optional paid services, and how visits fit the fee picture.',
-  updatedLabel: 'Guidance brief · 2026',
+    'A short sequence so you keep leverage: know the property, know the commission rules, then decide what help you want to pay for.',
+  updatedLabel: 'Buyer playbook · BFI',
+  sourceUrl: NAR_SETTLEMENT_URL,
+  sourceLabel: 'Official settlement website',
   sections: [
     {
-      heading: 'Free by default in a buyer tool',
+      heading: '1. Diligence the address yourself',
       paragraphs: [
-        'Public-record lookup framing, visit presence confirmation, and structured community labels should not require a paywall.',
-        'Watchlist and Journey checklist tracking are buyer productivity aids — not billable events.',
+        'Paste the address in BFI. Compare County’s Fact to listing size. Read sales and tax history. Check schools and surroundings labels from verified visitors.',
+        'Write private notes on what would change your mind. Star only the addresses worth a second look.',
       ],
     },
     {
-      heading: 'Optional paid work (outside the app)',
+      heading: '2. Know compensation is negotiable',
       paragraphs: [
-        'Home inspection, specialized reports, surveys, and legal review are optional paid engagements the buyer chooses after early diligence.',
-        'Those fees are not “visit costs.” Conflating them with a presence check misleads buyers about what verification means.',
+        'Broker fees and commissions are not set by law. Before you tour with an MLS-using agent, expect a written buyer agreement that states what you will pay (or how pay is determined) in clear terms.',
+        'Do not sign open-ended compensation language. Ask what happens if a seller later offers a concession — your agreement should cap what your agent can receive.',
       ],
     },
     {
-      heading: 'Commission context',
+      heading: '3. Decide what you want an agent for',
       paragraphs: [
-        'Broker compensation is negotiated and disclosed under applicable rules. Visit verification must not be bundled as a hidden add-on to commission or seller concessions.',
-        'Buyers should be able to complete early diligence — including a verified visit — without triggering a commission obligation merely by confirming presence.',
+        'Negotiation, contract paperwork, scheduling access, and local custom still matter. You can still choose full-service, limited service, or (where lawful) represent yourself with other professional help.',
+        'Use Journey’s checklist so agent conversations stay on your timeline — not a pressure script.',
+      ],
+    },
+    {
+      heading: '4. Visit with your eyes open',
+      paragraphs: [
+        'BFI Verify logs GPS presence with date and time at no charge inside the app. Use that log — and Buyer Community Plus/Watch labels — to remember what you actually observed before you escalate to an offer.',
       ],
     },
   ],
 }
 
-export const GUIDANCE_DOCS: GuidanceDoc[] = [NREC_VISIT_VERDICT, NREC_COST_TRANSPARENCY]
+export const GUIDANCE_DOCS: GuidanceDoc[] = [BUYER_COMMISSION_BRIEF, BUYER_BEFORE_AGENT_BRIEF]
 
 export function getGuidanceDoc(id: string) {
+  // Legacy IDs from earlier drafts → current buyer briefs
+  if (id === 'nrec-visit-verdict' || id === 'nrec-cost-transparency') {
+    return BUYER_COMMISSION_BRIEF
+  }
   return GUIDANCE_DOCS.find((doc) => doc.id === id)
+}
+
+export function inAppBrowsePath(url: string) {
+  return `/browse?url=${encodeURIComponent(url)}`
 }

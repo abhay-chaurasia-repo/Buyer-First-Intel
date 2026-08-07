@@ -2,14 +2,15 @@ import { useId, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
-  Banknote,
   ClipboardCheck,
-  MapPin,
+  FileSearch,
+  Handshake,
   Scale,
   Search,
   ShieldCheck,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { NAR_SETTLEMENT_URL, inAppBrowsePath } from '@/data/nrecGuidance'
 import { cn } from '@/lib/utils'
 
 export function HomeScreen() {
@@ -55,7 +56,8 @@ export function HomeScreen() {
               Due Diligence
             </h1>
             <p className="mx-auto mt-3 max-w-sm text-[0.95rem] leading-relaxed text-ink-muted">
-              Paste a property address. Verify public-record truth before you commit.
+              Paste a property address. Verify public-record truth before you commit — and before you
+              talk to an agent.
             </p>
           </div>
 
@@ -113,77 +115,101 @@ export function HomeScreen() {
             No MLS. No prices. County records first.
           </p>
 
-          {/* Below search: NREC visit guidance + related briefs */}
           <section
             className="animate-bfi-rise mt-8 w-full max-w-md space-y-4 text-left"
             style={{ animationDelay: '200ms' }}
-            aria-label="Visit guidance"
-            data-testid="home-nrec-section"
+            aria-label="Commission settlement guidance for buyers"
+            data-testid="home-settlement-section"
           >
             <div className="flex items-center gap-2 px-0.5">
               <Scale className="h-4 w-4 text-saffron" strokeWidth={2.25} />
               <p className="font-display text-[11px] font-bold tracking-[0.16em] text-ink-muted uppercase">
-                National Real Estate Commission
+                Broker commission settlements
               </p>
             </div>
 
             <div className="space-y-3 rounded-2xl border border-line bg-paper-elevated/90 p-4 shadow-sm">
               <p className="text-[13px] font-semibold leading-snug text-ink">
-                Verdict on visits: how they work & what they cost
+                Know the rules before you hire an agent or write an offer
               </p>
               <p className="text-[13px] leading-relaxed text-ink-muted">
-                Presence verification is free in BFI — GPS confirm within ~100m, no dwell timer, no
-                seller-paid visit boosts. Physical showing logistics stay outside the app; you should
-                not be charged a special fee just to verify you were there.
+                Lawsuits alleged anticompetitive commission practices that inflated what sellers
+                paid. Settlements with NAR, HomeServices, and other defendants are valued at over $1
+                billion in public materials. Court approval came November 27, 2024 — appeals can delay
+                final benefits. For buyers, the lasting shift is how compensation is disclosed and
+                negotiated.
               </p>
+              <ul className="space-y-2 text-[13px] leading-relaxed text-ink-muted">
+                <li>
+                  <span className="font-semibold text-ink">MLS:</span> offers of buyer-broker
+                  compensation are no longer allowed on the MLS.
+                </li>
+                <li>
+                  <span className="font-semibold text-ink">Before touring:</span> expect a written
+                  buyer agreement with clear, negotiable pay terms — not open-ended.
+                </li>
+                <li>
+                  <span className="font-semibold text-ink">Your leverage:</span> commissions are not
+                  set by law. Diligence the house first, then decide what help you want to buy.
+                </li>
+              </ul>
               <Link
-                to="/guidance/nrec-visit-verdict"
+                to={inAppBrowsePath(NAR_SETTLEMENT_URL)}
                 className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-saffron-deep underline-offset-2 hover:underline touch-manipulation"
-                data-testid="link-nrec-visit-verdict"
+                data-testid="link-nar-settlement-site"
               >
-                Read the full NREC visit verdict
+                Open official settlement site in app
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>
 
             <ul className="space-y-3">
               <li className="flex gap-3 px-0.5">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden />
+                <FileSearch className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden />
                 <p className="text-[13px] leading-relaxed text-ink-muted">
-                  <span className="font-semibold text-ink">On site:</span> tap Verify to log date and
-                  time. Compare timing yourself to when you believe the home was listed.
+                  <span className="font-semibold text-ink">Before any offer:</span> compare county
+                  living area to listing claims, tax and sales history, schools, and community
+                  labels.
                 </p>
               </li>
               <li className="flex gap-3 px-0.5">
-                <Banknote className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden />
+                <Handshake className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden />
                 <p className="text-[13px] leading-relaxed text-ink-muted">
-                  <span className="font-semibold text-ink">Cost:</span> BFI visit confirm is $0.
-                  Inspection and other paid diligence stay optional — not a precondition of Verify.
+                  <span className="font-semibold text-ink">Before an agent:</span> know what you will
+                  pay for representation. Sign only objective compensation — flat fee, percent, or
+                  hourly.
                 </p>
               </li>
               <li className="flex gap-3 px-0.5">
                 <ClipboardCheck className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden />
                 <p className="text-[13px] leading-relaxed text-ink-muted">
-                  <span className="font-semibold text-ink">After a visit:</span> upvote Buyer Community
-                  labels and track steps in Journey.
+                  <span className="font-semibold text-ink">Stay on your path:</span> star Watchlist
+                  homes and track Prepare → Diligence → Offer in Journey.
                 </p>
               </li>
             </ul>
 
             <div className="flex flex-wrap gap-x-4 gap-y-2 px-0.5 pt-1">
               <Link
-                to="/guidance/nrec-cost-transparency"
+                to="/guidance/buyer-commission-brief"
                 className="inline-flex min-h-10 items-center text-[13px] font-semibold text-saffron-deep underline-offset-2 hover:underline touch-manipulation"
-                data-testid="link-nrec-cost-transparency"
+                data-testid="link-buyer-commission-brief"
               >
-                Cost transparency brief
+                Buyer settlement brief
+              </Link>
+              <Link
+                to="/guidance/before-you-talk-to-an-agent"
+                className="inline-flex min-h-10 items-center text-[13px] font-semibold text-saffron-deep underline-offset-2 hover:underline touch-manipulation"
+                data-testid="link-before-agent"
+              >
+                Before you talk to an agent
               </Link>
               <Link
                 to="/journey"
                 className="inline-flex min-h-10 items-center text-[13px] font-semibold text-saffron-deep underline-offset-2 hover:underline touch-manipulation"
                 data-testid="link-home-journey"
               >
-                Open Journey checklist
+                Journey checklist
               </Link>
             </div>
           </section>
