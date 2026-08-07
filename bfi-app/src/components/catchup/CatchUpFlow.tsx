@@ -59,34 +59,44 @@ const surfaceMeta: Record<
   },
 }
 
+function stripHash(value: string) {
+  return value.replace(/^#+/, '').replaceAll('#', '')
+}
+
 function DetailSection({ card }: { card: CatchUpCard }) {
   return (
-    <section
-      className="border-b border-night-line px-4 py-4 last:border-b-0"
+    <article
+      className="rounded-2xl border border-night-line bg-coastal-deep/55 p-2 shadow-sm backdrop-blur-sm"
       data-testid={`detail-section-${card.id}`}
     >
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-saffron-glow uppercase">
-        {card.type.replaceAll('_', ' ')}
-      </p>
-      <h3 className="mt-1.5 text-[1.15rem] font-bold leading-snug text-night-ink">
-        {card.headline}
-      </h3>
-      <p className="mt-2 text-[14px] leading-relaxed text-night-muted">{card.preview}</p>
+      <div className="rounded-xl px-2 py-2">
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-saffron-glow uppercase">
+          {stripHash(card.type.replaceAll('_', ' '))}
+        </p>
+        <h3 className="mt-1 text-[15px] font-bold leading-snug text-night-ink">
+          {stripHash(card.headline)}
+        </h3>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
+          {stripHash(card.preview)}
+        </p>
+      </div>
 
       {card.fields && card.fields.length > 0 ? (
-        <dl className="mt-4 space-y-2">
+        <div className="mt-1 space-y-1.5">
           {card.fields.map((field) => (
             <div
               key={`${field.label}-${field.value}`}
-              className="flex items-baseline justify-between gap-3"
+              className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-night-line bg-coastal-deep/60 px-3 py-2.5"
             >
-              <dt className="text-[12px] text-night-faint">{field.label}</dt>
-              <dd className="text-right text-[13px] font-semibold text-night-ink">{field.value}</dd>
+              <span className="text-[12px] text-night-faint">{stripHash(field.label)}</span>
+              <span className="text-right text-[13px] font-semibold text-night-ink">
+                {stripHash(field.value)}
+              </span>
             </div>
           ))}
-        </dl>
+        </div>
       ) : null}
-    </section>
+    </article>
   )
 }
 
@@ -145,9 +155,13 @@ export function CatchUpFlow({ surface, response, onClose }: CatchUpFlowProps) {
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {items.length > 0 ? (
-            items.map((card) => <DetailSection key={card.id} card={card} />)
+            <div className="space-y-3">
+              {items.map((card) => (
+                <DetailSection key={card.id} card={card} />
+              ))}
+            </div>
           ) : (
             <div className="flex h-full flex-col items-center justify-center px-6 text-center">
               <p className="text-sm text-night-muted">No details available for this section yet.</p>
