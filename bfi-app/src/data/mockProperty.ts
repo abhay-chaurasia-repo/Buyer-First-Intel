@@ -1,3 +1,5 @@
+import { BUYER_LABEL_CATEGORIES } from '@/data/buyerCommunityLabels'
+
 export type PropertyChannelId =
   | '01-property-summary'
   | '02-owner-details'
@@ -262,9 +264,9 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
     {
       id: 'buyer-insights',
       title: 'Buyer Community',
-      subtitle: 'Insights',
-      badge: '3',
-      detail: 'Aggregated structured buyer signals',
+      subtitle: 'Label votes',
+      badge: String(BUYER_LABEL_CATEGORIES.length),
+      detail: 'Pre-set labels · verified visitors upvote',
       accent: 'buyer-insights',
     },
     {

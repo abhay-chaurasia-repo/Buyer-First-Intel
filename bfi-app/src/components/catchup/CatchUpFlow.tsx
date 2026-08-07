@@ -16,6 +16,8 @@ import {
   type CatchUpCard,
   type CatchUpSurface,
 } from '@/data/catchUpApi'
+import { BUYER_COMMUNITY_LABELS } from '@/data/buyerCommunityLabels'
+import { BuyerCommunityPanel } from '@/components/catchup/BuyerCommunityPanel'
 import { cn } from '@/lib/utils'
 
 export type { CatchUpSurface }
@@ -52,7 +54,7 @@ const surfaceMeta: Record<
     title: 'Buyer Community',
     Icon: Users,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'Signals shared by other buyers on this property',
+    blurb: 'Pre-set labels — verified visitors upvote what they observe',
   },
   schools: {
     title: 'Schools',
@@ -130,6 +132,7 @@ type CatchUpFlowProps = {
   surface: CatchUpSurface
   response: CatchUpApiResponse
   address: string
+  propertyId: string
   onClose: () => void
 }
 
@@ -137,11 +140,19 @@ type CatchUpFlowProps = {
  * Tile interior that mirrors the post-search property page:
  * same top bar, collapsible history-style boxes, and AppShell bottom nav.
  */
-export function CatchUpFlow({ surface, response, address, onClose }: CatchUpFlowProps) {
+export function CatchUpFlow({
+  surface,
+  response,
+  address,
+  propertyId,
+  onClose,
+}: CatchUpFlowProps) {
   const meta = surfaceMeta[surface]
   const Icon = meta.Icon
   const items = response.items
   const truncated = truncateAddress(address)
+  const isBuyerCommunity = surface === 'buyer-insights'
+  const headerCount = isBuyerCommunity ? BUYER_COMMUNITY_LABELS.length : items.length
 
   return (
     <div
@@ -206,28 +217,32 @@ export function CatchUpFlow({ surface, response, address, onClose }: CatchUpFlow
               <p className="mt-0.5 text-[11px] text-night-faint">{meta.blurb}</p>
             </div>
             <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-              {items.length}
+              {headerCount}
             </span>
           </div>
         </section>
 
-        <div className="mt-3 space-y-4 px-3">
-          {items.length > 0 ? (
-            items.map((card) => <DetailSection key={card.id} card={card} />)
-          ) : (
-            <div className="rounded-2xl border border-night-line bg-coastal-deep/55 p-4 text-center shadow-sm backdrop-blur-sm">
-              <p className="text-sm text-night-muted">No details available for this section yet.</p>
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-4 inline-flex min-h-11 items-center gap-1 rounded-xl border border-night-line bg-coastal-deep/60 px-4 text-sm font-semibold text-night-ink touch-manipulation"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Back
-              </button>
-            </div>
-          )}
-        </div>
+        {isBuyerCommunity ? (
+          <BuyerCommunityPanel propertyId={propertyId} />
+        ) : (
+          <div className="mt-3 space-y-4 px-3">
+            {items.length > 0 ? (
+              items.map((card) => <DetailSection key={card.id} card={card} />)
+            ) : (
+              <div className="rounded-2xl border border-night-line bg-coastal-deep/55 p-4 text-center shadow-sm backdrop-blur-sm">
+                <p className="text-sm text-night-muted">No details available for this section yet.</p>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="mt-4 inline-flex min-h-11 items-center gap-1 rounded-xl border border-night-line bg-coastal-deep/60 px-4 text-sm font-semibold text-night-ink touch-manipulation"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
