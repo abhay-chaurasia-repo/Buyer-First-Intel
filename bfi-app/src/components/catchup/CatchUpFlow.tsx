@@ -1,47 +1,66 @@
 import { useMemo, useRef, useState } from 'react'
 import {
-  Bookmark,
   Check,
   ChevronLeft,
+  FileText,
   Hash,
-  Headphones,
-  Layers,
+  History,
+  Receipt,
+  School,
   ShieldCheck,
   Undo2,
+  Users,
   X,
+  type LucideIcon,
 } from 'lucide-react'
-import type { CatchUpApiResponse, CatchUpCard } from '@/data/catchUpApi'
+import {
+  type CatchUpApiResponse,
+  type CatchUpCard,
+  type CatchUpSurface,
+} from '@/data/catchUpApi'
 import { cn } from '@/lib/utils'
 
-export type CatchUpSurface = 'catch-up' | 'huddles' | 'later' | 'verified'
+export type { CatchUpSurface }
 
 const surfaceMeta: Record<
   CatchUpSurface,
-  { title: string; Icon: typeof Layers; accent: string; iconWrap: string }
+  { title: string; Icon: LucideIcon; accent: string; iconWrap: string }
 > = {
-  'catch-up': {
-    title: 'Catch up',
-    Icon: Layers,
+  'county-facts': {
+    title: "County's Fact",
+    Icon: FileText,
     accent: 'text-saffron-glow',
     iconWrap: 'bg-saffron/25 text-saffron-glow',
   },
-  huddles: {
-    title: 'Huddles',
-    Icon: Headphones,
+  'sales-history': {
+    title: 'Sales History',
+    Icon: History,
     accent: 'text-saffron-glow',
     iconWrap: 'bg-saffron-bright/25 text-saffron-glow',
   },
-  later: {
-    title: 'Later',
-    Icon: Bookmark,
+  'tax-history': {
+    title: 'Tax History',
+    Icon: Receipt,
     accent: 'text-saffron-glow',
     iconWrap: 'bg-saffron/20 text-saffron-glow',
   },
-  verified: {
-    title: 'Verified',
+  'verified-visits': {
+    title: 'Verified Visits',
     Icon: ShieldCheck,
     accent: 'text-saffron-glow',
     iconWrap: 'bg-night-ink/15 text-saffron-glow',
+  },
+  'buyer-insights': {
+    title: 'Buyer Community Insights',
+    Icon: Users,
+    accent: 'text-saffron-glow',
+    iconWrap: 'bg-saffron/25 text-saffron-glow',
+  },
+  schools: {
+    title: 'Schools Associated',
+    Icon: School,
+    accent: 'text-saffron-glow',
+    iconWrap: 'bg-saffron-bright/20 text-saffron-glow',
   },
 }
 

@@ -1,26 +1,23 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  Bookmark,
   ChevronDown,
   Crosshair,
-  Headphones,
-  Layers,
+  FileText,
+  History,
   Plus,
+  Receipt,
+  School,
   ShieldCheck,
   StickyNote,
   Star,
   Trash2,
+  Users,
   type LucideIcon,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { CatchUpFlow, type CatchUpSurface } from '@/components/catchup/CatchUpFlow'
-import {
-  fetchCatchUpApi,
-  fetchHuddlesApi,
-  fetchLaterApi,
-  fetchVerifiedApi,
-} from '@/data/catchUpApi'
+import { fetchSurfaceApi } from '@/data/catchUpApi'
 import {
   DEMO_PROPERTY,
   SEARCH_HISTORY,
@@ -62,24 +59,30 @@ function persistNotes(propertyKey: string, notes: SavedNote[]) {
 }
 
 const metricIcons: Record<MetricCard['accent'], LucideIcon> = {
-  'catch-up': Layers,
-  huddles: Headphones,
-  later: Bookmark,
-  verified: ShieldCheck,
+  'county-facts': FileText,
+  'sales-history': History,
+  'tax-history': Receipt,
+  'verified-visits': ShieldCheck,
+  'buyer-insights': Users,
+  schools: School,
 }
 
 const metricIconWrap: Record<MetricCard['accent'], string> = {
-  'catch-up': 'bg-saffron/25 text-saffron-glow',
-  huddles: 'bg-saffron-bright/25 text-saffron-glow',
-  later: 'bg-saffron/20 text-saffron-glow',
-  verified: 'bg-night-ink/15 text-saffron-glow',
+  'county-facts': 'bg-saffron/25 text-saffron-glow',
+  'sales-history': 'bg-saffron-bright/25 text-saffron-glow',
+  'tax-history': 'bg-saffron/20 text-saffron-glow',
+  'verified-visits': 'bg-night-ink/15 text-saffron-glow',
+  'buyer-insights': 'bg-saffron/25 text-saffron-glow',
+  schools: 'bg-saffron-bright/20 text-saffron-glow',
 }
 
 const metricToSurface: Record<MetricCard['id'], CatchUpSurface> = {
-  'catch-up': 'catch-up',
-  huddles: 'huddles',
-  later: 'later',
-  verified: 'verified',
+  'county-facts': 'county-facts',
+  'sales-history': 'sales-history',
+  'tax-history': 'tax-history',
+  'verified-visits': 'verified-visits',
+  'buyer-insights': 'buyer-insights',
+  schools: 'schools',
 }
 
 function truncateAddress(address: string, max = 22) {
@@ -233,7 +236,7 @@ export function PropertyDetailScreen() {
                   key={card.id}
                   type="button"
                   onClick={() => setActiveSurface(metricToSurface[card.id])}
-                  className="relative flex w-[4.75rem] shrink-0 flex-col items-center gap-2 rounded-2xl bg-transparent px-1 py-1 text-center transition-opacity active:opacity-70 touch-manipulation"
+                  className="relative flex w-[5.5rem] shrink-0 flex-col items-center gap-2 rounded-2xl bg-transparent px-1 py-1 text-center transition-opacity active:opacity-70 touch-manipulation"
                   aria-label={`${card.title}. ${card.subtitle}`}
                   title={card.detail}
                   data-testid={`metric-${card.id}`}
@@ -253,8 +256,11 @@ export function PropertyDetailScreen() {
                       </span>
                     ) : null}
                   </span>
-                  <span className="w-full truncate text-[12px] font-medium leading-tight text-night-ink">
+                  <span className="w-full text-[11px] font-medium leading-tight text-night-ink">
                     {card.title}
+                  </span>
+                  <span className="w-full text-[10px] leading-tight text-night-faint">
+                    {card.subtitle}
                   </span>
                 </button>
               )
@@ -393,15 +399,7 @@ export function PropertyDetailScreen() {
         <CatchUpFlow
           key={activeSurface}
           surface={activeSurface}
-          response={
-            activeSurface === 'catch-up'
-              ? fetchCatchUpApi(property)
-              : activeSurface === 'huddles'
-                ? fetchHuddlesApi(property)
-                : activeSurface === 'later'
-                  ? fetchLaterApi(property)
-                  : fetchVerifiedApi(property)
-          }
+          response={fetchSurfaceApi(activeSurface, property)}
           onClose={() => setActiveSurface(null)}
         />
       ) : null}

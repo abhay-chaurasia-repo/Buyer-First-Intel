@@ -28,7 +28,13 @@ export type HistoryAddress = {
   lastViewed: string
 }
 
-export type MetricCardId = 'catch-up' | 'huddles' | 'later' | 'verified'
+export type MetricCardId =
+  | 'county-facts'
+  | 'sales-history'
+  | 'tax-history'
+  | 'verified-visits'
+  | 'buyer-insights'
+  | 'schools'
 
 export type MetricCard = {
   id: MetricCardId
@@ -37,7 +43,7 @@ export type MetricCard = {
   /** Compact Slack-style corner badge (count or short status) */
   badge?: string
   detail: string
-  accent: 'catch-up' | 'huddles' | 'later' | 'verified'
+  accent: MetricCardId
 }
 
 export type ChannelField = {
@@ -222,36 +228,52 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
 
   return [
     {
-      id: 'catch-up',
-      title: 'Catch up',
-      subtitle: 'Size discrepancies',
+      id: 'county-facts',
+      title: "County's Fact",
+      subtitle: 'Public records',
       badge: hasDiscrepancy ? '1' : undefined,
-      detail: `County ${property.sqft.toLocaleString()} vs claimed ${property.claimedSqft?.toLocaleString() ?? '—'}`,
-      accent: 'catch-up',
+      detail: `County ${property.sqft.toLocaleString()} sqft · ${property.bedrooms}/${property.bathrooms}`,
+      accent: 'county-facts',
     },
     {
-      id: 'huddles',
-      title: 'Huddles',
-      subtitle: 'Full specs',
-      badge: undefined,
-      detail: `${property.bedrooms} bd / ${property.bathrooms} ba · ${property.sqft.toLocaleString()} sqft · Built ${property.yearBuilt}`,
-      accent: 'huddles',
+      id: 'sales-history',
+      title: 'Sales History',
+      subtitle: 'Deed transfers',
+      badge: '2',
+      detail: `${property.deedType} · ${property.lastSaleDate}`,
+      accent: 'sales-history',
     },
     {
-      id: 'later',
-      title: 'Later',
-      subtitle: 'Sales / legal',
-      badge: '1',
-      detail: `${property.deedType} · Last sale ${property.lastSaleDate}`,
-      accent: 'later',
+      id: 'tax-history',
+      title: 'Tax History',
+      subtitle: 'Assessments',
+      badge: '2',
+      detail: `${property.taxYear} · ${property.taxAssessedValueLabel}`,
+      accent: 'tax-history',
     },
     {
-      id: 'verified',
-      title: 'Verified',
-      subtitle: 'GPS visits',
+      id: 'verified-visits',
+      title: 'Verified Visits',
+      subtitle: 'GPS presence',
       badge: String(property.verifiedVisits),
       detail: 'Within 100m presence confirms',
-      accent: 'verified',
+      accent: 'verified-visits',
+    },
+    {
+      id: 'buyer-insights',
+      title: 'Buyer Community',
+      subtitle: 'Insights',
+      badge: '3',
+      detail: 'Aggregated structured buyer signals',
+      accent: 'buyer-insights',
+    },
+    {
+      id: 'schools',
+      title: 'Schools',
+      subtitle: 'Associated',
+      badge: '2',
+      detail: 'Assigned campuses for this address',
+      accent: 'schools',
     },
   ]
 }

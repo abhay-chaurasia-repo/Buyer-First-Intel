@@ -9,6 +9,8 @@ export type CatchUpItemType =
   | 'checklist'
   | 'spec'
   | 'legal'
+  | 'tax'
+  | 'school'
 
 export type CatchUpCard = {
   id: string
@@ -33,12 +35,36 @@ export type CatchUpApiResponse = {
   items: CatchUpCard[]
 }
 
+export type CatchUpSurface =
+  | 'county-facts'
+  | 'sales-history'
+  | 'tax-history'
+  | 'verified-visits'
+  | 'buyer-insights'
+  | 'schools'
+
 function isoMinutesAgo(minutes: number) {
   return new Date(Date.now() - minutes * 60_000).toISOString()
 }
 
-/** GET /api/properties/:id/catch-up */
-export function fetchCatchUpApi(property: MockProperty): CatchUpApiResponse {
+function wrapResponse(
+  propertyId: string,
+  endpoint: string,
+  items: CatchUpCard[],
+): CatchUpApiResponse {
+  return {
+    ok: true,
+    endpoint,
+    method: 'GET',
+    propertyId,
+    generatedAt: new Date().toISOString(),
+    remaining: items.length,
+    items,
+  }
+}
+
+/** GET /api/properties/:id/county-facts */
+export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse {
   const delta =
     property.claimedSqft && property.sqft
       ? Math.round(((property.sqft - property.claimedSqft) / property.claimedSqft) * 100)
@@ -46,12 +72,12 @@ export function fetchCatchUpApi(property: MockProperty): CatchUpApiResponse {
 
   const items: CatchUpCard[] = [
     {
-      id: 'cu-size-gap',
+      id: 'cf-living-area',
       type: 'discrepancy',
-      channel: 'size-discrepancy',
+      channel: 'county-living-area',
       unreadCount: 2,
-      headline: 'Living area mismatch',
-      preview: `County records show ${property.sqft.toLocaleString()} sqft, but the external claim is ${property.claimedSqft?.toLocaleString() ?? '—'} sqft (${delta}%). Confirm what is included before you offer.`,
+      headline: 'County living-area fact',
+      preview: `County records show ${property.sqft.toLocaleString()} sqft. External claim is ${property.claimedSqft?.toLocaleString() ?? '—'} sqft (${delta}%).`,
       timestamp: isoMinutesAgo(18),
       source: 'ATTOM / county vs external claim',
       fields: [
@@ -61,163 +87,127 @@ export function fetchCatchUpApi(property: MockProperty): CatchUpApiResponse {
       ],
     },
     {
-      id: 'cu-record-refresh',
-      type: 'record_update',
-      channel: 'public-records',
-      unreadCount: 1,
-      headline: 'Public-record snapshot refreshed',
-      preview: `Owner of record is ${property.ownerName}. APN ${property.apn}, zoning ${property.zoning}. Built ${property.yearBuilt}.`,
-      timestamp: isoMinutesAgo(55),
-      source: 'GET /api/properties/:id',
-      fields: [
-        { label: 'Owner', value: property.ownerName },
-        { label: 'APN', value: property.apn },
-        { label: 'Zoning', value: property.zoning },
-      ],
-    },
-    {
-      id: 'cu-buyer-signal',
-      type: 'buyer_signal',
-      channel: 'neighborhood-signals',
-      unreadCount: 3,
-      headline: 'New aggregated buyer signals',
-      preview:
-        '3 buyers observed evening street noise. 4 buyers noted limited driveway depth. Structured counts only — no public comments.',
-      timestamp: isoMinutesAgo(120),
-      source: 'GET /api/flags/:propertyId',
-      fields: [
-        { label: 'Noise', value: '3 buyers' },
-        { label: 'Driveway', value: '4 buyers' },
-      ],
-    },
-    {
-      id: 'cu-checklist',
-      type: 'checklist',
-      channel: 'due-diligence',
-      unreadCount: 1,
-      headline: 'Checklist still open',
-      preview: '4 of 14 diligence items complete. Flood overlay and HOA docs are still deferred.',
-      timestamp: isoMinutesAgo(240),
-      source: 'GET /api/checklist/:propertyId',
-      fields: [
-        { label: 'Complete', value: '4 / 14' },
-        { label: 'Deferred', value: 'Flood · HOA' },
-      ],
-    },
-  ]
-
-  return {
-    ok: true,
-    endpoint: `/api/properties/${property.id}/catch-up`,
-    method: 'GET',
-    propertyId: property.id,
-    generatedAt: new Date().toISOString(),
-    remaining: items.length,
-    items,
-  }
-}
-
-/** GET /api/properties/:id/huddles */
-export function fetchHuddlesApi(property: MockProperty): CatchUpApiResponse {
-  const items: CatchUpCard[] = [
-    {
-      id: 'hd-full-specs',
+      id: 'cf-rooms',
       type: 'spec',
-      channel: 'full-specs',
+      channel: 'county-rooms',
       unreadCount: 1,
-      headline: 'County floor-plan facts',
-      preview: `${property.bedrooms} bed · ${property.bathrooms} bath · ${property.sqft.toLocaleString()} sqft living · lot ${property.lotSizeSqft.toLocaleString()} sqft · built ${property.yearBuilt}.`,
-      timestamp: isoMinutesAgo(12),
+      headline: 'Beds, baths, year built',
+      preview: `${property.bedrooms} bed · ${property.bathrooms} bath · built ${property.yearBuilt} · lot ${property.lotSizeSqft.toLocaleString()} sqft.`,
+      timestamp: isoMinutesAgo(40),
       source: 'GET /api/properties/:id',
       fields: [
         { label: 'Beds / baths', value: `${property.bedrooms} / ${property.bathrooms}` },
-        { label: 'Living area', value: `${property.sqft.toLocaleString()} sqft` },
-        { label: 'Lot', value: `${property.lotSizeSqft.toLocaleString()} sqft` },
         { label: 'Year built', value: String(property.yearBuilt) },
+        { label: 'Lot', value: `${property.lotSizeSqft.toLocaleString()} sqft` },
+        { label: 'Zoning', value: property.zoning },
+        { label: 'APN', value: property.apn },
       ],
     },
     {
-      id: 'hd-occupancy',
-      type: 'spec',
-      channel: 'owner-occupancy',
+      id: 'cf-owner',
+      type: 'record_update',
+      channel: 'owner-of-record',
       unreadCount: 1,
-      headline: 'Owner occupancy huddle',
-      preview: `${property.ownerName} · owner-occupied: ${property.ownerOccupied ? 'Yes' : 'No'}. Use for diligence context only — not outreach.`,
-      timestamp: isoMinutesAgo(40),
+      headline: 'Owner of record',
+      preview: `${property.ownerName} · owner-occupied: ${property.ownerOccupied ? 'Yes' : 'No'}. Public-record only.`,
+      timestamp: isoMinutesAgo(90),
       source: 'GET /api/properties/:id',
       fields: [
         { label: 'Owner', value: property.ownerName },
         { label: 'Occupied', value: property.ownerOccupied ? 'Yes' : 'No' },
       ],
     },
-    {
-      id: 'hd-legal-crosscheck',
-      type: 'legal',
-      channel: 'specs-vs-deed',
-      unreadCount: 2,
-      headline: 'Cross-check specs against deed',
-      preview: `Last instrument ${property.deedType} on ${property.lastSaleDate}. Confirm living-area classification matches what sellers claim.`,
-      timestamp: isoMinutesAgo(90),
-      source: 'GET /api/properties/:id · sales',
-      fields: [
-        { label: 'Deed', value: property.deedType },
-        { label: 'Last sale', value: property.lastSaleDate },
-      ],
-    },
   ]
 
-  return {
-    ok: true,
-    endpoint: `/api/properties/${property.id}/huddles`,
-    method: 'GET',
-    propertyId: property.id,
-    generatedAt: new Date().toISOString(),
-    remaining: items.length,
-    items,
-  }
+  return wrapResponse(property.id, `/api/properties/${property.id}/county-facts`, items)
 }
 
-/** GET /api/properties/:id/later */
-export function fetchLaterApi(property: MockProperty): CatchUpApiResponse {
+/** GET /api/properties/:id/sales-history */
+export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse {
   const items: CatchUpCard[] = [
     {
-      id: 'lt-sales-legal',
+      id: 'sh-last-sale',
       type: 'legal',
-      channel: 'sales-and-deed',
+      channel: 'last-sale',
       unreadCount: 1,
-      headline: 'Sales / legal parked for later',
-      preview: `${property.deedType} recorded ${property.lastSaleDate}. Tax assessment year ${property.taxYear}.`,
-      timestamp: isoMinutesAgo(30),
-      source: 'GET /api/properties/:id',
+      headline: 'Most recent transfer',
+      preview: `${property.deedType} recorded ${property.lastSaleDate}. Sale amount intentionally de-emphasized.`,
+      timestamp: isoMinutesAgo(12),
+      source: 'GET /api/properties/:id · sales',
       fields: [
+        { label: 'Sale date', value: property.lastSaleDate },
         { label: 'Deed type', value: property.deedType },
-        { label: 'Tax year', value: String(property.taxYear) },
-        { label: 'Assessed', value: property.taxAssessedValueLabel },
+        { label: 'Amount', value: property.lastSalePriceLabel },
+        { label: 'Document #', value: '2019-084221 (stub)' },
+      ],
+    },
+    {
+      id: 'sh-prior',
+      type: 'legal',
+      channel: 'prior-transfers',
+      unreadCount: 1,
+      headline: 'Prior deed chain (stub)',
+      preview: 'Earlier warranty / special warranty instruments available for diligence cross-check when API is bound.',
+      timestamp: isoMinutesAgo(180),
+      source: 'County recorder stub',
+      fields: [
+        { label: 'Prior sale', value: '2011-03-22 (stub)' },
+        { label: 'Instrument', value: 'Special Warranty (stub)' },
       ],
     },
   ]
 
-  return {
-    ok: true,
-    endpoint: `/api/properties/${property.id}/later`,
-    method: 'GET',
-    propertyId: property.id,
-    generatedAt: new Date().toISOString(),
-    remaining: items.length,
-    items,
-  }
+  return wrapResponse(property.id, `/api/properties/${property.id}/sales-history`, items)
+}
+
+/** GET /api/properties/:id/tax-history */
+export function fetchTaxHistoryApi(property: MockProperty): CatchUpApiResponse {
+  const items: CatchUpCard[] = [
+    {
+      id: 'th-assessment',
+      type: 'tax',
+      channel: 'tax-assessment',
+      unreadCount: 1,
+      headline: `${property.taxYear} assessed value`,
+      preview: `${property.taxAssessedValueLabel}. Homestead exemption flagged in stub data.`,
+      timestamp: isoMinutesAgo(25),
+      source: 'GET /api/properties/:id · tax',
+      fields: [
+        { label: 'Tax year', value: String(property.taxYear) },
+        { label: 'Assessed', value: property.taxAssessedValueLabel },
+        { label: 'Land', value: 'Stub — bind ATTOM land value' },
+        { label: 'Improvement', value: 'Stub — bind ATTOM improvement value' },
+      ],
+    },
+    {
+      id: 'th-prior-year',
+      type: 'tax',
+      channel: 'prior-tax-year',
+      unreadCount: 1,
+      headline: 'Prior-year roll (stub)',
+      preview: `${property.taxYear - 1} assessment retained for year-over-year diligence comparison.`,
+      timestamp: isoMinutesAgo(200),
+      source: 'Assessor stub',
+      fields: [
+        { label: 'Prior year', value: String(property.taxYear - 1) },
+        { label: 'Exemptions', value: 'Homestead (stub)' },
+      ],
+    },
+  ]
+
+  return wrapResponse(property.id, `/api/properties/${property.id}/tax-history`, items)
 }
 
 /** GET /api/properties/:id/verified-visits */
-export function fetchVerifiedApi(property: MockProperty): CatchUpApiResponse {
+export function fetchVerifiedVisitsApi(property: MockProperty): CatchUpApiResponse {
   const items: CatchUpCard[] = [
     {
-      id: 'vf-visits',
+      id: 'vv-count',
       type: 'buyer_signal',
       channel: 'verified-visits',
       unreadCount: property.verifiedVisits,
       headline: 'GPS presence confirmations',
-      preview: `${property.verifiedVisits} verified visits within 100m. Presence unlocks stronger insight weight — no dwell timer.`,
+      preview: `${property.verifiedVisits} verified visits within 100m. No dwell timer — tap Verify on site.`,
       timestamp: isoMinutesAgo(8),
       source: 'GET /api/visits/:propertyId/count',
       fields: [
@@ -225,15 +215,124 @@ export function fetchVerifiedApi(property: MockProperty): CatchUpApiResponse {
         { label: 'Radius', value: '100m' },
       ],
     },
+    {
+      id: 'vv-weight',
+      type: 'buyer_signal',
+      channel: 'visit-weight',
+      unreadCount: 1,
+      headline: 'Why visits matter',
+      preview: 'Verified presence unlocks stronger contribution weight on structured buyer insights.',
+      timestamp: isoMinutesAgo(60),
+      source: 'GET /api/visits/:propertyId',
+      fields: [{ label: 'Policy', value: 'Presence confirmation only' }],
+    },
   ]
 
-  return {
-    ok: true,
-    endpoint: `/api/properties/${property.id}/verified-visits`,
-    method: 'GET',
-    propertyId: property.id,
-    generatedAt: new Date().toISOString(),
-    remaining: items.length,
-    items,
+  return wrapResponse(property.id, `/api/properties/${property.id}/verified-visits`, items)
+}
+
+/** GET /api/properties/:id/buyer-insights */
+export function fetchBuyerInsightsApi(property: MockProperty): CatchUpApiResponse {
+  const items: CatchUpCard[] = [
+    {
+      id: 'bi-noise',
+      type: 'buyer_signal',
+      channel: 'neighborhood-noise',
+      unreadCount: 3,
+      headline: 'Evening street noise',
+      preview: '3 buyers observed evening street noise. Aggregated counts only — no public free text.',
+      timestamp: isoMinutesAgo(45),
+      source: 'GET /api/flags/:propertyId',
+      fields: [
+        { label: 'Signal', value: 'Evening noise' },
+        { label: 'Buyers', value: '3' },
+      ],
+    },
+    {
+      id: 'bi-parking',
+      type: 'buyer_signal',
+      channel: 'parking-driveway',
+      unreadCount: 4,
+      headline: 'Driveway / parking constraints',
+      preview: '4 buyers noted limited driveway depth. 2 noted tight street parking after 6pm.',
+      timestamp: isoMinutesAgo(100),
+      source: 'GET /api/flags/:propertyId',
+      fields: [
+        { label: 'Driveway depth', value: '4 buyers' },
+        { label: 'Street parking', value: '2 buyers' },
+      ],
+    },
+    {
+      id: 'bi-structure',
+      type: 'buyer_signal',
+      channel: 'structure-signals',
+      unreadCount: 1,
+      headline: 'Structured condition signals',
+      preview: 'Possible garage conversion flagged by 1 verified buyer. Basement present confirmed by 2.',
+      timestamp: isoMinutesAgo(160),
+      source: 'GET /api/flags/:propertyId',
+      fields: [
+        { label: 'Garage conversion', value: '1 verified' },
+        { label: 'Basement present', value: '2 verified' },
+      ],
+    },
+  ]
+
+  return wrapResponse(property.id, `/api/properties/${property.id}/buyer-insights`, items)
+}
+
+/** GET /api/properties/:id/schools */
+export function fetchSchoolsApi(property: MockProperty): CatchUpApiResponse {
+  const items: CatchUpCard[] = [
+    {
+      id: 'sc-elementary',
+      type: 'school',
+      channel: 'elementary',
+      unreadCount: 1,
+      headline: 'Assigned elementary',
+      preview: 'Oak Ridge Elementary — verify current boundary with the district before deciding.',
+      timestamp: isoMinutesAgo(20),
+      source: 'GET /api/properties/:id/schools',
+      fields: [
+        { label: 'Campus', value: 'Oak Ridge Elementary' },
+        { label: 'District', value: 'Austin ISD' },
+      ],
+    },
+    {
+      id: 'sc-secondary',
+      type: 'school',
+      channel: 'secondary',
+      unreadCount: 1,
+      headline: 'Middle & high assignment',
+      preview: 'South Austin Middle → Austin High School. Ratings are contextual — not a rankings marketplace.',
+      timestamp: isoMinutesAgo(55),
+      source: 'GET /api/properties/:id/schools',
+      fields: [
+        { label: 'Middle', value: 'South Austin Middle' },
+        { label: 'High', value: 'Austin High School' },
+      ],
+    },
+  ]
+
+  return wrapResponse(property.id, `/api/properties/${property.id}/schools`, items)
+}
+
+export function fetchSurfaceApi(
+  surface: CatchUpSurface,
+  property: MockProperty,
+): CatchUpApiResponse {
+  switch (surface) {
+    case 'county-facts':
+      return fetchCountyFactsApi(property)
+    case 'sales-history':
+      return fetchSalesHistoryApi(property)
+    case 'tax-history':
+      return fetchTaxHistoryApi(property)
+    case 'verified-visits':
+      return fetchVerifiedVisitsApi(property)
+    case 'buyer-insights':
+      return fetchBuyerInsightsApi(property)
+    case 'schools':
+      return fetchSchoolsApi(property)
   }
 }
