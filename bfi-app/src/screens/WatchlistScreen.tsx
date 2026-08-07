@@ -1,7 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarClock, Check, MapPin, Star, Trash2 } from 'lucide-react'
+import {
+  CalendarClock,
+  Check,
+  ChevronDown,
+  MapPin,
+  Plus,
+  Star,
+  StickyNote,
+  Trash2,
+} from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import {
+  addNote,
+  deleteNote,
+  loadNotes,
+  type SavedNote,
+} from '@/data/propertyNotesStorage'
 import {
   fromDatetimeLocalValue,
   loadWatchlist,
@@ -41,6 +56,130 @@ function formatVisitWhen(iso: string) {
   }
 }
 
+function PropertyNotes({
+  propertyId,
+  onNotesChange,
+}: {
+  propertyId: string
+  onNotesChange?: (count: number) => void
+}) {
+  const [open, setOpen] = useState(true)
+  const [notes, setNotes] = useState<SavedNote[]>(() => loadNotes(propertyId))
+  const [draft, setDraft] = useState('')
+
+  useEffect(() => {
+    const next = loadNotes(propertyId)
+    setNotes(next)
+    setDraft('')
+    onNotesChange?.(next.length)
+  }, [propertyId, onNotesChange])
+
+  function handleSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!draft.trim()) return
+    const next = addNote(propertyId, draft)
+    setNotes(next)
+    onNotesChange?.(next.length)
+    setDraft('')
+  }
+
+  function handleDelete(noteId: string) {
+    const next = deleteNote(propertyId, noteId)
+    setNotes(next)
+    onNotesChange?.(next.length)
+  }
+
+  return (
+    <div className="border-t border-night-line pt-3" data-testid={`notes-section-${propertyId}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full min-h-10 items-center gap-2 rounded-xl px-1 text-left touch-manipulation"
+        aria-expanded={open}
+        data-testid={`button-toggle-notes-${propertyId}`}
+      >
+        <ChevronDown
+          className={cn('h-4 w-4 text-saffron-glow transition-transform', !open && '-rotate-90')}
+        />
+        <StickyNote className="h-3.5 w-3.5 text-saffron-bright" aria-hidden />
+        <span className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
+          Notes
+        </span>
+        <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+          {notes.length}
+        </span>
+      </button>
+
+      {open ? (
+        <div className="animate-bfi-fade mt-2 space-y-2">
+          <p className="px-0.5 text-[11px] text-night-faint">
+            Private notes for this saved address
+          </p>
+          <form onSubmit={handleSave} className="space-y-2" data-testid={`notes-form-${propertyId}`}>
+            <textarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              rows={2}
+              placeholder="Add a note…"
+              className="w-full resize-none rounded-xl border border-night-line bg-coastal-deep/70 px-3 py-2.5 text-sm text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/60"
+              data-testid={`input-property-note-${propertyId}`}
+            />
+            <button
+              type="submit"
+              disabled={!draft.trim()}
+              className={cn(
+                'inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-colors touch-manipulation',
+                draft.trim()
+                  ? 'bg-saffron text-white hover:bg-saffron-deep shadow-[0_6px_16px_rgb(232_145_58/0.3)]'
+                  : 'bg-night-ink/10 text-night-faint',
+              )}
+              data-testid={`button-save-note-${propertyId}`}
+            >
+              <Plus className="h-4 w-4" />
+              Save note
+            </button>
+          </form>
+
+          {notes.length > 0 ? (
+            <ul className="space-y-2" data-testid={`notes-list-${propertyId}`}>
+              {notes.map((note) => (
+                <li
+                  key={note.id}
+                  className="flex gap-2 rounded-xl border border-night-line bg-coastal-deep/70 px-3 py-2.5"
+                >
+                  <StickyNote
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-bright"
+                    aria-hidden
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm leading-relaxed text-night-ink whitespace-pre-wrap">
+                      {note.text}
+                    </p>
+                    <p className="mt-1 text-[10px] text-night-faint">
+                      {new Date(note.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(note.id)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+                    aria-label="Delete note"
+                    data-testid={`button-delete-note-${note.id}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-0.5 pb-1 text-[12px] text-night-faint">No notes yet.</p>
+          )}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function WatchlistRow({
   item,
   onChange,
@@ -54,6 +193,7 @@ function WatchlistRow({
 }) {
   const status = visitPlanStatus(item)
   const plannedValue = toDatetimeLocalValue(item.plannedVisitAt)
+  const [noteCount, setNoteCount] = useState(() => loadNotes(item.id).length)
 
   return (
     <li
@@ -81,6 +221,12 @@ function WatchlistRow({
                 Not visited
               </span>
             )}
+            {noteCount > 0 ? (
+              <span className="inline-flex items-center gap-0.5 rounded-md bg-saffron/15 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+                <StickyNote className="h-3 w-3" aria-hidden />
+                {noteCount}
+              </span>
+            ) : null}
           </div>
           <p className="mt-0.5 truncate text-[12px] text-night-muted">
             {item.city}, {item.state} {item.zipCode}
@@ -165,6 +311,8 @@ function WatchlistRow({
           />
         </label>
       </div>
+
+      <PropertyNotes propertyId={item.id} onNotesChange={setNoteCount} />
     </li>
   )
 }
@@ -200,7 +348,7 @@ export function WatchlistScreen() {
             Saved properties
           </h1>
           <p className="mt-1 text-[12px] text-night-faint">
-            Star to save. Plan a visit date/time, or mark visited when you’ve been on site.
+            Plan visits, mark visited, and keep private notes on each saved address.
           </p>
         </div>
       </header>
@@ -214,8 +362,7 @@ export function WatchlistScreen() {
             <Star className="mx-auto h-8 w-8 text-saffron-glow" strokeWidth={1.75} />
             <p className="mt-3 text-sm font-semibold text-night-ink">No saved properties yet</p>
             <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
-              Open an address from Search, then tap the star in the top bar to save it. You can plan
-              visits from here afterward.
+              Star an address from its property page. Notes and visit planning live here afterward.
             </p>
             <button
               type="button"

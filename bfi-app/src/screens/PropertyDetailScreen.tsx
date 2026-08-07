@@ -1,17 +1,15 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ChevronDown,
   Crosshair,
   FileText,
   History,
-  Plus,
   Receipt,
   School,
   ShieldCheck,
   StickyNote,
   Star,
-  Trash2,
   Users,
   type LucideIcon,
 } from 'lucide-react'
@@ -26,38 +24,9 @@ import {
   type HistoryAddress,
   type MetricCard,
 } from '@/data/mockProperty'
+import { notesCount } from '@/data/propertyNotesStorage'
 import { isOnWatchlist, toggleWatchlist } from '@/data/watchlistStorage'
 import { cn } from '@/lib/utils'
-
-const NOTES_STORAGE_KEY = 'bfi.property-notes'
-
-type SavedNote = {
-  id: string
-  text: string
-  createdAt: string
-}
-
-function loadNotes(propertyKey: string): SavedNote[] {
-  try {
-    const raw = localStorage.getItem(NOTES_STORAGE_KEY)
-    if (!raw) return []
-    const all = JSON.parse(raw) as Record<string, SavedNote[]>
-    return Array.isArray(all[propertyKey]) ? all[propertyKey]! : []
-  } catch {
-    return []
-  }
-}
-
-function persistNotes(propertyKey: string, notes: SavedNote[]) {
-  try {
-    const raw = localStorage.getItem(NOTES_STORAGE_KEY)
-    const all = raw ? (JSON.parse(raw) as Record<string, SavedNote[]>) : {}
-    all[propertyKey] = notes
-    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(all))
-  } catch {
-    // Ignore storage failures in demo shell
-  }
-}
 
 const metricIcons: Record<MetricCard['accent'], LucideIcon> = {
   'county-facts': FileText,
@@ -139,20 +108,16 @@ export function PropertyDetailScreen() {
   const propertyKey = property.id
 
   const [starred, setStarred] = useState(() => isOnWatchlist(property.id) || property.starred)
-  const [notesOpen, setNotesOpen] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(true)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
-  const [notes, setNotes] = useState<SavedNote[]>(() => loadNotes(propertyKey))
-  const [draftNote, setDraftNote] = useState('')
 
   useEffect(() => {
-    setNotes(loadNotes(propertyKey))
-    setDraftNote('')
     setStarred(isOnWatchlist(property.id) || property.starred)
   }, [propertyKey, property.id, property.starred])
 
   const metrics = useMemo(() => getMetricCards(property), [property])
   const truncated = truncateAddress(property.address)
+  const savedNoteCount = notesCount(property.id)
 
   function handleToggleStar() {
     const result = toggleWatchlist(property)
@@ -163,30 +128,6 @@ export function PropertyDetailScreen() {
     const full = `${item.address}, ${item.city}, ${item.state}`
     navigate(`/property/${encodeURIComponent(full)}`)
     setActiveSurface(null)
-  }
-
-  function handleSaveNote(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const text = draftNote.trim()
-    if (!text) return
-
-    const next: SavedNote[] = [
-      {
-        id: `note-${Date.now()}`,
-        text,
-        createdAt: new Date().toISOString(),
-      },
-      ...notes,
-    ]
-    setNotes(next)
-    persistNotes(propertyKey, next)
-    setDraftNote('')
-  }
-
-  function handleDeleteNote(noteId: string) {
-    const next = notes.filter((note) => note.id !== noteId)
-    setNotes(next)
-    persistNotes(propertyKey, next)
   }
 
   const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
@@ -289,97 +230,35 @@ export function PropertyDetailScreen() {
               </div>
             </section>
 
-            <section className="mt-5 px-3" data-testid="notes-section">
+            <section className="mt-5 px-3" data-testid="notes-moved-hint">
               <button
                 type="button"
-                onClick={() => setNotesOpen((open) => !open)}
-                className="flex w-full min-h-11 items-center gap-2 rounded-xl px-2 py-1.5 text-left touch-manipulation"
-                aria-expanded={notesOpen}
-                data-testid="button-toggle-notes"
+                onClick={() => {
+                  if (!starred) handleToggleStar()
+                  navigate('/watchlist')
+                }}
+                className="flex w-full min-h-11 items-center gap-2 rounded-xl border border-night-line bg-coastal-deep/55 px-3 py-2.5 text-left touch-manipulation"
+                data-testid="button-open-watchlist-notes"
               >
-                <ChevronDown
-                  className={cn(
-                    'h-4 w-4 text-saffron-glow transition-transform',
-                    !notesOpen && '-rotate-90',
-                  )}
-                />
-                <StickyNote className="h-3.5 w-3.5 text-saffron-bright" aria-hidden />
-                <span className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
-                  Notes
+                <StickyNote className="h-4 w-4 shrink-0 text-saffron-bright" aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-[11px] font-bold tracking-[0.14em] text-night-muted uppercase">
+                    Notes live on Watchlist
+                  </span>
+                  <span className="mt-0.5 block text-[12px] text-night-faint">
+                    {starred
+                      ? savedNoteCount > 0
+                        ? `${savedNoteCount} note${savedNoteCount === 1 ? '' : 's'} on this saved property`
+                        : 'Open Watchlist to add private notes'
+                      : 'Star to save, then add private notes on Watchlist'}
+                  </span>
                 </span>
-                <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-                  {notes.length}
-                </span>
+                {savedNoteCount > 0 ? (
+                  <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+                    {savedNoteCount}
+                  </span>
+                ) : null}
               </button>
-
-              {notesOpen ? (
-                <div className="animate-bfi-fade mt-1 space-y-2 rounded-2xl border border-night-line bg-coastal-deep/55 p-3 shadow-sm backdrop-blur-sm">
-                  <p className="px-0.5 text-[11px] text-night-faint">
-                    Save private details about this address
-                  </p>
-                  <form onSubmit={handleSaveNote} className="space-y-2" data-testid="notes-form">
-                    <textarea
-                      value={draftNote}
-                      onChange={(event) => setDraftNote(event.target.value)}
-                      rows={3}
-                      placeholder="Add a note for this property…"
-                      className="w-full resize-none rounded-xl border border-night-line bg-coastal-deep/70 px-3 py-2.5 text-sm text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/60"
-                      data-testid="input-property-note"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!draftNote.trim()}
-                      className={cn(
-                        'inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-colors touch-manipulation',
-                        draftNote.trim()
-                          ? 'bg-saffron text-white hover:bg-saffron-deep shadow-[0_6px_16px_rgb(232_145_58/0.3)]'
-                          : 'bg-night-ink/10 text-night-faint',
-                      )}
-                      data-testid="button-save-note"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Save note
-                    </button>
-                  </form>
-
-                  {notes.length > 0 ? (
-                    <ul className="space-y-2 pt-1" data-testid="notes-list">
-                      {notes.map((note) => (
-                        <li
-                          key={note.id}
-                          className="flex gap-2 rounded-xl border border-night-line bg-coastal-deep/60 px-3 py-2.5"
-                        >
-                          <StickyNote
-                            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-bright"
-                            aria-hidden
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm leading-relaxed text-night-ink whitespace-pre-wrap">
-                              {note.text}
-                            </p>
-                            <p className="mt-1 text-[10px] text-night-faint">
-                              {new Date(note.createdAt).toLocaleString()}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteNote(note.id)}
-                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-                            aria-label="Delete note"
-                            data-testid={`button-delete-note-${note.id}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="px-0.5 pb-1 text-[12px] text-night-faint">
-                      No notes yet for {property.address}.
-                    </p>
-                  )}
-                </div>
-              ) : null}
             </section>
 
             <section className="mt-4 px-3" data-testid="history-section">
