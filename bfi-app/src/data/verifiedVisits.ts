@@ -1,4 +1,6 @@
 import type { MockProperty } from './mockProperty'
+import { BUYER_COMMUNITY_LABELS } from './buyerCommunityLabels'
+import { loadBuyerVoteState, loadBuyerVerified } from './buyerCommunityStorage'
 
 /** One GPS-verified presence confirmation at a property. */
 export type VerifiedVisit = {
@@ -14,6 +16,11 @@ export type VerifiedVisit = {
   withinRadius: boolean
   /** Coarse platform hint only */
   platform: 'iOS' | 'Android'
+  /**
+   * Buyer Community label ids this visitor upvoted.
+   * Empty when they verified presence but did not label.
+   */
+  communityLabelIds: string[]
 }
 
 export type VisitPatternSignal = {
@@ -25,17 +32,9 @@ export type VisitPatternSignal = {
 
 export type VerifiedVisitsBundle = {
   propertyId: string
-  listingPostedAt: string
   radiusMeters: number
   visits: VerifiedVisit[]
   signals: VisitPatternSignal[]
-}
-
-function daysBetween(aIso: string, bIso: string) {
-  const a = new Date(aIso)
-  const b = new Date(bIso)
-  const ms = b.getTime() - a.getTime()
-  return Math.round(ms / (1000 * 60 * 60 * 24))
 }
 
 function uniqueDays(visits: VerifiedVisit[]) {
@@ -46,14 +45,13 @@ function uniqueVisitors(visits: VerifiedVisit[]) {
   return new Set(visits.map((v) => v.visitorLabel)).size
 }
 
-function buildSignals(
-  listingPostedAt: string,
-  visits: VerifiedVisit[],
-): VisitPatternSignal[] {
-  const postListing = visits.filter((v) => new Date(v.visitedAt) >= new Date(listingPostedAt))
-  const preListing = visits.length - postListing.length
+function buildSignals(visits: VerifiedVisit[]): VisitPatternSignal[] {
   const daySpan = uniqueDays(visits)
   const visitors = uniqueVisitors(visits)
+  const withLabels = visits.filter((v) => v.communityLabelIds.length > 0).length
+  const labelVisitors = new Set(
+    visits.filter((v) => v.communityLabelIds.length > 0).map((v) => v.visitorLabel),
+  ).size
 
   const sorted = [...visits].sort(
     (a, b) => new Date(a.visitedAt).getTime() - new Date(b.visitedAt).getTime(),
@@ -71,16 +69,7 @@ function buildSignals(
     return hour >= 8 && hour <= 20
   }).length
 
-  const signals: VisitPatternSignal[] = [
-    {
-      id: 'vs-listing',
-      title: preListing === 0 ? 'All visits after listing' : 'Some visits before listing',
-      detail:
-        preListing === 0
-          ? `${postListing.length} of ${visits.length} confirmations landed on or after the sale posting date.`
-          : `${preListing} visit(s) timestamped before the listing post — review those dates carefully.`,
-      tone: preListing === 0 ? 'positive' : 'caution',
-    },
+  return [
     {
       id: 'vs-spread',
       title: 'Calendar spread',
@@ -102,82 +91,143 @@ function buildSignals(
       detail: `${daytime} of ${visits.length} during typical showing hours (8am–8pm local). Odd-hour-only patterns can look less natural.`,
       tone: daytime >= Math.ceil(visits.length * 0.6) ? 'positive' : 'neutral',
     },
+    {
+      id: 'vs-labels',
+      title:
+        labelVisitors > 0
+          ? 'Community labels from visitors'
+          : 'No community labels yet',
+      detail:
+        labelVisitors > 0
+          ? `${labelVisitors} visitor(s) also upvoted Buyer Community labels on ${withLabels} visit row(s). Labels pull from the same community catalog.`
+          : 'Verified presence alone is logged. Label votes appear here when a visitor upvotes in Buyer Community.',
+      tone: labelVisitors > 0 ? 'positive' : 'neutral',
+    },
   ]
-
-  return signals
 }
 
+const SEED_VISITS: VerifiedVisit[] = [
+  {
+    id: 'vv-1',
+    visitedAt: '2026-07-14T10:22:00',
+    visitorLabel: 'Visitor A',
+    accuracyMeters: 8,
+    distanceMeters: 24,
+    withinRadius: true,
+    platform: 'iOS',
+    communityLabelIds: ['evening-street-noise', 'tight-driveway'],
+  },
+  {
+    id: 'vv-2',
+    visitedAt: '2026-07-18T16:05:00',
+    visitorLabel: 'Visitor B',
+    accuracyMeters: 12,
+    distanceMeters: 41,
+    withinRadius: true,
+    platform: 'Android',
+    communityLabelIds: ['mature-trees', 'easy-guest-parking'],
+  },
+  {
+    id: 'vv-3',
+    visitedAt: '2026-07-22T11:48:00',
+    visitorLabel: 'Visitor C',
+    accuracyMeters: 6,
+    distanceMeters: 18,
+    withinRadius: true,
+    platform: 'iOS',
+    communityLabelIds: ['finished-basement', 'updated-interior-feel'],
+  },
+  {
+    id: 'vv-4',
+    visitedAt: '2026-07-22T11:51:00',
+    visitorLabel: 'Visitor D',
+    accuracyMeters: 15,
+    distanceMeters: 62,
+    withinRadius: true,
+    platform: 'Android',
+    communityLabelIds: [],
+  },
+  {
+    id: 'vv-5',
+    visitedAt: '2026-08-01T18:15:00',
+    visitorLabel: 'Visitor A',
+    accuracyMeters: 9,
+    distanceMeters: 31,
+    withinRadius: true,
+    platform: 'iOS',
+    // Same visitor — labels carry from their community contributions
+    communityLabelIds: ['evening-street-noise', 'tight-driveway', 'price-high-for-condition'],
+  },
+  {
+    id: 'vv-6',
+    visitedAt: '2026-08-05T09:03:00',
+    visitorLabel: 'Visitor E',
+    accuracyMeters: 11,
+    distanceMeters: 47,
+    withinRadius: true,
+    platform: 'iOS',
+    communityLabelIds: ['exterior-deferred-maintenance', 'drainage-concern'],
+  },
+]
+
 /**
- * Demo visit log for a property. Dates are absolute so buyers can compare
- * against listing post time and judge whether the pattern looks natural.
+ * Demo visit log. Date/time only — buyers compare to listing timing themselves.
+ * Community labels mirror Buyer Community upvotes for that visitor.
  */
 export function getVerifiedVisitsBundle(property: MockProperty): VerifiedVisitsBundle {
-  const listingPostedAt = property.listingPostedAt
-
-  const visits: VerifiedVisit[] = [
-    {
-      id: 'vv-1',
-      visitedAt: '2026-07-14T10:22:00',
-      visitorLabel: 'Visitor A',
-      accuracyMeters: 8,
-      distanceMeters: 24,
-      withinRadius: true,
-      platform: 'iOS',
-    },
-    {
-      id: 'vv-2',
-      visitedAt: '2026-07-18T16:05:00',
-      visitorLabel: 'Visitor B',
-      accuracyMeters: 12,
-      distanceMeters: 41,
-      withinRadius: true,
-      platform: 'Android',
-    },
-    {
-      id: 'vv-3',
-      visitedAt: '2026-07-22T11:48:00',
-      visitorLabel: 'Visitor C',
-      accuracyMeters: 6,
-      distanceMeters: 18,
-      withinRadius: true,
-      platform: 'iOS',
-    },
-    {
-      id: 'vv-4',
-      visitedAt: '2026-07-22T11:51:00',
-      visitorLabel: 'Visitor D',
-      accuracyMeters: 15,
-      distanceMeters: 62,
-      withinRadius: true,
-      platform: 'Android',
-    },
-    {
-      id: 'vv-5',
-      visitedAt: '2026-08-01T18:15:00',
-      visitorLabel: 'Visitor A',
-      accuracyMeters: 9,
-      distanceMeters: 31,
-      withinRadius: true,
-      platform: 'iOS',
-    },
-    {
-      id: 'vv-6',
-      visitedAt: '2026-08-05T09:03:00',
-      visitorLabel: 'Visitor E',
-      accuracyMeters: 11,
-      distanceMeters: 47,
-      withinRadius: true,
-      platform: 'iOS',
-    },
-  ]
+  const visits = mergeLiveCommunityLabels(property.id, SEED_VISITS)
 
   return {
     propertyId: property.id,
-    listingPostedAt,
     radiusMeters: 100,
     visits,
-    signals: buildSignals(listingPostedAt, visits),
+    signals: buildSignals(visits),
   }
+}
+
+/**
+ * Overlay the current user's Buyer Community upvotes onto a "You" visit row
+ * when they have verified presence and labelled.
+ */
+function mergeLiveCommunityLabels(
+  propertyId: string,
+  seed: VerifiedVisit[],
+): VerifiedVisit[] {
+  if (typeof localStorage === 'undefined') return seed.map((v) => ({ ...v }))
+
+  const verified = loadBuyerVerified(propertyId)
+  const { myVotes } = loadBuyerVoteState(propertyId)
+  const base = seed.map((v) => ({ ...v, communityLabelIds: [...v.communityLabelIds] }))
+
+  if (!verified || myVotes.length === 0) return base
+
+  const youIndex = base.findIndex((v) => v.visitorLabel === 'You')
+  if (youIndex >= 0) {
+    const existing = base[youIndex]!
+    base[youIndex] = {
+      ...existing,
+      communityLabelIds: Array.from(new Set([...existing.communityLabelIds, ...myVotes])),
+    }
+    return base
+  }
+
+  return [
+    {
+      id: 'vv-you',
+      visitedAt: new Date().toISOString(),
+      visitorLabel: 'You',
+      accuracyMeters: 10,
+      distanceMeters: 20,
+      withinRadius: true,
+      platform: 'iOS',
+      communityLabelIds: [...myVotes],
+    },
+    ...base,
+  ]
+}
+
+export function labelTextById(labelId: string) {
+  return BUYER_COMMUNITY_LABELS.find((label) => label.id === labelId)?.text ?? labelId
 }
 
 export function formatVisitDate(iso: string) {
@@ -196,22 +246,11 @@ export function formatVisitTime(iso: string) {
   })
 }
 
-export function relativeToListing(visitedAt: string, listingPostedAt: string) {
-  const days = daysBetween(listingPostedAt, visitedAt)
-  if (days === 0) return 'Same day as listing post'
-  if (days > 0) return `${days} day${days === 1 ? '' : 's'} after listing`
-  const before = Math.abs(days)
-  return `${before} day${before === 1 ? '' : 's'} before listing`
-}
-
 export function visitSummary(bundle: VerifiedVisitsBundle) {
-  const postListing = bundle.visits.filter(
-    (v) => new Date(v.visitedAt) >= new Date(bundle.listingPostedAt),
-  ).length
+  const withLabels = bundle.visits.filter((v) => v.communityLabelIds.length > 0).length
   return {
     total: bundle.visits.length,
-    postListing,
-    preListing: bundle.visits.length - postListing,
+    withLabels,
     distinctDays: uniqueDays(bundle.visits),
     distinctVisitors: uniqueVisitors(bundle.visits),
   }

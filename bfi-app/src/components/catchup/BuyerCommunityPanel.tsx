@@ -6,72 +6,16 @@ import {
   type BuyerLabelCategoryId,
   type BuyerCommunityLabel,
 } from '@/data/buyerCommunityLabels'
+import {
+  loadBuyerVerified,
+  loadBuyerVoteState,
+  persistBuyerVerified,
+  persistBuyerVoteState,
+  type BuyerVoteState,
+} from '@/data/buyerCommunityStorage'
 import { cn } from '@/lib/utils'
 
-const VOTES_STORAGE_KEY = 'bfi.buyer-community-votes'
-const VERIFIED_STORAGE_KEY = 'bfi.buyer-community-verified'
-
-type VoteState = {
-  /** Label ids this visitor has upvoted */
-  myVotes: string[]
-  /** Extra community votes added in this demo session (labelId → delta) */
-  localBoosts: Record<string, number>
-}
-
-function emptyVoteState(): VoteState {
-  return { myVotes: [], localBoosts: {} }
-}
-
-function loadVoteState(propertyId: string): VoteState {
-  try {
-    const raw = localStorage.getItem(VOTES_STORAGE_KEY)
-    if (!raw) return emptyVoteState()
-    const all = JSON.parse(raw) as Record<string, VoteState>
-    const entry = all[propertyId]
-    if (!entry || !Array.isArray(entry.myVotes)) return emptyVoteState()
-    return {
-      myVotes: entry.myVotes,
-      localBoosts: entry.localBoosts ?? {},
-    }
-  } catch {
-    return emptyVoteState()
-  }
-}
-
-function persistVoteState(propertyId: string, state: VoteState) {
-  try {
-    const raw = localStorage.getItem(VOTES_STORAGE_KEY)
-    const all = raw ? (JSON.parse(raw) as Record<string, VoteState>) : {}
-    all[propertyId] = state
-    localStorage.setItem(VOTES_STORAGE_KEY, JSON.stringify(all))
-  } catch {
-    // Ignore storage failures in demo shell
-  }
-}
-
-function loadVerified(propertyId: string): boolean {
-  try {
-    const raw = localStorage.getItem(VERIFIED_STORAGE_KEY)
-    if (!raw) return false
-    const all = JSON.parse(raw) as Record<string, boolean>
-    return Boolean(all[propertyId])
-  } catch {
-    return false
-  }
-}
-
-function persistVerified(propertyId: string, verified: boolean) {
-  try {
-    const raw = localStorage.getItem(VERIFIED_STORAGE_KEY)
-    const all = raw ? (JSON.parse(raw) as Record<string, boolean>) : {}
-    all[propertyId] = verified
-    localStorage.setItem(VERIFIED_STORAGE_KEY, JSON.stringify(all))
-  } catch {
-    // Ignore storage failures in demo shell
-  }
-}
-
-function voteCount(label: BuyerCommunityLabel, state: VoteState) {
+function voteCount(label: BuyerCommunityLabel, state: BuyerVoteState) {
   const boost = state.localBoosts[label.id] ?? 0
   return label.seedVotes + boost
 }
@@ -89,7 +33,7 @@ function CategoryBlock({
   title: string
   blurb: string
   labels: BuyerCommunityLabel[]
-  voteState: VoteState
+  voteState: BuyerVoteState
   verified: boolean
   onToggleVote: (labelId: string) => void
 }) {
@@ -184,12 +128,12 @@ type BuyerCommunityPanelProps = {
  * Buyer Community: fixed labels only. Verified visitors upvote what they observe.
  */
 export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
-  const [voteState, setVoteState] = useState<VoteState>(() => loadVoteState(propertyId))
-  const [verified, setVerified] = useState(() => loadVerified(propertyId))
+  const [voteState, setVoteState] = useState<BuyerVoteState>(() => loadBuyerVoteState(propertyId))
+  const [verified, setVerified] = useState(() => loadBuyerVerified(propertyId))
 
   useEffect(() => {
-    setVoteState(loadVoteState(propertyId))
-    setVerified(loadVerified(propertyId))
+    setVoteState(loadBuyerVoteState(propertyId))
+    setVerified(loadBuyerVerified(propertyId))
   }, [propertyId])
 
   const totalVotes = useMemo(
@@ -199,7 +143,7 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
 
   function handleConfirmVisit() {
     setVerified(true)
-    persistVerified(propertyId, true)
+    persistBuyerVerified(propertyId, true)
   }
 
   function handleToggleVote(labelId: string) {
@@ -216,7 +160,7 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
         [labelId]: already ? currentBoost - 1 : currentBoost + 1,
       }
       const next = { myVotes, localBoosts }
-      persistVoteState(propertyId, next)
+      persistBuyerVoteState(propertyId, next)
       return next
     })
   }

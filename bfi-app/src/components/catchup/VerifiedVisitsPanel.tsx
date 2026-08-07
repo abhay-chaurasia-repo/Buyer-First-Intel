@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   CalendarClock,
   ChevronDown,
   MapPin,
   ShieldAlert,
   ShieldCheck,
+  Tag,
   Users,
 } from 'lucide-react'
 import type { MockProperty } from '@/data/mockProperty'
@@ -12,7 +13,7 @@ import {
   formatVisitDate,
   formatVisitTime,
   getVerifiedVisitsBundle,
-  relativeToListing,
+  labelTextById,
   visitSummary,
   type VisitPatternSignal,
   type VerifiedVisit,
@@ -25,15 +26,9 @@ function toneClass(tone: VisitPatternSignal['tone']) {
   return 'text-night-muted'
 }
 
-function VisitRow({
-  visit,
-  listingPostedAt,
-}: {
-  visit: VerifiedVisit
-  listingPostedAt: string
-}) {
-  const relative = relativeToListing(visit.visitedAt, listingPostedAt)
-  const afterListing = new Date(visit.visitedAt) >= new Date(listingPostedAt)
+function VisitRow({ visit }: { visit: VerifiedVisit }) {
+  const labels = visit.communityLabelIds.map(labelTextById)
+  const isYou = visit.visitorLabel === 'You'
 
   return (
     <article
@@ -50,19 +45,16 @@ function VisitRow({
             <span className="text-night-faint"> · {visit.visitorLabel}</span>
           </p>
         </div>
-        <span
-          className={cn(
-            'shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-            afterListing
-              ? 'bg-saffron/20 text-saffron-glow'
-              : 'bg-night-ink/10 text-night-faint',
-          )}
-        >
-          {afterListing ? 'Post-listing' : 'Pre-listing'}
-        </span>
+        {labels.length > 0 ? (
+          <span className="shrink-0 rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow uppercase tracking-wide">
+            {labels.length} label{labels.length === 1 ? '' : 's'}
+          </span>
+        ) : (
+          <span className="shrink-0 rounded-md bg-night-ink/10 px-1.5 py-0.5 text-[10px] font-bold text-night-faint uppercase tracking-wide">
+            Presence only
+          </span>
+        )}
       </div>
-
-      <p className="mt-2 text-[11px] text-night-faint">{relative}</p>
 
       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-night-muted">
         <span className="inline-flex items-center gap-1">
@@ -74,6 +66,29 @@ function VisitRow({
           {visit.withinRadius ? 'Inside 100m' : 'Outside radius'}
         </span>
       </div>
+
+      {labels.length > 0 ? (
+        <div className="mt-2.5" data-testid={`visit-labels-${visit.id}`}>
+          <p className="mb-1.5 inline-flex items-center gap-1 text-[10px] font-bold tracking-wide text-night-faint uppercase">
+            <Tag className="h-3 w-3 text-saffron-glow" aria-hidden />
+            {isYou ? 'Your Buyer Community labels' : 'Buyer Community labels'}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {labels.map((text) => (
+              <span
+                key={text}
+                className="rounded-lg border border-saffron/35 bg-saffron/15 px-2 py-1 text-[11px] font-medium text-saffron-glow"
+              >
+                {text}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="mt-2 text-[11px] text-night-faint">
+          No community labels from this visitor yet.
+        </p>
+      )}
     </article>
   )
 }
@@ -132,11 +147,22 @@ type VerifiedVisitsPanelProps = {
 }
 
 /**
- * Verified Visits: dated GPS presence log so buyers can judge timing vs listing
- * and whether the pattern looks natural or manufactured.
+ * Verified Visits: dated GPS presence log. Buyers judge listing timing themselves.
+ * Community labels from Buyer Community appear on each visitor who labelled.
  */
 export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
+  const [tick, setTick] = useState(0)
+
+  // Re-read live "You" labels when returning from Buyer Community in the same session
+  useEffect(() => {
+    const onFocus = () => setTick((n) => n + 1)
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
+
   const bundle = getVerifiedVisitsBundle(property)
+  // tick forces refresh after storage changes when remounting / focusing
+  void tick
   const summary = visitSummary(bundle)
   const sortedVisits = [...bundle.visits].sort(
     (a, b) => new Date(b.visitedAt).getTime() - new Date(a.visitedAt).getTime(),
@@ -147,46 +173,41 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
       <div className="rounded-2xl border border-night-line bg-coastal-deep/55 p-3 shadow-sm backdrop-blur-sm">
         <p className="text-[13px] leading-relaxed text-night-ink">
           Each row is a GPS presence check within {bundle.radiusMeters}m — with date and time so you
-          can see whether visits landed after the sale was posted, and whether the pattern looks
-          natural.
+          can judge the pattern yourself. If a visitor also labelled in Buyer Community, those
+          labels show here.
         </p>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-xl border border-night-line bg-coastal-deep/60 px-3 py-2">
-            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
-              Listing posted
-            </p>
-            <p className="mt-1 text-sm font-semibold text-night-ink">
-              {formatVisitDate(bundle.listingPostedAt)}
-            </p>
-            <p className="text-[11px] text-night-muted">
-              {formatVisitTime(bundle.listingPostedAt)}
-            </p>
-          </div>
           <div className="rounded-xl border border-night-line bg-coastal-deep/60 px-3 py-2">
             <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
               Verified visits
             </p>
             <p className="mt-1 text-sm font-semibold text-night-ink">{summary.total}</p>
             <p className="text-[11px] text-night-muted">
-              {summary.postListing} post-listing
-              {summary.preListing > 0 ? ` · ${summary.preListing} before` : ''}
+              {summary.distinctDays} days · {summary.distinctVisitors} visitors
             </p>
+          </div>
+          <div className="rounded-xl border border-night-line bg-coastal-deep/60 px-3 py-2">
+            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
+              With labels
+            </p>
+            <p className="mt-1 text-sm font-semibold text-night-ink">{summary.withLabels}</p>
+            <p className="text-[11px] text-night-muted">From Buyer Community</p>
           </div>
         </div>
 
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-night-faint">
           <span className="inline-flex items-center gap-1">
             <CalendarClock className="h-3 w-3 text-saffron-glow" aria-hidden />
-            {summary.distinctDays} distinct days
+            Date & time on every visit
           </span>
           <span className="inline-flex items-center gap-1">
             <Users className="h-3 w-3 text-saffron-glow" aria-hidden />
-            {summary.distinctVisitors} visitors
+            Anonymized visitors
           </span>
           <span className="inline-flex items-center gap-1">
             <ShieldCheck className="h-3 w-3 text-saffron-glow" aria-hidden />
-            No dwell timer — tap Verify on site
+            No dwell timer
           </span>
         </div>
       </div>
@@ -195,15 +216,11 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
         id="visit-log"
         title="Visit log"
         count={sortedVisits.length}
-        blurb="Newest first. Compare each timestamp to the listing post date above."
+        blurb="Newest first. You decide how these dates/times relate to the sale posting."
       >
         <div className="space-y-2 px-0.5 pb-0.5">
           {sortedVisits.map((visit) => (
-            <VisitRow
-              key={visit.id}
-              visit={visit}
-              listingPostedAt={bundle.listingPostedAt}
-            />
+            <VisitRow key={visit.id} visit={visit} />
           ))}
         </div>
       </CollapsibleSection>
@@ -221,7 +238,12 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
               className="rounded-xl border border-night-line bg-coastal-deep/60 px-3 py-2.5"
               data-testid={`visit-signal-${signal.id}`}
             >
-              <p className={cn('flex items-center gap-1.5 text-sm font-semibold', toneClass(signal.tone))}>
+              <p
+                className={cn(
+                  'flex items-center gap-1.5 text-sm font-semibold',
+                  toneClass(signal.tone),
+                )}
+              >
                 {signal.tone === 'caution' ? (
                   <ShieldAlert className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 ) : (
@@ -255,7 +277,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Buyer Community</span>
-            <span className="font-semibold">Unlocks label upvotes</span>
+            <span className="font-semibold">Labels appear on that visitor’s visits</span>
           </p>
         </div>
       </CollapsibleSection>

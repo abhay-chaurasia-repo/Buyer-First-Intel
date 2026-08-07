@@ -51,7 +51,7 @@ const surfaceMeta: Record<
     title: 'Verified Visits',
     Icon: ShieldCheck,
     iconWrap: 'bg-night-ink/15 text-saffron-glow',
-    blurb: 'Dated GPS presence — compare timing to the listing post',
+    blurb: 'Dated GPS presence — community labels show when visitors labelled',
   },
   'buyer-insights': {
     title: 'Buyer Community',
