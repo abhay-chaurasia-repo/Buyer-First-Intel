@@ -228,7 +228,7 @@ export function PropertyDetailScreen() {
 
       <div className="flex-1 overflow-y-auto pb-4">
         <section className="px-3 pt-4" aria-label="Quick actions" data-testid="metric-cards">
-          <div className="flex gap-3 overflow-x-auto px-0.5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="grid grid-cols-3 gap-x-2 gap-y-4 px-0.5">
             {metrics.map((card) => {
               const Icon = metricIcons[card.accent]
               return (
@@ -236,7 +236,7 @@ export function PropertyDetailScreen() {
                   key={card.id}
                   type="button"
                   onClick={() => setActiveSurface(metricToSurface[card.id])}
-                  className="relative flex w-[5.5rem] shrink-0 flex-col items-center gap-2 rounded-2xl bg-transparent px-1 py-1 text-center transition-opacity active:opacity-70 touch-manipulation"
+                  className="relative flex w-full flex-col items-center gap-1.5 rounded-2xl bg-transparent px-1 py-1 text-center transition-opacity active:opacity-70 touch-manipulation"
                   aria-label={`${card.title}. ${card.subtitle}`}
                   title={card.detail}
                   data-testid={`metric-${card.id}`}
