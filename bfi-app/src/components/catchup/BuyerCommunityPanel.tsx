@@ -41,10 +41,13 @@ function CategoryBlock({
 
   const sorted = useMemo(
     () =>
-      [...labels].sort(
-        (a, b) =>
-          voteCount(b, voteState) - voteCount(a, voteState) || a.text.localeCompare(b.text),
-      ),
+      [...labels].sort((a, b) => {
+        const voteDiff = voteCount(b, voteState) - voteCount(a, voteState)
+        if (voteDiff !== 0) return voteDiff
+        // Prefer positive labels when votes tie — keeps the surface from reading all-caution
+        if (a.tone !== b.tone) return a.tone === 'positive' ? -1 : 1
+        return a.text.localeCompare(b.text)
+      }),
     [labels, voteState],
   )
 
@@ -80,6 +83,17 @@ function CategoryBlock({
                 className="flex min-h-11 items-center gap-2 rounded-xl px-2 py-2"
                 data-testid={`buyer-label-${label.id}`}
               >
+                <span
+                  className={cn(
+                    'shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
+                    label.tone === 'positive'
+                      ? 'bg-saffron/20 text-saffron-glow'
+                      : 'bg-night-ink/12 text-night-muted',
+                  )}
+                  data-testid={`tone-${label.id}`}
+                >
+                  {label.tone === 'positive' ? 'Plus' : 'Watch'}
+                </span>
                 <span className="min-w-0 flex-1 text-[13px] leading-snug text-night-ink">
                   {label.text}
                 </span>
@@ -169,11 +183,18 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
     <div className="mt-3 space-y-4 px-3" data-testid="buyer-community-panel">
       <div className="rounded-2xl border border-night-line bg-coastal-deep/55 p-3 shadow-sm backdrop-blur-sm">
         <p className="text-[13px] leading-relaxed text-night-ink">
-          Pre-set labels only — no free text. Verified visitors upvote what they observe on site.
+          Pre-set labels only — both upsides (Plus) and watch-outs (Watch). Verified visitors upvote
+          what they observe on site.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-night-faint">
           <span>
             {BUYER_COMMUNITY_LABELS.length} labels · {totalVotes} community upvotes
+          </span>
+          <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 font-bold text-saffron-glow">
+            Plus {BUYER_COMMUNITY_LABELS.filter((l) => l.tone === 'positive').length}
+          </span>
+          <span className="rounded-md bg-night-ink/12 px-1.5 py-0.5 font-bold text-night-muted">
+            Watch {BUYER_COMMUNITY_LABELS.filter((l) => l.tone === 'negative').length}
           </span>
           {voteState.myVotes.length > 0 ? (
             <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 font-bold text-saffron-glow">

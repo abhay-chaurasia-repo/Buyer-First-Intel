@@ -115,7 +115,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 24,
     withinRadius: true,
     platform: 'iOS',
-    communityLabelIds: ['evening-street-noise', 'tight-driveway'],
+    communityLabelIds: ['quiet-at-night', 'tight-driveway'],
   },
   {
     id: 'vv-2',
@@ -125,7 +125,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 41,
     withinRadius: true,
     platform: 'Android',
-    communityLabelIds: ['mature-trees', 'easy-guest-parking'],
+    communityLabelIds: ['mature-trees', 'easy-guest-parking', 'strong-curb-appeal'],
   },
   {
     id: 'vv-3',
@@ -135,7 +135,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 18,
     withinRadius: true,
     platform: 'iOS',
-    communityLabelIds: ['finished-basement', 'updated-interior-feel'],
+    communityLabelIds: ['finished-basement', 'updated-interior-feel', 'well-kept-exterior'],
   },
   {
     id: 'vv-4',
@@ -155,8 +155,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 31,
     withinRadius: true,
     platform: 'iOS',
-    // Same visitor — labels carry from their community contributions
-    communityLabelIds: ['evening-street-noise', 'tight-driveway', 'price-high-for-condition'],
+    communityLabelIds: ['quiet-at-night', 'roomy-driveway', 'fair-value-feel'],
   },
   {
     id: 'vv-6',
@@ -166,7 +165,7 @@ const SEED_VISITS: VerifiedVisit[] = [
     distanceMeters: 47,
     withinRadius: true,
     platform: 'iOS',
-    communityLabelIds: ['exterior-deferred-maintenance', 'drainage-concern'],
+    communityLabelIds: ['exterior-deferred-maintenance', 'drainage-concern', 'usable-backyard'],
   },
 ]
 

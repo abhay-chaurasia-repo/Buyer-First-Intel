@@ -18,6 +18,7 @@ import {
   type VisitPatternSignal,
   type VerifiedVisit,
 } from '@/data/verifiedVisits'
+import { labelToneById } from '@/data/buyerCommunityLabels'
 import { cn } from '@/lib/utils'
 
 function toneClass(tone: VisitPatternSignal['tone']) {
@@ -74,14 +75,23 @@ function VisitRow({ visit }: { visit: VerifiedVisit }) {
             {isYou ? 'Your Buyer Community labels' : 'Buyer Community labels'}
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {labels.map((text) => (
-              <span
-                key={text}
-                className="rounded-lg border border-saffron/35 bg-saffron/15 px-2 py-1 text-[11px] font-medium text-saffron-glow"
-              >
-                {text}
-              </span>
-            ))}
+            {visit.communityLabelIds.map((labelId) => {
+              const text = labelTextById(labelId)
+              const tone = labelToneById(labelId)
+              return (
+                <span
+                  key={labelId}
+                  className={cn(
+                    'rounded-lg border px-2 py-1 text-[11px] font-medium',
+                    tone === 'positive'
+                      ? 'border-saffron/35 bg-saffron/15 text-saffron-glow'
+                      : 'border-night-line bg-night-ink/10 text-night-muted',
+                  )}
+                >
+                  {text}
+                </span>
+              )
+            })}
           </div>
         </div>
       ) : (

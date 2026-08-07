@@ -57,7 +57,7 @@ const surfaceMeta: Record<
     title: 'Buyer Community',
     Icon: Users,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'Pre-set labels — verified visitors upvote what they observe',
+    blurb: 'Pre-set Plus & Watch labels — verified visitors upvote what they observe',
   },
   schools: {
     title: 'Schools',
