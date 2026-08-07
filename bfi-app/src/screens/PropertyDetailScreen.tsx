@@ -26,6 +26,7 @@ import {
   type HistoryAddress,
   type MetricCard,
 } from '@/data/mockProperty'
+import { isOnWatchlist, toggleWatchlist } from '@/data/watchlistStorage'
 import { cn } from '@/lib/utils'
 
 const NOTES_STORAGE_KEY = 'bfi.property-notes'
@@ -137,7 +138,7 @@ export function PropertyDetailScreen() {
   )
   const propertyKey = property.id
 
-  const [starred, setStarred] = useState(property.starred)
+  const [starred, setStarred] = useState(() => isOnWatchlist(property.id) || property.starred)
   const [notesOpen, setNotesOpen] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(true)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
@@ -147,10 +148,16 @@ export function PropertyDetailScreen() {
   useEffect(() => {
     setNotes(loadNotes(propertyKey))
     setDraftNote('')
-  }, [propertyKey])
+    setStarred(isOnWatchlist(property.id) || property.starred)
+  }, [propertyKey, property.id, property.starred])
 
   const metrics = useMemo(() => getMetricCards(property), [property])
   const truncated = truncateAddress(property.address)
+
+  function handleToggleStar() {
+    const result = toggleWatchlist(property)
+    setStarred(result.starred)
+  }
 
   function openHistoryAddress(item: HistoryAddress) {
     const full = `${item.address}, ${item.city}, ${item.state}`
@@ -208,9 +215,9 @@ export function PropertyDetailScreen() {
             <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-3 py-2.5">
               <button
                 type="button"
-                onClick={() => setStarred((value) => !value)}
+                onClick={handleToggleStar}
                 className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-night-ink/10 hover:text-saffron-glow touch-manipulation"
-                aria-label={starred ? 'Unstar property' : 'Star property'}
+                aria-label={starred ? 'Remove from watchlist' : 'Save to watchlist'}
                 aria-pressed={starred}
                 data-testid="button-star-property"
               >
