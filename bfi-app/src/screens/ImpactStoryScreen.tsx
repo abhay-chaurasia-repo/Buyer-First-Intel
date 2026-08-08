@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
 import { IMPACT_PAGES, markImpactSeen, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
+
+const AUTO_MS = 4500
 
 function SizeSnippet() {
   return (
@@ -124,34 +126,9 @@ function Snippet({ kind }: { kind: ImpactPage['snippet'] }) {
   return <CommunitySnippet />
 }
 
-/**
- * Asana-style impact story — three pages that explain BFI before first use.
- */
-export function ImpactStoryScreen() {
-  const navigate = useNavigate()
-  const [index, setIndex] = useState(0)
-  const page = IMPACT_PAGES[index]!
-  const isLast = index === IMPACT_PAGES.length - 1
-
-  function finishAndGo(path: string) {
-    markImpactSeen()
-    navigate(path)
-  }
-
-  function handlePrimary() {
-    if (isLast) {
-      finishAndGo('/')
-      return
-    }
-    setIndex((value) => value + 1)
-  }
-
+function StorySlide({ page }: { page: ImpactPage }) {
   return (
-    <div
-      className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col overflow-hidden bg-ink text-white"
-      data-testid="impact-story"
-      data-page={page.id}
-    >
+    <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
       <img
         src={page.image}
         alt={page.imageAlt}
@@ -161,77 +138,175 @@ export function ImpactStoryScreen() {
         className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/35 to-ink/92"
         aria-hidden
       />
+      <div className="relative z-10 flex flex-1 flex-col px-5 pt-24 pb-4 sm:px-8">
+        <p className="font-display text-[11px] font-bold tracking-[0.18em] text-saffron-glow uppercase">
+          {page.eyebrow}
+        </p>
+        <h1 className="mt-3 max-w-sm font-display text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
+          {page.title}
+        </h1>
+        <p className="mt-3 max-w-sm text-[0.95rem] leading-relaxed text-white/80">{page.body}</p>
+        <div className="mt-8 max-w-sm animate-bfi-rise">
+          <Snippet kind={page.snippet} />
+        </div>
+      </div>
+    </div>
+  )
+}
 
-      <div className="relative z-10 flex min-h-dvh flex-col px-5 pb-8 pt-12 sm:px-8">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
-              <ShieldCheck className="h-4 w-4" strokeWidth={2.25} />
-            </span>
-            <span className="font-display text-sm font-semibold tracking-[0.14em] uppercase">
-              BFI
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => finishAndGo('/')}
-            className="min-h-10 rounded-full px-3 text-sm font-medium text-white/80 transition-colors hover:text-white touch-manipulation"
-            data-testid="button-impact-skip"
-          >
-            Skip
-          </button>
-        </header>
+/**
+ * Asana-style impact story — auto-advances through three pages for first impression.
+ */
+export function ImpactStoryScreen() {
+  const navigate = useNavigate()
+  const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [tick, setTick] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+  const page = IMPACT_PAGES[index]!
 
-        <div className="mt-8 flex flex-1 flex-col">
-          <p className="font-display text-[11px] font-bold tracking-[0.18em] text-saffron-glow uppercase">
-            {page.eyebrow}
-          </p>
-          <h1 className="mt-3 max-w-sm font-display text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
-            {page.title}
-          </h1>
-          <p className="mt-3 max-w-sm text-[0.95rem] leading-relaxed text-white/80">{page.body}</p>
+  useEffect(() => {
+    if (paused) return
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return
+    }
 
-          <div className="mt-8 max-w-sm animate-bfi-rise">
-            <Snippet kind={page.snippet} />
-          </div>
+    const step = 50
+    const timer = window.setInterval(() => {
+      setTick((value) => {
+        const next = value + step
+        if (next >= AUTO_MS) {
+          setIndex((i) => (i + 1) % IMPACT_PAGES.length)
+          return 0
+        }
+        return next
+      })
+    }, step)
+
+    return () => window.clearInterval(timer)
+  }, [paused, index])
+
+  function goTo(next: number) {
+    setIndex(next)
+    setTick(0)
+  }
+
+  function finishAndGo(path: string) {
+    markImpactSeen()
+    navigate(path)
+  }
+
+  function onTouchStart(clientX: number) {
+    touchStartX.current = clientX
+    setPaused(true)
+  }
+
+  function onTouchEnd(clientX: number) {
+    const start = touchStartX.current
+    touchStartX.current = null
+    setPaused(false)
+    if (start == null) return
+    const delta = clientX - start
+    if (Math.abs(delta) < 48) return
+    if (delta < 0) {
+      goTo((index + 1) % IMPACT_PAGES.length)
+    } else {
+      goTo((index - 1 + IMPACT_PAGES.length) % IMPACT_PAGES.length)
+    }
+  }
+
+  const progress = Math.min(1, tick / AUTO_MS)
+
+  return (
+    <div
+      className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col overflow-hidden bg-ink text-white"
+      data-testid="impact-story"
+      data-page={page.id}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={(event) => onTouchStart(event.changedTouches[0]?.clientX ?? 0)}
+      onTouchEnd={(event) => onTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+    >
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 pt-12 sm:px-8">
+        <div className="pointer-events-auto flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
+            <ShieldCheck className="h-4 w-4" strokeWidth={2.25} />
+          </span>
+          <span className="font-display text-sm font-semibold tracking-[0.14em] uppercase">BFI</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => finishAndGo('/')}
+          className="pointer-events-auto min-h-10 rounded-full px-3 text-sm font-medium text-white/80 transition-colors hover:text-white touch-manipulation"
+          data-testid="button-impact-skip"
+        >
+          Skip
+        </button>
+      </header>
+
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div
+          className="flex h-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+          data-testid="impact-carousel"
+        >
+          {IMPACT_PAGES.map((slide) => (
+            <div key={slide.id} className="h-full w-full shrink-0">
+              <StorySlide page={slide} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative z-20 space-y-4 bg-gradient-to-t from-ink via-ink/95 to-transparent px-5 pb-8 pt-4 sm:px-8">
+        <div className="flex items-center justify-center gap-2" aria-label="Story progress">
+          {IMPACT_PAGES.map((item, i) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                goTo(i)
+                setPaused(true)
+                window.setTimeout(() => setPaused(false), 1200)
+              }}
+              className={cn(
+                'relative h-1.5 overflow-hidden rounded-full transition-all touch-manipulation',
+                i === index ? 'w-10 bg-white/25' : 'w-10 bg-white/25 hover:bg-white/40',
+              )}
+              aria-label={`Go to story ${i + 1}`}
+              aria-current={i === index}
+            >
+              {i < index ? (
+                <span className="absolute inset-0 rounded-full bg-saffron" />
+              ) : null}
+              {i === index ? (
+                <span
+                  className="absolute inset-y-0 left-0 rounded-full bg-saffron transition-[width] duration-75 ease-linear"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              ) : null}
+            </button>
+          ))}
         </div>
 
-        <div className="mt-8 space-y-4">
-          <div className="flex items-center justify-center gap-2" aria-label="Story progress">
-            {IMPACT_PAGES.map((item, i) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setIndex(i)}
-                className={cn(
-                  'h-2 rounded-full transition-all touch-manipulation',
-                  i === index ? 'w-7 bg-saffron' : 'w-2 bg-white/35 hover:bg-white/55',
-                )}
-                aria-label={`Go to story ${i + 1}`}
-                aria-current={i === index}
-              />
-            ))}
-          </div>
+        <button
+          type="button"
+          onClick={() => finishAndGo('/')}
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-saffron text-base font-semibold text-white shadow-[0_10px_28px_rgb(232_145_58/0.4)] transition-colors hover:bg-saffron-deep touch-manipulation"
+          data-testid="button-impact-continue"
+        >
+          Start due diligence
+          <ArrowRight className="h-5 w-5" />
+        </button>
 
-          <button
-            type="button"
-            onClick={handlePrimary}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-saffron text-base font-semibold text-white shadow-[0_10px_28px_rgb(232_145_58/0.4)] transition-colors hover:bg-saffron-deep touch-manipulation"
-            data-testid="button-impact-continue"
-          >
-            {isLast ? 'Start due diligence' : 'Continue'}
-            <ArrowRight className="h-5 w-5" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => finishAndGo('/login')}
-            className="inline-flex min-h-11 w-full items-center justify-center text-sm font-semibold text-white/90 underline-offset-2 hover:underline touch-manipulation"
-            data-testid="button-impact-login"
-          >
-            Log in
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => finishAndGo('/login')}
+          className="inline-flex min-h-11 w-full items-center justify-center text-sm font-semibold text-white/90 underline-offset-2 hover:underline touch-manipulation"
+          data-testid="button-impact-login"
+        >
+          Log in
+        </button>
       </div>
     </div>
   )
