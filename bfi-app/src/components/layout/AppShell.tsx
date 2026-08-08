@@ -34,7 +34,7 @@ export function AppShell({
       <main
         className={cn(
           'relative z-10 flex min-h-0 flex-1 flex-col',
-          showBottomNav && 'pb-[4.75rem]',
+          showBottomNav && 'pb-[5.35rem]',
           contentClassName,
         )}
       >

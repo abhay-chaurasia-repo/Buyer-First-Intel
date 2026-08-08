@@ -102,17 +102,19 @@
   }
 
   /*
-   * Mobile app shell:
-   * - On phones: edge-to-edge
-   * - On larger screens: centered phone column (no book bezel)
+   * Modern mobile app shell:
+   * - Phones: edge-to-edge screen
+   * - Larger viewports: centered phone screen (modern device look)
    */
   .bfi-phone-stage {
     display: flex;
     height: 100dvh;
     width: 100%;
-    align-items: stretch;
+    align-items: center;
     justify-content: center;
-    background: #1f1617;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgb(232 145 58 / 0.08), transparent 55%),
+      #141010;
   }
 
   .bfi-phone-frame {
@@ -124,6 +126,37 @@
     flex-direction: column;
     overflow: hidden;
     background: #1f1617;
+  }
+
+  @media (min-width: 480px) {
+    .bfi-phone-stage {
+      padding: 1.25rem;
+    }
+
+    .bfi-phone-frame {
+      width: min(390px, 100%);
+      height: min(844px, calc(100dvh - 2.5rem));
+      border-radius: 2.25rem;
+      border: 3px solid #2a2223;
+      box-shadow:
+        0 0 0 1px rgb(255 248 247 / 0.06),
+        0 28px 80px rgb(0 0 0 / 0.55),
+        inset 0 0 0 1px rgb(255 248 247 / 0.04);
+    }
+
+    .bfi-phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0.55rem;
+      left: 50%;
+      z-index: 60;
+      width: 5.5rem;
+      height: 1.15rem;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #0d0a0a;
+      pointer-events: none;
+    }
   }
 
   /* Natural mobile scroll — no desktop scrollbar gutters */

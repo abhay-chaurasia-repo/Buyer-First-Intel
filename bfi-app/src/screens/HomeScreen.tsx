@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
   ClipboardCheck,
@@ -30,7 +30,7 @@ export function HomeScreen() {
       sceneIntensity="soft"
       contentClassName="relative min-h-0 overflow-y-auto overscroll-contain text-night-ink"
     >
-      <div className="relative flex flex-1 flex-col px-5 pb-4 pt-6">
+      <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
         <header className="animate-bfi-fade flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
@@ -45,17 +45,17 @@ export function HomeScreen() {
           </span>
         </header>
 
-        <div className="flex flex-1 flex-col items-center py-6">
+        <div className="flex flex-1 flex-col items-center py-5">
           <div className="animate-bfi-rise w-full text-center">
-            <p className="font-display text-[2.2rem] leading-none font-extrabold tracking-tight text-night-ink">
+            <p className="font-display text-[2rem] leading-none font-extrabold tracking-tight">
               <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                 BFI
               </span>
             </p>
-            <h1 className="mt-2 font-display text-[1.15rem] font-semibold tracking-tight text-saffron-glow">
+            <h1 className="mt-2 font-display text-[1.1rem] font-semibold tracking-tight text-saffron-glow">
               Due Diligence
             </h1>
-            <p className="mx-auto mt-2 max-w-sm text-[0.9rem] leading-relaxed text-white/80">
+            <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-white/80">
               Paste a property address. Verify public-record truth before you commit — and before you
               talk to an agent.
             </p>
@@ -63,7 +63,7 @@ export function HomeScreen() {
 
           <form
             onSubmit={handleSubmit}
-            className="animate-bfi-rise mt-7 w-full"
+            className="animate-bfi-rise mt-6 w-full"
             style={{ animationDelay: '80ms' }}
           >
             <label htmlFor={inputId} className="sr-only">
@@ -71,7 +71,7 @@ export function HomeScreen() {
             </label>
             <div
               className={cn(
-                'flex items-center gap-2 rounded-2xl border bg-coastal/90 px-3 py-2 shadow-search backdrop-blur-md transition-[border-color,box-shadow]',
+                'flex items-center gap-2 rounded-[1.25rem] border bg-coastal/90 px-3 py-2 shadow-search backdrop-blur-md transition-[border-color,box-shadow]',
                 isFocused
                   ? 'border-saffron ring-4 ring-saffron/25'
                   : 'border-white/25 hover:border-saffron/50',
@@ -95,7 +95,7 @@ export function HomeScreen() {
                 type="submit"
                 disabled={!query.trim()}
                 className={cn(
-                  'inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl transition-colors touch-manipulation',
+                  'inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl transition-colors touch-manipulation',
                   query.trim()
                     ? 'bg-saffron text-white hover:bg-saffron-deep shadow-[0_6px_14px_rgb(232_145_58/0.35)]'
                     : 'bg-coastal-deep/70 text-night-faint',
@@ -109,62 +109,51 @@ export function HomeScreen() {
           </form>
 
           <p
-            className="animate-bfi-rise mt-6 text-center text-sm text-night-faint"
+            className="animate-bfi-rise mt-5 text-center text-sm text-night-faint"
             style={{ animationDelay: '140ms' }}
           >
             No MLS. No prices. County records first.
           </p>
 
           <section
-            className="animate-bfi-rise mt-8 w-full space-y-3"
+            className="animate-bfi-rise mt-7 w-full"
             style={{ animationDelay: '200ms' }}
             aria-label="How due diligence works"
             data-testid="home-diligence-section"
           >
-            <div className="rounded-2xl border border-white/25 bg-coastal/90 p-4 shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md">
+            <div className="rounded-[1.25rem] border border-white/25 bg-coastal/90 p-4 shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md">
               <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
                 Start here
               </p>
-              <ul className="mt-3 space-y-3">
+              <ul className="mt-3 space-y-3.5">
                 <li className="flex gap-3">
-                  <FileSearch className="mt-0.5 h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
+                    <FileSearch className="h-4 w-4 text-saffron-glow" aria-hidden />
+                  </span>
                   <p className="text-[13px] leading-relaxed text-night-muted">
                     <span className="font-semibold text-night-ink">Search an address</span> to compare
                     county living area, tax and sales history, schools, and community labels.
                   </p>
                 </li>
                 <li className="flex gap-3">
-                  <Star className="mt-0.5 h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
+                    <Star className="h-4 w-4 text-saffron-glow" aria-hidden />
+                  </span>
                   <p className="text-[13px] leading-relaxed text-night-muted">
-                    <span className="font-semibold text-night-ink">Star homes</span> into Watchlist for
-                    visit planning and private notes.
+                    <span className="font-semibold text-night-ink">Star homes</span> for visit planning
+                    and private notes.
                   </p>
                 </li>
                 <li className="flex gap-3">
-                  <ClipboardCheck className="mt-0.5 h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
+                    <ClipboardCheck className="h-4 w-4 text-saffron-glow" aria-hidden />
+                  </span>
                   <p className="text-[13px] leading-relaxed text-night-muted">
-                    <span className="font-semibold text-night-ink">Follow Journey</span> from Prepare →
-                    Diligence → Offer so you stay on your path.
+                    <span className="font-semibold text-night-ink">Follow your path</span> from Prepare →
+                    Diligence → Offer.
                   </p>
                 </li>
               </ul>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 pt-1">
-              <Link
-                to="/watchlist"
-                className="inline-flex min-h-10 items-center text-[13px] font-semibold text-saffron-glow underline-offset-2 hover:underline touch-manipulation"
-                data-testid="link-home-watchlist"
-              >
-                Open Watchlist
-              </Link>
-              <Link
-                to="/journey"
-                className="inline-flex min-h-10 items-center text-[13px] font-semibold text-saffron-glow underline-offset-2 hover:underline touch-manipulation"
-                data-testid="link-home-journey"
-              >
-                Open Journey
-              </Link>
             </div>
           </section>
         </div>
