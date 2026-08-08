@@ -108,11 +108,23 @@ export function PropertyDetailScreen() {
   const propertyKey = property.id
 
   const [starred, setStarred] = useState(() => isOnWatchlist(property.id) || property.starred)
+  const [verified, setVerified] = useState(() => {
+    try {
+      return localStorage.getItem(`bfi.gpsVerified.${property.id}`) === '1'
+    } catch {
+      return false
+    }
+  })
   const [historyOpen, setHistoryOpen] = useState(true)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
 
   useEffect(() => {
     setStarred(isOnWatchlist(property.id) || property.starred)
+    try {
+      setVerified(localStorage.getItem(`bfi.gpsVerified.${property.id}`) === '1')
+    } catch {
+      setVerified(false)
+    }
   }, [propertyKey, property.id, property.starred])
 
   const metrics = useMemo(() => getMetricCards(property), [property])
@@ -122,6 +134,18 @@ export function PropertyDetailScreen() {
   function handleToggleStar() {
     const result = toggleWatchlist(property)
     setStarred(result.starred)
+  }
+
+  function handleToggleVerify() {
+    setVerified((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(`bfi.gpsVerified.${property.id}`, next ? '1' : '0')
+      } catch {
+        /* ignore */
+      }
+      return next
+    })
   }
 
   function openHistoryAddress(item: HistoryAddress) {
@@ -186,12 +210,19 @@ export function PropertyDetailScreen() {
 
               <button
                 type="button"
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-saffron/45 bg-saffron/20 px-3 text-xs font-bold tracking-wide text-saffron-glow transition-colors hover:bg-saffron/30 touch-manipulation"
-                aria-label="GPS Verify"
+                onClick={handleToggleVerify}
+                className={cn(
+                  'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-bold tracking-wide transition-colors touch-manipulation',
+                  verified
+                    ? 'border-saffron/55 bg-saffron/30 text-saffron-glow shadow-[0_0_0_1px_rgb(232_145_58/0.12)] hover:bg-saffron/40'
+                    : 'border-white/30 bg-white/12 text-night-ink hover:border-saffron/45 hover:bg-saffron/20 hover:text-saffron-glow',
+                )}
+                aria-label={verified ? 'Clear GPS verification' : 'GPS Verify'}
+                aria-pressed={verified}
                 data-testid="badge-gps-verify"
               >
-                <Crosshair className="h-3.5 w-3.5" />
-                Verify
+                <Crosshair className="h-3.5 w-3.5" strokeWidth={2.25} />
+                {verified ? 'Verified' : 'Verify'}
               </button>
             </div>
           </header>
