@@ -14,7 +14,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
-import { pageTitlePanelClass } from '@/components/layout/PageHeader'
 import { CatchUpFlow, type CatchUpSurface } from '@/components/catchup/CatchUpFlow'
 import { fetchSurfaceApi } from '@/data/catchUpApi'
 import {
@@ -148,49 +147,46 @@ export function PropertyDetailScreen() {
       ) : (
         <>
           <header
-            className="sticky top-0 z-20 bfi-status-pad"
+            className="relative z-20 shrink-0 bfi-status-pad"
             data-testid="property-top-bar"
           >
-            <div className="px-3 pb-2.5 pt-2">
-              <div
-                className={cn(
-                  pageTitlePanelClass,
-                  'grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-2 py-1.5',
-                )}
-                data-testid="page-title-panel"
+            <div
+              className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-3 pb-2 pt-2"
+              data-testid="page-title-open"
+            >
+              <button
+                type="button"
+                onClick={handleToggleStar}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-night-ink/10 hover:text-saffron-glow touch-manipulation"
+                aria-label={starred ? 'Remove from watchlist' : 'Save to watchlist'}
+                aria-pressed={starred}
+                data-testid="button-star-property"
               >
-                <button
-                  type="button"
-                  onClick={handleToggleStar}
-                  className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-night-ink/10 hover:text-saffron-glow touch-manipulation"
-                  aria-label={starred ? 'Remove from watchlist' : 'Save to watchlist'}
-                  aria-pressed={starred}
-                  data-testid="button-star-property"
-                >
-                  <Star
-                    className={cn('h-5 w-5', starred && 'fill-saffron-bright text-saffron-bright')}
-                    strokeWidth={starred ? 0 : 2}
-                  />
-                </button>
+                <Star
+                  className={cn('h-5 w-5', starred && 'fill-saffron-bright text-saffron-bright')}
+                  strokeWidth={starred ? 0 : 2}
+                />
+              </button>
 
-                <h1
-                  className="truncate text-center font-display text-[15px] font-semibold tracking-tight text-saffron-glow"
-                  title={fullAddress}
-                  data-testid="text-truncated-address"
-                >
+              <h1
+                className="truncate text-center font-display text-[1.05rem] font-semibold tracking-tight"
+                title={fullAddress}
+                data-testid="text-truncated-address"
+              >
+                <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                   {truncated}
-                </h1>
+                </span>
+              </h1>
 
-                <button
-                  type="button"
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-saffron/45 bg-saffron/20 px-3 text-xs font-bold tracking-wide text-saffron-glow transition-colors hover:bg-saffron/30 touch-manipulation"
-                  aria-label="GPS Verify"
-                  data-testid="badge-gps-verify"
-                >
-                  <Crosshair className="h-3.5 w-3.5" />
-                  Verify
-                </button>
-              </div>
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-saffron/45 bg-saffron/20 px-3 text-xs font-bold tracking-wide text-saffron-glow transition-colors hover:bg-saffron/30 touch-manipulation"
+                aria-label="GPS Verify"
+                data-testid="badge-gps-verify"
+              >
+                <Crosshair className="h-3.5 w-3.5" />
+                Verify
+              </button>
             </div>
           </header>
 

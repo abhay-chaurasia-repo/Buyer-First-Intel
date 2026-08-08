@@ -1,10 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
-/** Shared title-panel surface — soft enough for the house scene to read through. */
-export const pageTitlePanelClass =
-  'rounded-[1.35rem] border border-white/22 bg-coastal/45 shadow-[0_8px_24px_rgb(42_31_32/0.22)] backdrop-blur-md'
-
 type PageHeaderProps = {
   /** Primary heading — saffron gradient like Search “BFI” */
   title: string
@@ -15,8 +11,8 @@ type PageHeaderProps = {
 }
 
 /**
- * Centered page header that clears the phone notch / status area.
- * Title + description sit in a soft glass panel that blends with the scene.
+ * Open page title — same language as Search BFI / Due Diligence (no boxed panel).
+ * Clears the phone notch / status area and sits on the scene backdrop.
  */
 export function PageHeader({
   title,
@@ -27,26 +23,21 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <header
-      className={cn('sticky top-0 z-20 bfi-status-pad', className)}
+      className={cn('relative z-20 shrink-0 bfi-status-pad', className)}
       data-testid={testId}
     >
-      <div className="px-3 pb-2.5 pt-2">
-        <div
-          className={cn(pageTitlePanelClass, 'mx-auto px-4 py-3.5 text-center')}
-          data-testid="page-title-panel"
-        >
-          <h1 className="mx-auto max-w-[18rem] font-display text-[1.05rem] font-semibold leading-snug tracking-tight">
-            <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
-              {title}
-            </span>
-          </h1>
-          {description ? (
-            <p className="mx-auto mt-1.5 max-w-[19rem] text-[11px] leading-relaxed text-white/80">
-              {description}
-            </p>
-          ) : null}
-          {children}
-        </div>
+      <div className="animate-bfi-rise px-5 pb-2 pt-3 text-center" data-testid="page-title-open">
+        <h1 className="mx-auto max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight">
+          <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
+            {title}
+          </span>
+        </h1>
+        {description ? (
+          <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-white/80">
+            {description}
+          </p>
+        ) : null}
+        {children}
       </div>
     </header>
   )
