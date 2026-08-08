@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Phone, ShieldCheck, UserRoundPlus } from 'lucide-react'
+import { ChevronLeft, Phone, UserRoundPlus } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
 import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { markImpactSeen } from '@/data/impactStory'
@@ -120,12 +121,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
 
         <div className="mt-6 flex flex-1 flex-col items-center">
           <div className="flex flex-col items-center text-center">
-            <span
-              className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] bg-saffron text-white shadow-[0_14px_36px_rgb(232_145_58/0.45)]"
-              aria-hidden
-            >
-              <ShieldCheck className="h-8 w-8" strokeWidth={2.2} />
-            </span>
+            <BrandLogo size={64} className="rounded-[1.35rem] shadow-[0_14px_36px_rgb(232_145_58/0.45)]" />
             <p className="mt-4 font-display text-[1.85rem] font-bold tracking-tight text-night-ink">
               {APP_NAME}
             </p>

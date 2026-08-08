@@ -5,9 +5,9 @@ import {
   ClipboardCheck,
   FileSearch,
   Search,
-  ShieldCheck,
   Star,
 } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { AppShell } from '@/components/layout/AppShell'
 import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { cn } from '@/lib/utils'
@@ -34,9 +34,7 @@ export function HomeScreen() {
       <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">
         <header className="animate-bfi-fade flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
-              <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
-            </div>
+            <BrandLogo size={36} />
             <span className="truncate font-display text-sm font-semibold tracking-tight text-night-muted">
               {APP_NAME}
             </span>

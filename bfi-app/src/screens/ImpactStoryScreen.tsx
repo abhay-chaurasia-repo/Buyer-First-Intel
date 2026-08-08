@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
 import { APP_NAME } from '@/data/brand'
 import { cn } from '@/lib/utils'
@@ -222,9 +223,7 @@ export function ImpactStoryScreen() {
     >
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center px-5 bfi-status-pad">
         <div className="pointer-events-auto flex items-center gap-2 pb-2 pt-1">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
-            <ShieldCheck className="h-4 w-4" strokeWidth={2.25} />
-          </span>
+          <BrandLogo size={32} />
           <span className="font-display text-sm font-semibold tracking-tight">{APP_NAME}</span>
         </div>
       </header>
