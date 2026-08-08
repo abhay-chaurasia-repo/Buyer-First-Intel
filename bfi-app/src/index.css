@@ -73,9 +73,11 @@
     overflow: hidden;
     font-family: var(--font-sans);
     color: var(--color-night-ink);
-    background: #141010;
+    background: #1f1617;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   #root {
@@ -99,26 +101,32 @@
     padding-top: max(0.25rem, env(safe-area-inset-top));
   }
 
-  /* Full-bleed mobile canvas — no framed side bars */
+  /*
+   * Mobile app shell:
+   * - On phones: edge-to-edge
+   * - On larger screens: centered phone column (no book bezel)
+   */
   .bfi-phone-stage {
     display: flex;
     height: 100dvh;
     width: 100%;
+    align-items: stretch;
+    justify-content: center;
     background: #1f1617;
   }
 
   .bfi-phone-frame {
     position: relative;
     display: flex;
-    height: 100%;
     width: 100%;
-    max-width: 100%;
+    max-width: 430px;
+    height: 100%;
     flex-direction: column;
     overflow: hidden;
     background: #1f1617;
   }
 
-  /* Natural mobile scroll — hide book-like scroll gutters */
+  /* Natural mobile scroll — no desktop scrollbar gutters */
   .bfi-phone-frame,
   .bfi-phone-frame * {
     scrollbar-width: none;

@@ -69,10 +69,10 @@ export function GuidanceScreen() {
         </header>
 
         <article
-          className="flex-1 overflow-y-auto px-5 py-5 sm:px-8"
+          className="flex-1 overflow-y-auto px-5 py-5"
           data-testid={`guidance-doc-${doc.id}`}
         >
-          <div className="mx-auto max-w-md">
+          <div className="mx-auto w-full">
             <div className="flex items-center gap-2 text-saffron-glow">
               <Scale className="h-5 w-5" strokeWidth={2.25} />
               <span className="text-[11px] font-semibold tracking-wide text-night-faint uppercase">

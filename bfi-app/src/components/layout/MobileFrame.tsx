@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 /**
- * Full-bleed app canvas — fills the viewport with natural scrolling.
+ * Mobile-app canvas: edge-to-edge on phones, phone-width column on larger screens.
  */
 export function MobileFrame({ children }: { children: ReactNode }) {
   return (

@@ -46,7 +46,7 @@ export function HomeScreen() {
         </header>
 
         <div className="flex flex-1 flex-col items-center py-6">
-          <div className="animate-bfi-rise w-full max-w-md text-center">
+          <div className="animate-bfi-rise w-full text-center">
             <p className="font-display text-[2.2rem] leading-none font-extrabold tracking-tight text-night-ink">
               <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                 BFI
@@ -63,7 +63,7 @@ export function HomeScreen() {
 
           <form
             onSubmit={handleSubmit}
-            className="animate-bfi-rise mt-7 w-full max-w-md"
+            className="animate-bfi-rise mt-7 w-full"
             style={{ animationDelay: '80ms' }}
           >
             <label htmlFor={inputId} className="sr-only">
@@ -116,7 +116,7 @@ export function HomeScreen() {
           </p>
 
           <section
-            className="animate-bfi-rise mt-8 w-full max-w-md space-y-3"
+            className="animate-bfi-rise mt-8 w-full space-y-3"
             style={{ animationDelay: '200ms' }}
             aria-label="How due diligence works"
             data-testid="home-diligence-section"
