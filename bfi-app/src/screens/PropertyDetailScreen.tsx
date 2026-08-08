@@ -151,25 +151,31 @@ export function PropertyDetailScreen() {
             data-testid="property-top-bar"
           >
             <div
-              className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-3 pb-2 pt-2"
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 pb-2 pt-2"
               data-testid="page-title-open"
             >
               <button
                 type="button"
                 onClick={handleToggleStar}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-night-ink/10 hover:text-saffron-glow touch-manipulation"
+                className={cn(
+                  'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-bold tracking-wide transition-colors touch-manipulation',
+                  starred
+                    ? 'border-saffron/55 bg-saffron/30 text-saffron-glow shadow-[0_0_0_1px_rgb(232_145_58/0.12)] hover:bg-saffron/40'
+                    : 'border-white/30 bg-white/12 text-night-ink hover:border-saffron/45 hover:bg-saffron/20 hover:text-saffron-glow',
+                )}
                 aria-label={starred ? 'Remove from watchlist' : 'Save to watchlist'}
                 aria-pressed={starred}
                 data-testid="button-star-property"
               >
                 <Star
-                  className={cn('h-5 w-5', starred && 'fill-saffron-bright text-saffron-bright')}
-                  strokeWidth={starred ? 0 : 2}
+                  className={cn('h-3.5 w-3.5', starred && 'fill-saffron-glow')}
+                  strokeWidth={starred ? 0 : 2.25}
                 />
+                {starred ? 'Saved' : 'Save'}
               </button>
 
               <h1
-                className="truncate text-center font-display text-[1.05rem] font-semibold tracking-tight"
+                className="min-w-0 truncate text-center font-display text-[1.05rem] font-semibold tracking-tight"
                 title={fullAddress}
                 data-testid="text-truncated-address"
               >
