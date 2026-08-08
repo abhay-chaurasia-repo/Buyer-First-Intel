@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { PrimaryNavPanel } from './PrimaryNavPanel'
 import { cn } from '@/lib/utils'
 
 type PageHeaderProps = {
@@ -8,6 +9,8 @@ type PageHeaderProps = {
   testId?: string
   className?: string
   children?: ReactNode
+  /** Show Search / Watchlist / Journey panel under the status area */
+  showPrimaryNav?: boolean
 }
 
 /**
@@ -19,6 +22,7 @@ export function PageHeader({
   testId,
   className,
   children,
+  showPrimaryNav = false,
 }: PageHeaderProps) {
   return (
     <header
@@ -28,18 +32,25 @@ export function PageHeader({
       )}
       data-testid={testId}
     >
-      <div className="px-4 pb-3 pt-2.5 text-center">
-        <h1 className="mx-auto max-w-[16rem] font-display text-[1.05rem] font-semibold leading-snug tracking-tight">
-          <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
-            {title}
-          </span>
-        </h1>
-        {description ? (
-          <p className="mx-auto mt-1 max-w-[18rem] text-[11px] leading-relaxed text-white/75">
-            {description}
-          </p>
+      <div className="px-4 pb-3 pt-2.5">
+        {showPrimaryNav ? (
+          <div className="mb-3" data-testid="page-header-primary-nav">
+            <PrimaryNavPanel placement="top" testId="nav-top-panel" />
+          </div>
         ) : null}
-        {children}
+        <div className="text-center">
+          <h1 className="mx-auto max-w-[16rem] font-display text-[1.05rem] font-semibold leading-snug tracking-tight">
+            <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
+              {title}
+            </span>
+          </h1>
+          {description ? (
+            <p className="mx-auto mt-1 max-w-[18rem] text-[11px] leading-relaxed text-white/75">
+              {description}
+            </p>
+          ) : null}
+          {children}
+        </div>
       </div>
     </header>
   )

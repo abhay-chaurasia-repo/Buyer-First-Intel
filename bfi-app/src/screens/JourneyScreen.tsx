@@ -116,6 +116,7 @@ export function JourneyScreen() {
         title="Buying checklist"
         description="Prepare → diligence → close. Tap to check off."
         testId="journey-top-bar"
+        showPrimaryNav
       />
 
       <div className="flex-1 overflow-y-auto px-3 py-4 pb-4">
