@@ -4,7 +4,7 @@ import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react
 import { IMPACT_PAGES, markImpactSeen, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
 
-const AUTO_MS = 4500
+const AUTO_MS = 2000
 
 function SizeSnippet() {
   return (
@@ -155,40 +155,28 @@ function StorySlide({ page }: { page: ImpactPage }) {
 }
 
 /**
- * Asana-style impact story — auto-advances through three pages for first impression.
+ * Asana-style impact story — auto-advances every 2s through three pages.
  */
 export function ImpactStoryScreen() {
   const navigate = useNavigate()
   const [index, setIndex] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const [tick, setTick] = useState(0)
+  const [holding, setHolding] = useState(false)
   const touchStartX = useRef<number | null>(null)
   const page = IMPACT_PAGES[index]!
 
   useEffect(() => {
-    if (paused) return
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
+    if (holding) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    const step = 50
     const timer = window.setInterval(() => {
-      setTick((value) => {
-        const next = value + step
-        if (next >= AUTO_MS) {
-          setIndex((i) => (i + 1) % IMPACT_PAGES.length)
-          return 0
-        }
-        return next
-      })
-    }, step)
+      setIndex((i) => (i + 1) % IMPACT_PAGES.length)
+    }, AUTO_MS)
 
     return () => window.clearInterval(timer)
-  }, [paused, index])
+  }, [holding, index])
 
   function goTo(next: number) {
     setIndex(next)
-    setTick(0)
   }
 
   function finishAndGo(path: string) {
@@ -196,15 +184,15 @@ export function ImpactStoryScreen() {
     navigate(path)
   }
 
-  function onTouchStart(clientX: number) {
+  function onPointerDown(clientX: number) {
     touchStartX.current = clientX
-    setPaused(true)
+    setHolding(true)
   }
 
-  function onTouchEnd(clientX: number) {
+  function onPointerUp(clientX: number) {
     const start = touchStartX.current
     touchStartX.current = null
-    setPaused(false)
+    setHolding(false)
     if (start == null) return
     const delta = clientX - start
     if (Math.abs(delta) < 48) return
@@ -215,17 +203,24 @@ export function ImpactStoryScreen() {
     }
   }
 
-  const progress = Math.min(1, tick / AUTO_MS)
-
   return (
     <div
       className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col overflow-hidden bg-ink text-white"
       data-testid="impact-story"
       data-page={page.id}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={(event) => onTouchStart(event.changedTouches[0]?.clientX ?? 0)}
-      onTouchEnd={(event) => onTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+      onPointerDown={(event) => {
+        const target = event.target as HTMLElement
+        if (target.closest('button, a')) return
+        onPointerDown(event.clientX)
+      }}
+      onPointerUp={(event) => {
+        if (touchStartX.current == null) return
+        onPointerUp(event.clientX)
+      }}
+      onPointerCancel={() => {
+        touchStartX.current = null
+        setHolding(false)
+      }}
     >
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 pt-12 sm:px-8">
         <div className="pointer-events-auto flex items-center gap-2">
@@ -246,7 +241,7 @@ export function ImpactStoryScreen() {
 
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <div
-          className="flex h-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+          className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
           style={{ transform: `translateX(-${index * 100}%)` }}
           data-testid="impact-carousel"
         >
@@ -264,25 +259,19 @@ export function ImpactStoryScreen() {
             <button
               key={item.id}
               type="button"
-              onClick={() => {
-                goTo(i)
-                setPaused(true)
-                window.setTimeout(() => setPaused(false), 1200)
-              }}
-              className={cn(
-                'relative h-1.5 overflow-hidden rounded-full transition-all touch-manipulation',
-                i === index ? 'w-10 bg-white/25' : 'w-10 bg-white/25 hover:bg-white/40',
-              )}
+              onClick={() => goTo(i)}
+              className="relative h-1.5 w-10 overflow-hidden rounded-full bg-white/25 touch-manipulation"
               aria-label={`Go to story ${i + 1}`}
               aria-current={i === index}
             >
-              {i < index ? (
-                <span className="absolute inset-0 rounded-full bg-saffron" />
-              ) : null}
+              {i < index ? <span className="absolute inset-0 rounded-full bg-saffron" /> : null}
               {i === index ? (
                 <span
-                  className="absolute inset-y-0 left-0 rounded-full bg-saffron transition-[width] duration-75 ease-linear"
-                  style={{ width: `${progress * 100}%` }}
+                  key={index}
+                  className={cn(
+                    'absolute inset-y-0 left-0 w-full rounded-full bg-saffron animate-impact-progress',
+                    holding && 'is-paused',
+                  )}
                 />
               ) : null}
             </button>

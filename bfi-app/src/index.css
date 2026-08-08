@@ -137,6 +137,15 @@
   }
 }
 
+@keyframes impact-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .animate-bfi-rise {
   animation: bfi-rise 0.45s ease-out both;
 }
@@ -147,4 +156,21 @@
 
 .animate-bfi-channel-in {
   animation: bfi-channel-in 0.28s ease-out both;
+}
+
+.animate-impact-progress {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: impact-progress 2s linear forwards;
+}
+
+.animate-impact-progress.is-paused {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-impact-progress {
+    animation: none;
+    transform: scaleX(1);
+  }
 }
