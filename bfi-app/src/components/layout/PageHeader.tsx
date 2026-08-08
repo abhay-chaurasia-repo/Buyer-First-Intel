@@ -28,7 +28,7 @@ export function PageHeader({
     >
       <div className="animate-bfi-rise px-5 pb-2 pt-3 text-center" data-testid="page-title-open">
         <h1 className="mx-auto max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight">
-          <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
+          <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
             {title}
           </span>
         </h1>

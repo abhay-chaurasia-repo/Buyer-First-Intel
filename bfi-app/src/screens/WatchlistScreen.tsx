@@ -102,7 +102,7 @@ function PropertyNotes({
         <ChevronDown
           className={cn('h-4 w-4 text-saffron-glow transition-transform', !open && '-rotate-90')}
         />
-        <StickyNote className="h-3.5 w-3.5 text-saffron-bright" aria-hidden />
+        <StickyNote className="h-3.5 w-3.5 text-saffron-glow" aria-hidden />
         <span className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
           Notes
         </span>
@@ -149,7 +149,7 @@ function PropertyNotes({
                   className="flex gap-2 rounded-xl border border-white/20 bg-transparent px-3 py-2.5"
                 >
                   <StickyNote
-                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-bright"
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow"
                     aria-hidden
                   />
                   <div className="min-w-0 flex-1">

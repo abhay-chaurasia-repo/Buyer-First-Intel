@@ -61,7 +61,7 @@ export function GuidanceScreen() {
               <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
                 {doc.eyebrow}
               </p>
-              <p className="truncate font-display text-[14px] font-semibold text-saffron-glow/95">
+              <p className="truncate font-display text-[14px] font-semibold text-saffron-glow">
                 {doc.title}
               </p>
             </div>
@@ -83,7 +83,7 @@ export function GuidanceScreen() {
               </span>
             </div>
             <h1 className="mt-3 text-center font-display text-[1.25rem] font-semibold tracking-tight">
-              <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
+              <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
                 {doc.title}
               </span>
             </h1>

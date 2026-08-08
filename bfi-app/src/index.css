@@ -14,13 +14,16 @@
   --color-line: rgb(255 248 247 / 0.18);
   --color-line-strong: rgb(255 248 247 / 0.28);
 
-  /* Saffron accents */
+  /*
+   * Saffron accents
+   * Logo fill stays #e8913a; glow/bright are lighter same-hue shines for text.
+   */
   --color-saffron: #e8913a;
-  --color-saffron-bright: #f5a623;
+  --color-saffron-bright: #ffc266;
   --color-saffron-deep: #c46a1b;
   --color-saffron-soft: rgb(232 145 58 / 0.22);
   --color-saffron-mist: rgb(232 145 58 / 0.14);
-  --color-saffron-glow: #ffd89a;
+  --color-saffron-glow: #ffb14d;
 
   --color-action: #e8913a;
   --color-action-hover: #c46a1b;
