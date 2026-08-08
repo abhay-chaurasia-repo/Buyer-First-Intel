@@ -21,36 +21,36 @@ export function LoginScreen() {
 
   return (
     <div
-      className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col overflow-hidden"
+      className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col overflow-hidden bfi-ink-wash text-night-ink"
       data-testid="login-screen"
     >
-      <div className="pointer-events-none absolute inset-0 bfi-grid-wash opacity-80" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 bfi-grid-wash opacity-70" aria-hidden />
 
       <div className="relative flex flex-1 flex-col px-5 pb-8 pt-12 sm:px-8">
         <header className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
             <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
           </div>
-          <span className="font-display text-sm font-semibold tracking-[0.14em] text-ink-muted uppercase">
+          <span className="font-display text-sm font-semibold tracking-[0.14em] text-night-muted uppercase">
             BFI
           </span>
         </header>
 
         <div className="mt-10 flex-1">
-          <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron uppercase">
+          <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
             Buyer-only
           </p>
-          <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">
+          <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-night-ink">
             Log in
           </h1>
-          <p className="mt-2 max-w-sm text-[0.95rem] leading-relaxed text-ink-muted">
+          <p className="mt-2 max-w-sm text-[0.95rem] leading-relaxed text-white/80">
             Sign in to sync Watchlist, Journey, and private notes. Auth wiring comes next — for now,
             continue into due diligence.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-3" data-testid="login-form">
             <label className="block">
-              <span className="mb-1.5 block text-[11px] font-bold tracking-wide text-ink-faint uppercase">
+              <span className="mb-1.5 block text-[11px] font-bold tracking-wide text-night-faint uppercase">
                 Email
               </span>
               <input
@@ -59,12 +59,12 @@ export function LoginScreen() {
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
                 placeholder="you@email.com"
-                className="min-h-12 w-full rounded-2xl border border-line-strong bg-paper-elevated px-4 text-ink outline-none placeholder:text-ink-faint focus:border-saffron focus:ring-4 focus:ring-saffron-soft"
+                className="min-h-12 w-full rounded-2xl border border-white/25 bg-coastal/90 px-4 text-night-ink outline-none placeholder:text-night-faint backdrop-blur-md focus:border-saffron focus:ring-4 focus:ring-saffron/25"
                 data-testid="input-login-email"
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-[11px] font-bold tracking-wide text-ink-faint uppercase">
+              <span className="mb-1.5 block text-[11px] font-bold tracking-wide text-night-faint uppercase">
                 Password
               </span>
               <input
@@ -73,7 +73,7 @@ export function LoginScreen() {
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="min-h-12 w-full rounded-2xl border border-line-strong bg-paper-elevated px-4 text-ink outline-none placeholder:text-ink-faint focus:border-saffron focus:ring-4 focus:ring-saffron-soft"
+                className="min-h-12 w-full rounded-2xl border border-white/25 bg-coastal/90 px-4 text-night-ink outline-none placeholder:text-night-faint backdrop-blur-md focus:border-saffron focus:ring-4 focus:ring-saffron/25"
                 data-testid="input-login-password"
               />
             </label>
@@ -81,7 +81,7 @@ export function LoginScreen() {
             <button
               type="submit"
               className={cn(
-                'mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-saffron text-base font-semibold text-white shadow-[0_10px_28px_rgb(232_145_58/0.35)] transition-colors hover:bg-saffron-deep touch-manipulation',
+                'mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-saffron text-base font-semibold text-white shadow-[0_10px_28px_rgb(232_145_58/0.4)] transition-colors hover:bg-saffron-deep touch-manipulation',
               )}
               data-testid="button-login-submit"
             >
@@ -90,14 +90,14 @@ export function LoginScreen() {
             </button>
           </form>
 
-          <p className="mt-4 text-center text-[12px] text-ink-faint">
+          <p className="mt-4 text-center text-[12px] text-night-faint">
             Login is a preview shell. No account is created yet.
           </p>
         </div>
 
         <Link
           to="/welcome"
-          className="mt-4 inline-flex min-h-11 items-center justify-center text-sm font-semibold text-saffron-deep touch-manipulation"
+          className="mt-4 inline-flex min-h-11 items-center justify-center text-sm font-semibold text-saffron-glow touch-manipulation"
           data-testid="link-back-to-story"
         >
           Back to story

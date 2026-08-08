@@ -48,7 +48,7 @@ function PhaseSection({
       </button>
 
       {open ? (
-        <div className="animate-bfi-fade mt-1 space-y-1.5 rounded-2xl border border-night-line bg-coastal-deep/55 p-2 shadow-sm backdrop-blur-sm">
+        <div className="animate-bfi-fade mt-1 space-y-1.5 rounded-2xl border border-white/25 bg-coastal/90 p-2 shadow-sm backdrop-blur-sm">
           <p className="px-2 pb-1 text-[11px] text-night-faint">{blurb}</p>
           {items.map((item) => {
             const checked = Boolean(progress[item.id])
@@ -69,7 +69,7 @@ function PhaseSection({
                     'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border',
                     checked
                       ? 'border-saffron bg-saffron text-white'
-                      : 'border-night-line bg-coastal-deep/60 text-transparent',
+                      : 'border-white/25 bg-coastal/90 text-transparent',
                   )}
                 >
                   <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -115,7 +115,7 @@ export function JourneyScreen() {
       contentClassName="min-h-0 bfi-night-wash text-night-ink"
     >
       <header
-        className="sticky top-0 z-20 border-b border-night-line bg-coastal/90 backdrop-blur-md"
+        className="sticky top-0 z-20 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
         data-testid="journey-top-bar"
       >
         <div className="px-4 py-3">
@@ -132,7 +132,7 @@ export function JourneyScreen() {
       </header>
 
       <div className="flex-1 overflow-y-auto px-3 py-4 pb-4">
-        <div className="rounded-2xl border border-night-line bg-coastal-deep/55 p-3 shadow-sm backdrop-blur-sm">
+        <div className="rounded-2xl border border-white/25 bg-coastal/90 p-3 shadow-sm backdrop-blur-sm">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">

@@ -16,7 +16,7 @@ export function AppShell({
   contentClassName,
 }: AppShellProps) {
   return (
-    <div className={cn('relative mx-auto flex min-h-dvh w-full max-w-lg flex-col', className)}>
+    <div className={cn('relative mx-auto flex min-h-dvh w-full max-w-lg flex-col bfi-ink-wash text-night-ink', className)}>
       <main
         className={cn(
           'flex flex-1 flex-col',

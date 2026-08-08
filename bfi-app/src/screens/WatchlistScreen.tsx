@@ -90,7 +90,7 @@ function PropertyNotes({
   }
 
   return (
-    <div className="border-t border-night-line pt-3" data-testid={`notes-section-${propertyId}`}>
+    <div className="border-t border-white/15 pt-3" data-testid={`notes-section-${propertyId}`}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -121,7 +121,7 @@ function PropertyNotes({
               onChange={(event) => setDraft(event.target.value)}
               rows={2}
               placeholder="Add a note…"
-              className="w-full resize-none rounded-xl border border-night-line bg-coastal-deep/70 px-3 py-2.5 text-sm text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/60"
+              className="w-full resize-none rounded-xl border border-white/20 bg-coastal-deep/70 px-3 py-2.5 text-sm text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/60"
               data-testid={`input-property-note-${propertyId}`}
             />
             <button
@@ -145,7 +145,7 @@ function PropertyNotes({
               {notes.map((note) => (
                 <li
                   key={note.id}
-                  className="flex gap-2 rounded-xl border border-night-line bg-coastal-deep/70 px-3 py-2.5"
+                  className="flex gap-2 rounded-xl border border-white/20 bg-coastal-deep/70 px-3 py-2.5"
                 >
                   <StickyNote
                     className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-bright"
@@ -198,7 +198,7 @@ function WatchlistRow({
 
   return (
     <li
-      className="rounded-xl border border-night-line bg-coastal-deep/60"
+      className="rounded-xl border border-white/25 bg-coastal/90"
       data-testid={`watchlist-item-${item.id}`}
     >
       <button
@@ -236,7 +236,7 @@ function WatchlistRow({
       </button>
 
       {open ? (
-        <div className="animate-bfi-fade space-y-3 border-t border-night-line px-3 pb-3 pt-3">
+        <div className="animate-bfi-fade space-y-3 border-t border-white/15 px-3 pb-3 pt-3">
           <div className="flex items-start gap-2">
             <button
               type="button"
@@ -284,7 +284,7 @@ function WatchlistRow({
             </button>
           </div>
 
-          <div className="space-y-2 border-t border-night-line pt-3">
+          <div className="space-y-2 border-t border-white/15 pt-3">
             {status === 'visited' && item.visitedAt ? (
               <p className="flex items-center gap-1.5 text-[12px] text-saffron-glow">
                 <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
@@ -310,7 +310,7 @@ function WatchlistRow({
                   'inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold touch-manipulation',
                   status === 'visited'
                     ? 'border-saffron/55 bg-saffron/25 text-saffron-glow'
-                    : 'border-night-line bg-coastal-deep/55 text-night-muted hover:border-saffron/40 hover:text-saffron-glow',
+                    : 'border-white/25 bg-coastal/90 text-night-muted hover:border-saffron/40 hover:text-saffron-glow',
                 )}
                 aria-pressed={status === 'visited'}
                 data-testid={`button-mark-visited-${item.id}`}
@@ -323,7 +323,7 @@ function WatchlistRow({
                 <button
                   type="button"
                   onClick={() => onChange(setWatchlistPlannedVisit(item.id, null))}
-                  className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-night-line bg-coastal-deep/55 px-3 text-xs font-semibold text-night-muted touch-manipulation"
+                  className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/25 bg-coastal/90 px-3 text-xs font-semibold text-night-muted touch-manipulation"
                   data-testid={`button-clear-plan-${item.id}`}
                 >
                   Clear plan
@@ -343,7 +343,7 @@ function WatchlistRow({
                   const next = fromDatetimeLocalValue(event.target.value)
                   onChange(setWatchlistPlannedVisit(item.id, next))
                 }}
-                className="min-h-11 w-full rounded-xl border border-night-line bg-coastal-deep/70 px-3 text-sm text-night-ink outline-none focus:border-saffron/60"
+                className="min-h-11 w-full rounded-xl border border-white/20 bg-coastal-deep/70 px-3 text-sm text-night-ink outline-none focus:border-saffron/60"
                 data-testid={`input-plan-visit-${item.id}`}
               />
             </label>
@@ -376,7 +376,7 @@ export function WatchlistScreen() {
       contentClassName="min-h-0 bfi-night-wash text-night-ink"
     >
       <header
-        className="sticky top-0 z-20 border-b border-night-line bg-coastal/90 backdrop-blur-md"
+        className="sticky top-0 z-20 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
         data-testid="watchlist-top-bar"
       >
         <div className="px-4 py-3">
@@ -395,7 +395,7 @@ export function WatchlistScreen() {
       <div className="flex-1 overflow-y-auto px-3 py-4 pb-4">
         {items.length === 0 ? (
           <div
-            className="rounded-2xl border border-night-line bg-coastal-deep/55 p-5 text-center shadow-sm backdrop-blur-sm"
+            className="rounded-2xl border border-white/25 bg-coastal/90 p-5 text-center shadow-sm backdrop-blur-sm"
             data-testid="watchlist-empty"
           >
             <Star className="mx-auto h-8 w-8 text-saffron-glow" strokeWidth={1.75} />
@@ -415,15 +415,15 @@ export function WatchlistScreen() {
         ) : (
           <section className="space-y-3" data-testid="watchlist-list">
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl border border-night-line bg-coastal-deep/55 px-3 py-2">
+              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2">
                 <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Saved</p>
                 <p className="mt-1 text-sm font-semibold text-night-ink">{items.length}</p>
               </div>
-              <div className="rounded-xl border border-night-line bg-coastal-deep/55 px-3 py-2">
+              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2">
                 <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Planned</p>
                 <p className="mt-1 text-sm font-semibold text-night-ink">{plannedCount}</p>
               </div>
-              <div className="rounded-xl border border-night-line bg-coastal-deep/55 px-3 py-2">
+              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2">
                 <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Visited</p>
                 <p className="mt-1 text-sm font-semibold text-night-ink">{visitedCount}</p>
               </div>

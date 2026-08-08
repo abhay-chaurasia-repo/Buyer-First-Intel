@@ -72,7 +72,7 @@ function CategoryBlock({
       </button>
 
       {open ? (
-        <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-night-line bg-coastal-deep/55 p-2 shadow-sm backdrop-blur-sm">
+        <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-coastal/90 p-2 shadow-sm backdrop-blur-sm">
           <p className="px-2 pb-1 text-[11px] text-night-faint">{blurb}</p>
           {sorted.map((label) => {
             const count = voteCount(label, voteState)
@@ -105,8 +105,8 @@ function CategoryBlock({
                     'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold transition-colors touch-manipulation',
                     voted
                       ? 'border-saffron/55 bg-saffron/25 text-saffron-glow'
-                      : 'border-night-line bg-coastal-deep/60 text-night-muted hover:border-saffron/40 hover:text-saffron-glow',
-                    !verified && 'cursor-not-allowed opacity-55 hover:border-night-line hover:text-night-muted',
+                      : 'border-white/25 bg-coastal/90 text-night-muted hover:border-saffron/40 hover:text-saffron-glow',
+                    !verified && 'cursor-not-allowed opacity-55 hover:border-white/20 hover:text-night-muted',
                   )}
                   aria-pressed={voted}
                   aria-label={
@@ -181,7 +181,7 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
 
   return (
     <div className="mt-3 space-y-4 px-3" data-testid="buyer-community-panel">
-      <div className="rounded-2xl border border-night-line bg-coastal-deep/55 p-3 shadow-sm backdrop-blur-sm">
+      <div className="rounded-2xl border border-white/25 bg-coastal/90 p-3 shadow-sm backdrop-blur-sm">
         <p className="text-[13px] leading-relaxed text-night-ink">
           Pre-set labels only — both upsides (Plus) and watch-outs (Watch). Verified visitors upvote
           what they observe on site.
