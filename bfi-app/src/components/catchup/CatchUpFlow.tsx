@@ -106,7 +106,7 @@ function DetailSection({ card }: { card: CatchUpCard }) {
       </button>
 
       {open ? (
-        <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-coastal/90 p-2 shadow-sm backdrop-blur-sm">
+        <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
           <p className="px-2 pb-1 text-[11px] text-night-faint">{stripHash(card.preview)}</p>
 
           {card.fields && card.fields.length > 0
@@ -194,7 +194,7 @@ export function CatchUpFlow({
     >
       {/* Same top-bar language as the searched property page */}
       <header
-        className="sticky top-0 z-20 shrink-0 border-b border-white/15 bg-coastal/80 backdrop-blur-md bfi-status-pad"
+        className="relative z-20 shrink-0 bfi-status-pad"
         data-testid="tile-detail-top-bar"
       >
         <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-3 pb-2.5 pt-2">
@@ -270,12 +270,12 @@ export function CatchUpFlow({
             {items.length > 0 ? (
               items.map((card) => <DetailSection key={card.id} card={card} />)
             ) : (
-              <div className="rounded-2xl border border-white/25 bg-coastal/90 p-4 text-center shadow-sm backdrop-blur-sm">
+              <div className="rounded-2xl border border-white/25 bg-transparent p-4 text-center">
                 <p className="text-sm text-night-muted">No details available for this section yet.</p>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-4 inline-flex min-h-11 items-center gap-1 rounded-xl border border-white/25 bg-coastal/90 px-4 text-sm font-semibold text-night-ink touch-manipulation"
+                  className="mt-4 inline-flex min-h-11 items-center gap-1 rounded-xl border border-white/25 bg-transparent px-4 text-sm font-semibold text-night-ink touch-manipulation"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Back

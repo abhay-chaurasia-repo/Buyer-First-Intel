@@ -80,7 +80,7 @@ export function InAppBrowserScreen() {
           </p>
         </div>
 
-        <div className="relative min-h-0 flex-1 bg-coastal-deep/40">
+        <div className="relative min-h-0 flex-1 bg-transparent">
           <iframe
             title="Official real estate commission settlement site"
             src={url}

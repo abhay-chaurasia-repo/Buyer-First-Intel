@@ -33,7 +33,7 @@ function VisitRow({ visit }: { visit: VerifiedVisit }) {
 
   return (
     <article
-      className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2.5"
+      className="rounded-xl border border-white/25 bg-transparent px-3 py-2.5"
       data-testid={`visit-row-${visit.id}`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -143,7 +143,7 @@ function CollapsibleSection({
       </button>
 
       {open ? (
-        <div className="animate-bfi-fade mt-1 space-y-2 rounded-2xl border border-white/25 bg-coastal/90 p-2 shadow-sm backdrop-blur-sm">
+        <div className="animate-bfi-fade mt-1 space-y-2 rounded-2xl border border-white/25 bg-transparent p-2">
           {blurb ? <p className="px-2 pb-1 text-[11px] text-night-faint">{blurb}</p> : null}
           {children}
         </div>
@@ -180,7 +180,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
 
   return (
     <div className="mt-3 space-y-4 px-3" data-testid="verified-visits-panel">
-      <div className="rounded-2xl border border-white/25 bg-coastal/90 p-3 shadow-sm backdrop-blur-sm">
+      <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
           Each row is a GPS presence check within {bundle.radiusMeters}m — with date and time so you
           can judge the pattern yourself. If a visitor also labelled in Buyer Community, those
@@ -188,7 +188,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
         </p>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2">
+          <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
             <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
               Verified visits
             </p>
@@ -197,7 +197,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
               {summary.distinctDays} days · {summary.distinctVisitors} visitors
             </p>
           </div>
-          <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2">
+          <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
             <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
               With labels
             </p>
@@ -245,7 +245,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
           {bundle.signals.map((signal) => (
             <li
               key={signal.id}
-              className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2.5"
+              className="rounded-xl border border-white/25 bg-transparent px-3 py-2.5"
               data-testid={`visit-signal-${signal.id}`}
             >
               <p

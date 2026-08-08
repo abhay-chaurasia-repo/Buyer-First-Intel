@@ -9,7 +9,7 @@ const AUTO_MS = 3500
 function SizeSnippet() {
   return (
     <div
-      className="rounded-2xl border border-white/25 bg-coastal/90 p-2.5 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
+      className="rounded-2xl border border-white/25 bg-transparent p-2.5 text-night-ink"
       data-testid="impact-snippet-size"
     >
       <div className="flex items-center gap-2">
@@ -21,11 +21,11 @@ function SizeSnippet() {
         </p>
       </div>
       <div className="mt-3 space-y-1.5">
-        <div className="flex items-center justify-between rounded-xl bg-coastal-deep/70 px-3 py-2.5">
+        <div className="flex items-center justify-between rounded-xl bg-transparent px-3 py-2.5">
           <span className="text-[12px] text-night-muted">County sqft</span>
           <span className="text-[13px] font-semibold text-night-ink">2,509</span>
         </div>
-        <div className="flex items-center justify-between rounded-xl bg-coastal-deep/70 px-3 py-2.5">
+        <div className="flex items-center justify-between rounded-xl bg-transparent px-3 py-2.5">
           <span className="text-[12px] text-night-muted">Listing claim</span>
           <span className="text-[13px] font-semibold text-saffron-glow">2,924</span>
         </div>
@@ -42,7 +42,7 @@ function SizeSnippet() {
 function VisitsSnippet() {
   return (
     <div
-      className="rounded-2xl border border-white/25 bg-coastal/90 p-2.5 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
+      className="rounded-2xl border border-white/25 bg-transparent p-2.5 text-night-ink"
       data-testid="impact-snippet-visits"
     >
       <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ function VisitsSnippet() {
         ].map((row) => (
           <div
             key={row.when}
-            className="flex items-center justify-between gap-2 rounded-xl bg-coastal-deep/70 px-3 py-2"
+            className="flex items-center justify-between gap-2 rounded-xl bg-transparent px-3 py-2"
           >
             <div className="min-w-0">
               <p className="truncate text-[12px] font-semibold text-night-ink">{row.when}</p>
@@ -83,7 +83,7 @@ function VisitsSnippet() {
 function CommunitySnippet() {
   return (
     <div
-      className="rounded-2xl border border-white/25 bg-coastal/90 p-2.5 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
+      className="rounded-2xl border border-white/25 bg-transparent p-2.5 text-night-ink"
       data-testid="impact-snippet-community"
     >
       <div className="flex items-center gap-2">
@@ -280,7 +280,7 @@ export function ImpactStoryScreen() {
         <button
           type="button"
           onClick={() => navigate('/login')}
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 text-base font-semibold text-night-ink backdrop-blur-sm transition-colors hover:bg-white/16 touch-manipulation"
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 text-base font-semibold text-night-ink transition-colors hover:bg-white/16 touch-manipulation"
           data-testid="button-impact-login"
         >
           Already have an account? Log in

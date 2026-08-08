@@ -71,7 +71,7 @@ export function HomeScreen() {
             </label>
             <div
               className={cn(
-                'flex items-center gap-2 rounded-[1.25rem] border bg-coastal/90 px-3 py-2 shadow-search backdrop-blur-md transition-[border-color,box-shadow]',
+                'flex items-center gap-2 rounded-[1.25rem] border bg-transparent px-3 py-2 transition-[border-color,box-shadow]',
                 isFocused
                   ? 'border-saffron ring-4 ring-saffron/25'
                   : 'border-white/25 hover:border-saffron/50',
@@ -98,7 +98,7 @@ export function HomeScreen() {
                   'inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl transition-colors touch-manipulation',
                   query.trim()
                     ? 'bg-saffron text-white hover:bg-saffron-deep shadow-[0_6px_14px_rgb(232_145_58/0.35)]'
-                    : 'bg-coastal-deep/70 text-night-faint',
+                    : 'bg-transparent text-night-faint',
                 )}
                 aria-label="Search address"
                 data-testid="button-address-search"
@@ -121,7 +121,7 @@ export function HomeScreen() {
             aria-label="How due diligence works"
             data-testid="home-diligence-section"
           >
-            <div className="rounded-[1.25rem] border border-white/25 bg-coastal/90 p-4 shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md">
+            <div className="rounded-[1.25rem] border border-white/25 bg-transparent p-4">
               <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
                 Start here
               </p>

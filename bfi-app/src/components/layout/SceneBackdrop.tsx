@@ -9,9 +9,9 @@ type SceneBackdropProps = {
 }
 
 const overlays: Record<NonNullable<SceneBackdropProps['intensity']>, string> = {
-  soft: 'from-ink/55 via-ink/45 to-ink/88',
-  medium: 'from-ink/65 via-ink/55 to-ink/92',
-  strong: 'from-ink/72 via-ink/62 to-ink/94',
+  soft: 'from-ink/35 via-ink/28 to-ink/72',
+  medium: 'from-ink/42 via-ink/35 to-ink/78',
+  strong: 'from-ink/52 via-ink/45 to-ink/85',
 }
 
 /**

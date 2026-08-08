@@ -241,7 +241,7 @@ export function PropertyDetailScreen() {
                       aria-label={card.title}
                       data-testid={`metric-${card.id}`}
                     >
-                      <span className="relative flex h-14 w-14 items-center justify-center rounded-[18px] bg-coastal-soft shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_0_0_1px_rgb(255_248_247/0.12)]">
+                      <span className="relative flex h-14 w-14 items-center justify-center rounded-[18px] border border-white/25 bg-transparent">
                         <span
                           className={cn(
                             'flex h-10 w-10 items-center justify-center rounded-[14px]',
@@ -270,7 +270,7 @@ export function PropertyDetailScreen() {
                   if (!starred) handleToggleStar()
                   navigate('/watchlist')
                 }}
-                className="flex w-full min-h-11 items-center gap-2 rounded-xl border border-white/25 bg-coastal/90 px-3 py-2.5 text-left touch-manipulation"
+                className="flex w-full min-h-11 items-center gap-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5 text-left touch-manipulation"
                 data-testid="button-open-watchlist-notes"
               >
                 <StickyNote className="h-4 w-4 shrink-0 text-saffron-bright" aria-hidden />
@@ -317,7 +317,7 @@ export function PropertyDetailScreen() {
               </button>
 
               {historyOpen ? (
-                <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-coastal/90 p-2 shadow-sm backdrop-blur-sm">
+                <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
                   <p className="px-2 pb-1 text-[11px] text-night-faint">
                     Previously searched and saved addresses
                   </p>

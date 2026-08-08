@@ -20,7 +20,7 @@ export function PrimaryNavPanel({
 }) {
   return (
     <nav className={className} aria-label="Primary" data-testid={testId}>
-      <div className="mx-auto flex h-[3.85rem] w-full items-stretch justify-around rounded-[1.35rem] border border-white/12 bg-ink/85 px-1.5 shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[3.85rem] w-full items-stretch justify-around rounded-[1.35rem] border border-white/20 bg-transparent px-1.5">
         {navItems.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}

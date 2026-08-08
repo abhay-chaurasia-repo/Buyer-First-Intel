@@ -104,7 +104,7 @@ export function GuidanceScreen() {
               {doc.sections.map((section) => (
                 <section
                   key={section.heading}
-                  className="rounded-2xl border border-white/25 bg-coastal/90 p-4 shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
+                  className="rounded-2xl border border-white/25 bg-transparent p-4"
                 >
                   <h2 className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
                     {section.heading}
