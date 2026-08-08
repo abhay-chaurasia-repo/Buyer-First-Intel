@@ -9,7 +9,7 @@ type SceneBackdropProps = {
 }
 
 const overlays: Record<NonNullable<SceneBackdropProps['intensity']>, string> = {
-  soft: 'from-ink/28 via-ink/22 to-ink/68',
+  soft: 'from-ink/35 via-ink/28 to-ink/72',
   medium: 'from-ink/42 via-ink/35 to-ink/78',
   strong: 'from-ink/52 via-ink/45 to-ink/85',
 }
@@ -38,8 +38,7 @@ export function SceneBackdrop({
       <div
         className={cn('absolute inset-0 bg-gradient-to-b', overlays[intensity])}
       />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_-8%,rgb(232_145_58/0.22),transparent_58%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_20%,rgb(245_166_35/0.12),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.14),transparent_55%)]" />
     </div>
   )
 }

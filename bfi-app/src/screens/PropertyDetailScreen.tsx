@@ -37,15 +37,12 @@ const metricIcons: Record<MetricCard['accent'], LucideIcon> = {
 }
 
 const metricIconWrap: Record<MetricCard['accent'], string> = {
-  'county-facts': 'bg-saffron/30 text-saffron-glow shadow-[0_6px_16px_rgb(232_145_58/0.35)]',
-  'sales-history':
-    'bg-saffron-bright/30 text-saffron-glow shadow-[0_6px_16px_rgb(245_166_35/0.32)]',
-  'tax-history': 'bg-saffron/25 text-saffron-glow shadow-[0_6px_16px_rgb(232_145_58/0.3)]',
-  'verified-visits':
-    'bg-saffron/30 text-saffron-glow shadow-[0_6px_16px_rgb(232_145_58/0.32)]',
-  'buyer-insights':
-    'bg-saffron-bright/28 text-saffron-glow shadow-[0_6px_16px_rgb(245_166_35/0.3)]',
-  schools: 'bg-saffron/28 text-saffron-glow shadow-[0_6px_16px_rgb(232_145_58/0.3)]',
+  'county-facts': 'bg-saffron/25 text-saffron-glow',
+  'sales-history': 'bg-saffron-bright/25 text-saffron-glow',
+  'tax-history': 'bg-saffron/20 text-saffron-glow',
+  'verified-visits': 'bg-night-ink/15 text-saffron-glow',
+  'buyer-insights': 'bg-saffron/25 text-saffron-glow',
+  schools: 'bg-saffron-bright/20 text-saffron-glow',
 }
 
 const metricToSurface: Record<MetricCard['id'], CatchUpSurface> = {
@@ -158,11 +155,7 @@ export function PropertyDetailScreen() {
   const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
 
   return (
-    <AppShell
-      scene="property"
-      sceneIntensity="soft"
-      contentClassName="relative min-h-0 overflow-y-auto overscroll-contain text-night-ink"
-    >
+    <AppShell scene="property" sceneIntensity="soft" contentClassName="min-h-0 text-night-ink">
       {activeSurface ? (
         <CatchUpFlow
           key={activeSurface}
@@ -176,22 +169,20 @@ export function PropertyDetailScreen() {
       ) : (
         <>
           <header
-            className="animate-bfi-fade relative z-20 shrink-0 bfi-status-pad"
+            className="relative z-20 shrink-0 bfi-status-pad"
             data-testid="property-top-bar"
           >
             <div
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 pb-1 pt-2"
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 pb-2 pt-2"
               data-testid="page-title-open"
             >
               <button
                 type="button"
                 onClick={handleToggleStar}
                 className={cn(
-                  'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color,box-shadow] touch-manipulation',
-                  'hover:border-saffron/45 hover:bg-saffron/15 focus-visible:border-saffron/45 focus-visible:bg-saffron/15 active:border-saffron/45',
-                  starred
-                    ? 'text-saffron-glow shadow-[0_0_18px_rgb(232_145_58/0.25)]'
-                    : 'text-night-ink',
+                  'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color] touch-manipulation',
+                  'hover:border-white/35 hover:bg-white/8 focus-visible:border-white/35 focus-visible:bg-white/8 active:border-white/35',
+                  starred ? 'text-saffron-glow' : 'text-night-ink',
                 )}
                 aria-label={starred ? 'Remove from watchlist' : 'Save to watchlist'}
                 aria-pressed={starred}
@@ -205,12 +196,12 @@ export function PropertyDetailScreen() {
               </button>
 
               <div
-                className="min-w-0 rounded-xl border border-transparent px-2.5 py-1.5 text-center transition-[border-color,background-color,box-shadow] hover:border-saffron/40 hover:bg-saffron/10 hover:shadow-[0_0_20px_rgb(232_145_58/0.18)] focus-within:border-saffron/40"
+                className="min-w-0 rounded-xl border border-transparent px-2.5 py-1.5 text-center transition-[border-color,background-color] hover:border-white/35 hover:bg-white/8 focus-within:border-white/35"
                 data-testid="property-address-box"
                 title={fullAddress}
               >
                 <h1
-                  className="truncate font-display text-[1.15rem] font-extrabold tracking-tight"
+                  className="truncate font-display text-[1.05rem] font-semibold tracking-tight"
                   data-testid="text-truncated-address"
                 >
                   <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
@@ -223,11 +214,9 @@ export function PropertyDetailScreen() {
                 type="button"
                 onClick={handleToggleVerify}
                 className={cn(
-                  'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color,box-shadow] touch-manipulation',
-                  'hover:border-saffron/45 hover:bg-saffron/15 focus-visible:border-saffron/45 focus-visible:bg-saffron/15 active:border-saffron/45',
-                  verified
-                    ? 'text-saffron-glow shadow-[0_0_18px_rgb(232_145_58/0.25)]'
-                    : 'text-night-ink',
+                  'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color] touch-manipulation',
+                  'hover:border-white/35 hover:bg-white/8 focus-visible:border-white/35 focus-visible:bg-white/8 active:border-white/35',
+                  verified ? 'text-saffron-glow' : 'text-night-ink',
                 )}
                 aria-label={verified ? 'Clear GPS verification' : 'GPS Verify'}
                 aria-pressed={verified}
@@ -237,36 +226,23 @@ export function PropertyDetailScreen() {
                 <span>{verified ? 'Verified' : 'Verify'}</span>
               </button>
             </div>
-
-            <p className="animate-bfi-rise px-5 pb-2 text-center text-[0.82rem] leading-relaxed text-white/80">
-              County records first — visits, taxes, and buyer labels for this address.
-            </p>
           </header>
 
-          <div className="flex-1 pb-4">
-            <section
-              className="animate-bfi-rise px-3 pt-3"
-              style={{ animationDelay: '80ms' }}
-              aria-label="Quick actions"
-              data-testid="metric-cards"
-            >
-              <p className="mb-3 px-1 font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-                Dig in here
-              </p>
+          <div className="flex-1 overflow-y-auto pb-4">
+            <section className="px-3 pt-4" aria-label="Quick actions" data-testid="metric-cards">
               <div className="grid grid-cols-3 gap-x-2 gap-y-4 px-0.5">
-                {metrics.map((card, index) => {
+                {metrics.map((card) => {
                   const Icon = metricIcons[card.accent]
                   return (
                     <button
                       key={card.id}
                       type="button"
                       onClick={() => setActiveSurface(metricToSurface[card.id])}
-                      className="animate-bfi-rise relative flex w-full flex-col items-center gap-1.5 rounded-2xl bg-transparent px-1 py-1 text-center transition-transform active:scale-[0.97] touch-manipulation"
-                      style={{ animationDelay: `${120 + index * 45}ms` }}
+                      className="relative flex w-full flex-col items-center gap-1.5 rounded-2xl bg-transparent px-1 py-1 text-center transition-opacity active:opacity-70 touch-manipulation"
                       aria-label={card.title}
                       data-testid={`metric-${card.id}`}
                     >
-                      <span className="relative flex h-14 w-14 items-center justify-center rounded-[18px] border border-saffron/35 bg-transparent">
+                      <span className="relative flex h-14 w-14 items-center justify-center rounded-[18px] border border-white/25 bg-transparent">
                         <span
                           className={cn(
                             'flex h-10 w-10 items-center justify-center rounded-[14px]',
@@ -276,10 +252,10 @@ export function PropertyDetailScreen() {
                           <Icon className="h-5 w-5" strokeWidth={2.25} />
                         </span>
                       </span>
-                      <span className="w-full text-[11px] font-semibold leading-tight text-night-ink">
+                      <span className="w-full text-[11px] font-medium leading-tight text-night-ink">
                         {card.title}
                       </span>
-                      <span className="w-full text-[10px] leading-tight text-white/70">
+                      <span className="w-full text-[10px] leading-tight text-night-faint">
                         {card.subtitle}
                       </span>
                     </button>
@@ -288,11 +264,7 @@ export function PropertyDetailScreen() {
               </div>
             </section>
 
-            <section
-              className="animate-bfi-rise mt-5 px-3"
-              style={{ animationDelay: '280ms' }}
-              data-testid="history-section"
-            >
+            <section className="mt-4 px-3" data-testid="history-section">
               <button
                 type="button"
                 onClick={() => setHistoryOpen((open) => !open)}
@@ -306,17 +278,17 @@ export function PropertyDetailScreen() {
                     !historyOpen && '-rotate-90',
                   )}
                 />
-                <span className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+                <span className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
                   Searched History
                 </span>
-                <span className="ml-auto rounded-md border border-saffron/40 bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+                <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
                   {SEARCH_HISTORY.length}
                 </span>
               </button>
 
               {historyOpen ? (
-                <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-saffron/30 bg-transparent p-2">
-                  <p className="px-2 pb-1 text-[11px] text-white/70">
+                <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
+                  <p className="px-2 pb-1 text-[11px] text-night-faint">
                     Previously searched and saved addresses
                   </p>
                   {SEARCH_HISTORY.map((item) => (
