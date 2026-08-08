@@ -27,7 +27,7 @@ export function HomeScreen() {
   return (
     <AppShell
       scene="search"
-      sceneIntensity="soft"
+      sceneIntensity="medium"
       contentClassName="relative min-h-0 overflow-y-auto overscroll-contain text-night-ink"
     >
       <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">

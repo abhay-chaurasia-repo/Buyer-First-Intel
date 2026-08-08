@@ -21,7 +21,7 @@ export const PAGE_SCENES: Record<PageSceneId, PageScene> = {
   search: {
     id: 'search',
     src: '/scenes/bg-search.png',
-    alt: 'Welcoming craftsman home at golden hour',
+    alt: 'Warm craftsman home at dusk with softened glow for readable type',
   },
   watchlist: {
     id: 'watchlist',
