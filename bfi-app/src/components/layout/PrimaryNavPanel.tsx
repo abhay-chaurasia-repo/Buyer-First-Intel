@@ -29,7 +29,7 @@ export function PrimaryNavPanel({
             className={({ isActive }) =>
               cn(
                 'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-2 transition-colors touch-manipulation',
-                isActive ? 'text-saffron-glow' : 'text-night-muted active:text-saffron-glow',
+                isActive ? 'text-saffron-bright' : 'text-night-muted active:text-saffron-glow',
               )
             }
             data-testid={`nav-${label.toLowerCase()}`}

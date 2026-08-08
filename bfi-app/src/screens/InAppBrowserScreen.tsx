@@ -59,7 +59,7 @@ export function InAppBrowserScreen() {
               <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
                 In-app browser
               </p>
-              <p className="truncate text-[12px] text-saffron-glow" title={url}>
+              <p className="truncate text-[12px] text-saffron-glow/85" title={url}>
                 {host}
               </p>
             </div>

@@ -249,11 +249,11 @@ export function CatchUpFlow({
             </span>
             <div className="min-w-0 flex-1 text-center">
               <p className="font-display text-[13px] font-extrabold tracking-tight">
-                <span className="bg-gradient-to-br from-[#fff6de] via-saffron-glow to-saffron-bright bg-clip-text text-transparent">
+                <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                   {meta.title}
                 </span>
               </p>
-              <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
+              <p className="mt-0.5 text-[11px] text-saffron-glow/90">{meta.blurb}</p>
             </div>
             <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
               {headerCount}

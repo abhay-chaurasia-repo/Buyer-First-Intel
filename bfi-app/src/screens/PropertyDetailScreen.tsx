@@ -82,7 +82,7 @@ function HistoryRow({
       </span>
       {item.hasPrivateNotes ? (
         <StickyNote
-          className="h-3.5 w-3.5 shrink-0 text-saffron-glow"
+          className="h-3.5 w-3.5 shrink-0 text-saffron-bright"
           aria-label="Has private notes"
           data-testid={`history-notes-${item.id}`}
         />
@@ -204,7 +204,7 @@ export function PropertyDetailScreen() {
                   className="truncate font-display text-[1.05rem] font-semibold tracking-tight"
                   data-testid="text-truncated-address"
                 >
-                  <span className="bg-gradient-to-br from-[#fff6de] via-saffron-glow to-saffron-bright bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                     {truncated}
                   </span>
                 </h1>

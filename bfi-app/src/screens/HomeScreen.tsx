@@ -49,7 +49,7 @@ export function HomeScreen() {
         <div className="flex flex-1 flex-col items-center py-5">
           <div className="animate-bfi-rise w-full text-center">
             <h1 className="font-display text-[1.85rem] leading-none font-extrabold tracking-tight">
-              <span className="bg-gradient-to-br from-[#fff6de] via-saffron-glow to-saffron-bright bg-clip-text text-transparent">
+              <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                 {APP_NAME}
               </span>
             </h1>
