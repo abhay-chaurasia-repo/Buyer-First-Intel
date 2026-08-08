@@ -161,7 +161,7 @@
 .animate-impact-progress {
   transform: scaleX(0);
   transform-origin: left center;
-  animation: impact-progress 2s linear forwards;
+  animation: impact-progress 3.5s linear forwards;
 }
 
 .animate-impact-progress.is-paused {

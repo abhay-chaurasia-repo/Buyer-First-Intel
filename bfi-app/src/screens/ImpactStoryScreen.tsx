@@ -4,7 +4,7 @@ import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react
 import { IMPACT_PAGES, markImpactSeen, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
 
-const AUTO_MS = 2000
+const AUTO_MS = 3500
 
 function SizeSnippet() {
   return (
@@ -155,7 +155,7 @@ function StorySlide({ page }: { page: ImpactPage }) {
 }
 
 /**
- * Asana-style impact story — auto-advances every 2s through three pages.
+ * Asana-style impact story — auto-advances every 3.5s through three pages.
  */
 export function ImpactStoryScreen() {
   const navigate = useNavigate()
