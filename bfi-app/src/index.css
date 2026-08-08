@@ -99,14 +99,12 @@
     padding-top: max(0.25rem, env(safe-area-inset-top));
   }
 
-  /* Phone-sized app canvas — fills device; framed on larger screens */
+  /* Full-bleed mobile canvas — no framed side bars */
   .bfi-phone-stage {
     display: flex;
     height: 100dvh;
     width: 100%;
-    align-items: center;
-    justify-content: center;
-    background: #141010;
+    background: #1f1617;
   }
 
   .bfi-phone-frame {
@@ -120,20 +118,17 @@
     background: #1f1617;
   }
 
-  @media (min-width: 480px) {
-    .bfi-phone-stage {
-      padding: 1rem;
-    }
+  /* Natural mobile scroll — hide book-like scroll gutters */
+  .bfi-phone-frame,
+  .bfi-phone-frame * {
+    scrollbar-width: none;
+  }
 
-    .bfi-phone-frame {
-      width: min(390px, 100%);
-      height: min(844px, calc(100dvh - 2rem));
-      border-radius: 1.75rem;
-      border: 1px solid rgb(255 248 247 / 0.12);
-      box-shadow:
-        0 0 0 1px rgb(0 0 0 / 0.35),
-        0 24px 80px rgb(0 0 0 / 0.55);
-    }
+  .bfi-phone-frame::-webkit-scrollbar,
+  .bfi-phone-frame *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
   }
 
   /* Same canvas as welcome — used across every app screen */

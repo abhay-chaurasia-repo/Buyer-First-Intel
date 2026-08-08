@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react'
 
 /**
- * Locks the app into a phone-sized viewport.
- * On real phones it fills the screen; on larger displays it sits in a device frame.
+ * Full-bleed app canvas — fills the viewport with natural scrolling.
  */
 export function MobileFrame({ children }: { children: ReactNode }) {
   return (
@@ -13,4 +12,3 @@ export function MobileFrame({ children }: { children: ReactNode }) {
     </div>
   )
 }
-
