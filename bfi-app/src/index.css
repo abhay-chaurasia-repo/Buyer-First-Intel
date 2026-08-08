@@ -59,19 +59,28 @@
   html,
   body,
   #root {
+    height: 100%;
     min-height: 100%;
+    min-height: 100dvh;
+  }
+
+  html {
+    overflow: hidden;
   }
 
   body {
     margin: 0;
+    overflow: hidden;
     font-family: var(--font-sans);
     color: var(--color-night-ink);
-    background:
-      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.18) 0%, transparent 55%),
-      radial-gradient(ellipse 70% 45% at 100% 0%, rgb(144 93 95 / 0.32) 0%, transparent 50%),
-      linear-gradient(180deg, #3a2a2b 0%, #2a1f20 42%, #1f1617 100%);
+    background: #141010;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  #root {
+    height: 100dvh;
+    overflow: hidden;
   }
 
   button,
@@ -88,6 +97,46 @@
 
   .safe-area-pt {
     padding-top: max(0.25rem, env(safe-area-inset-top));
+  }
+
+  /* Phone-sized app canvas — fills device; framed on larger screens */
+  .bfi-phone-stage {
+    display: flex;
+    height: 100dvh;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    background: #141010;
+  }
+
+  .bfi-phone-frame {
+    position: relative;
+    display: flex;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 40% at 100% 0%, rgb(144 93 95 / 0.28) 0%, transparent 50%),
+      linear-gradient(180deg, #3a2a2b 0%, #2a1f20 45%, #1f1617 100%);
+  }
+
+  @media (min-width: 480px) {
+    .bfi-phone-stage {
+      padding: 1rem;
+    }
+
+    .bfi-phone-frame {
+      width: min(390px, 100%);
+      height: min(844px, calc(100dvh - 2rem));
+      border-radius: 1.75rem;
+      border: 1px solid rgb(255 248 247 / 0.12);
+      box-shadow:
+        0 0 0 1px rgb(0 0 0 / 0.35),
+        0 24px 80px rgb(0 0 0 / 0.55);
+    }
   }
 
   /* Same canvas as welcome — used across every app screen */

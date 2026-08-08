@@ -11,11 +11,11 @@ const navItems = [
 export function BottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-white/15 bg-ink/95 backdrop-blur-md safe-area-pb"
+      className="absolute inset-x-0 bottom-0 z-50 border-t border-white/15 bg-ink/95 backdrop-blur-md safe-area-pb"
       aria-label="Primary"
       data-testid="nav-bottom"
     >
-      <div className="mx-auto flex h-[3.75rem] max-w-lg items-stretch justify-around px-2">
+      <div className="mx-auto flex h-[3.75rem] w-full items-stretch justify-around px-2">
         {navItems.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}

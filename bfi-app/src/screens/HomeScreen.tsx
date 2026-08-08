@@ -29,11 +29,11 @@ export function HomeScreen() {
   return (
     <AppShell
       className="bfi-ink-wash"
-      contentClassName="relative overflow-hidden bfi-ink-wash text-night-ink"
+      contentClassName="relative min-h-0 overflow-y-auto overscroll-contain bfi-ink-wash text-night-ink"
     >
       <div className="pointer-events-none absolute inset-0 bfi-grid-wash opacity-70" aria-hidden />
 
-      <div className="relative flex flex-1 flex-col px-5 pb-6 pt-10 sm:px-8">
+      <div className="relative flex flex-1 flex-col px-5 pb-4 pt-6 sm:px-6">
         <header className="animate-bfi-fade flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
@@ -48,17 +48,17 @@ export function HomeScreen() {
           </span>
         </header>
 
-        <div className="flex flex-1 flex-col items-center py-10">
+        <div className="flex flex-1 flex-col items-center py-6">
           <div className="animate-bfi-rise w-full max-w-md text-center">
-            <p className="font-display text-[2.65rem] leading-none font-extrabold tracking-tight text-night-ink sm:text-5xl">
+            <p className="font-display text-[2.2rem] leading-none font-extrabold tracking-tight text-night-ink sm:text-5xl">
               <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                 BFI
               </span>
             </p>
-            <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-night-ink sm:text-[1.75rem]">
+            <h1 className="mt-2 font-display text-xl font-semibold tracking-tight text-night-ink sm:text-[1.75rem]">
               Due Diligence
             </h1>
-            <p className="mx-auto mt-3 max-w-sm text-[0.95rem] leading-relaxed text-white/80">
+            <p className="mx-auto mt-2 max-w-sm text-[0.9rem] leading-relaxed text-white/80">
               Paste a property address. Verify public-record truth before you commit — and before you
               talk to an agent.
             </p>
@@ -66,7 +66,7 @@ export function HomeScreen() {
 
           <form
             onSubmit={handleSubmit}
-            className="animate-bfi-rise mt-10 w-full max-w-md"
+            className="animate-bfi-rise mt-7 w-full max-w-md"
             style={{ animationDelay: '80ms' }}
           >
             <label htmlFor={inputId} className="sr-only">

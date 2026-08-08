@@ -9,7 +9,7 @@ const AUTO_MS = 3500
 function SizeSnippet() {
   return (
     <div
-      className="rounded-2xl border border-white/25 bg-coastal/90 p-3 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
+      className="rounded-2xl border border-white/25 bg-coastal/90 p-2.5 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
       data-testid="impact-snippet-size"
     >
       <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ function SizeSnippet() {
 function VisitsSnippet() {
   return (
     <div
-      className="rounded-2xl border border-white/25 bg-coastal/90 p-3 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
+      className="rounded-2xl border border-white/25 bg-coastal/90 p-2.5 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
       data-testid="impact-snippet-visits"
     >
       <div className="flex items-center gap-2">
@@ -83,7 +83,7 @@ function VisitsSnippet() {
 function CommunitySnippet() {
   return (
     <div
-      className="rounded-2xl border border-white/25 bg-coastal/90 p-3 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
+      className="rounded-2xl border border-white/25 bg-coastal/90 p-2.5 text-night-ink shadow-[0_16px_40px_rgb(42_31_32/0.35)] backdrop-blur-md"
       data-testid="impact-snippet-community"
     >
       <div className="flex items-center gap-2">
@@ -138,15 +138,17 @@ function StorySlide({ page }: { page: ImpactPage }) {
         className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/35 to-ink/92"
         aria-hidden
       />
-      <div className="relative z-10 flex flex-1 flex-col px-5 pt-24 pb-4 sm:px-8">
-        <p className="font-display text-[11px] font-bold tracking-[0.18em] text-saffron-glow uppercase">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(3.5rem,env(safe-area-inset-top))] pb-3 sm:px-6">
+        <p className="mt-10 font-display text-[10px] font-bold tracking-[0.18em] text-saffron-glow uppercase">
           {page.eyebrow}
         </p>
-        <h1 className="mt-3 max-w-sm font-display text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
+        <h1 className="mt-2 max-w-sm font-display text-[1.45rem] font-semibold leading-tight tracking-tight [@media(min-height:740px)]:text-[1.85rem]">
           {page.title}
         </h1>
-        <p className="mt-3 max-w-sm text-[0.95rem] leading-relaxed text-white/80">{page.body}</p>
-        <div className="mt-8 max-w-sm animate-bfi-rise">
+        <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-white/80 [@media(min-height:740px)]:text-[0.95rem]">
+          {page.body}
+        </p>
+        <div className="mt-4 max-w-sm animate-bfi-rise [@media(min-height:740px)]:mt-6">
           <Snippet kind={page.snippet} />
         </div>
       </div>
@@ -205,7 +207,7 @@ export function ImpactStoryScreen() {
 
   return (
     <div
-      className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col overflow-hidden bg-ink text-white"
+      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-ink text-white"
       data-testid="impact-story"
       data-page={page.id}
       onPointerDown={(event) => {
@@ -222,7 +224,7 @@ export function ImpactStoryScreen() {
         setHolding(false)
       }}
     >
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 pt-12 sm:px-8">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6">
         <div className="pointer-events-auto flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
             <ShieldCheck className="h-4 w-4" strokeWidth={2.25} />
@@ -253,7 +255,7 @@ export function ImpactStoryScreen() {
         </div>
       </div>
 
-      <div className="relative z-20 space-y-4 bg-gradient-to-t from-ink via-ink/95 to-transparent px-5 pb-8 pt-4 sm:px-8">
+      <div className="relative z-20 shrink-0 space-y-3 bg-gradient-to-t from-ink via-ink/95 to-transparent px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
         <div className="flex items-center justify-center gap-2" aria-label="Story progress">
           {IMPACT_PAGES.map((item, i) => (
             <button
@@ -291,7 +293,7 @@ export function ImpactStoryScreen() {
         <button
           type="button"
           onClick={() => finishAndGo('/login')}
-          className="inline-flex min-h-11 w-full items-center justify-center text-sm font-semibold text-white/90 underline-offset-2 hover:underline touch-manipulation"
+          className="inline-flex min-h-10 w-full items-center justify-center text-sm font-semibold text-white/90 underline-offset-2 hover:underline touch-manipulation"
           data-testid="button-impact-login"
         >
           Log in

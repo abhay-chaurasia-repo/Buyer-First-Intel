@@ -21,12 +21,12 @@ export function LoginScreen() {
 
   return (
     <div
-      className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col overflow-hidden bfi-ink-wash text-night-ink"
+      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bfi-ink-wash text-night-ink"
       data-testid="login-screen"
     >
       <div className="pointer-events-none absolute inset-0 bfi-grid-wash opacity-70" aria-hidden />
 
-      <div className="relative flex flex-1 flex-col px-5 pb-8 pt-12 sm:px-8">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-8 sm:px-6">
         <header className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
             <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
@@ -36,7 +36,7 @@ export function LoginScreen() {
           </span>
         </header>
 
-        <div className="mt-10 flex-1">
+        <div className="mt-8 flex-1">
           <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
             Buyer-only
           </p>

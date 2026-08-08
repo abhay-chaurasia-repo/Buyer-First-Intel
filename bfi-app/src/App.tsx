@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { MobileFrame } from '@/components/layout/MobileFrame'
 import { hasSeenImpact } from '@/data/impactStory'
 import { HomeScreen } from '@/screens/HomeScreen'
 import { PropertyDetailScreen } from '@/screens/PropertyDetailScreen'
@@ -18,17 +19,19 @@ function RootEntry() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<RootEntry />} />
-      <Route path="/welcome" element={<ImpactStoryScreen />} />
-      <Route path="/login" element={<LoginScreen />} />
-      <Route path="/property/:address" element={<PropertyDetailScreen />} />
-      <Route path="/watchlist" element={<WatchlistScreen />} />
-      <Route path="/journey" element={<JourneyScreen />} />
-      <Route path="/guidance/:docId" element={<GuidanceScreen />} />
-      <Route path="/browse" element={<InAppBrowserScreen />} />
-      <Route path="/audit" element={<Navigate to="/journey" replace />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <MobileFrame>
+      <Routes>
+        <Route path="/" element={<RootEntry />} />
+        <Route path="/welcome" element={<ImpactStoryScreen />} />
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/property/:address" element={<PropertyDetailScreen />} />
+        <Route path="/watchlist" element={<WatchlistScreen />} />
+        <Route path="/journey" element={<JourneyScreen />} />
+        <Route path="/guidance/:docId" element={<GuidanceScreen />} />
+        <Route path="/browse" element={<InAppBrowserScreen />} />
+        <Route path="/audit" element={<Navigate to="/journey" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </MobileFrame>
   )
 }
