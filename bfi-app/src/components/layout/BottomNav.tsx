@@ -6,7 +6,7 @@ export function BottomNav() {
       className="absolute inset-x-0 bottom-0 z-50 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))] pt-1"
       data-testid="nav-bottom"
     >
-      <PrimaryNavPanel placement="bottom" testId="nav-bottom-panel" />
+      <PrimaryNavPanel testId="nav-bottom-panel" />
     </div>
   )
 }

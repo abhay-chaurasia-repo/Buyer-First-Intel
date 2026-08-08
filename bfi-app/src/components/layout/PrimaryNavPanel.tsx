@@ -2,45 +2,26 @@ import { NavLink } from 'react-router-dom'
 import { ClipboardCheck, Search, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export const PRIMARY_NAV_ITEMS = [
+const navItems = [
   { to: '/', icon: Search, label: 'Search', end: true },
   { to: '/watchlist', icon: Star, label: 'Watchlist', end: false },
   { to: '/journey', icon: ClipboardCheck, label: 'Journey', end: false },
 ] as const
 
-type PrimaryNavPanelProps = {
-  /** Visual placement — same panel, different chrome */
-  placement?: 'top' | 'bottom'
-  className?: string
-  testId?: string
-}
-
 /**
- * Shared Search / Watchlist / Journey switcher — used as bottom dock and top panel.
+ * Bottom Search / Watchlist / Journey dock.
  */
 export function PrimaryNavPanel({
-  placement = 'bottom',
   className,
   testId = 'nav-primary',
-}: PrimaryNavPanelProps) {
-  const isTop = placement === 'top'
-
+}: {
+  className?: string
+  testId?: string
+}) {
   return (
-    <nav
-      className={cn(isTop ? 'w-full' : undefined, className)}
-      aria-label="Primary"
-      data-testid={testId}
-      data-placement={placement}
-    >
-      <div
-        className={cn(
-          'mx-auto flex w-full items-stretch justify-around border border-white/12 bg-ink/85 px-1.5 shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl',
-          isTop
-            ? 'h-[3.35rem] rounded-[1.2rem]'
-            : 'h-[3.85rem] rounded-[1.35rem]',
-        )}
-      >
-        {PRIMARY_NAV_ITEMS.map(({ to, icon: Icon, label, end }) => (
+    <nav className={className} aria-label="Primary" data-testid={testId}>
+      <div className="mx-auto flex h-[3.85rem] w-full items-stretch justify-around rounded-[1.35rem] border border-white/12 bg-ink/85 px-1.5 shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl">
+        {navItems.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -51,19 +32,18 @@ export function PrimaryNavPanel({
                 isActive ? 'text-saffron-bright' : 'text-night-muted active:text-saffron-glow',
               )
             }
-            data-testid={`nav-${label.toLowerCase()}${isTop ? '-top' : ''}`}
+            data-testid={`nav-${label.toLowerCase()}`}
           >
             {({ isActive }) => (
               <>
                 <Icon
-                  className={isTop ? 'h-5 w-5' : 'h-[22px] w-[22px]'}
+                  className="h-[22px] w-[22px]"
                   strokeWidth={isActive ? 2.4 : 1.85}
                   fill={isActive && label === 'Watchlist' ? 'currentColor' : 'none'}
                 />
                 <span
                   className={cn(
-                    'max-w-full truncate leading-none',
-                    isTop ? 'text-[10px]' : 'text-[10px]',
+                    'max-w-full truncate text-[10px] leading-none',
                     isActive ? 'font-semibold' : 'font-medium',
                   )}
                 >

@@ -377,7 +377,6 @@ export function WatchlistScreen() {
         title="Saved properties"
         description="Plan visits, mark visited, and keep private notes."
         testId="watchlist-top-bar"
-        showPrimaryNav
       />
 
       <div className="flex-1 overflow-y-auto px-3 py-4 pb-4">

@@ -30,8 +30,8 @@ export function HomeScreen() {
       sceneIntensity="soft"
       contentClassName="relative min-h-0 overflow-y-auto overscroll-contain text-night-ink"
     >
-      <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">
-        <header className="animate-bfi-fade flex items-center justify-between">
+      <div className="relative flex flex-1 flex-col px-3 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">
+        <header className="animate-bfi-fade flex items-center justify-between px-2">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
               <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
@@ -45,17 +45,20 @@ export function HomeScreen() {
           </span>
         </header>
 
-        <div className="flex flex-1 flex-col items-center py-5">
-          <div className="animate-bfi-rise w-full text-center">
-            <p className="font-display text-[2rem] leading-none font-extrabold tracking-tight">
+        <div className="flex flex-1 flex-col items-center px-2 py-5">
+          <div
+            className="animate-bfi-rise w-full rounded-[1.35rem] border border-white/12 bg-ink/85 px-4 py-4 text-center shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl"
+            data-testid="page-title-panel"
+          >
+            <p className="font-display text-[1.85rem] leading-none font-extrabold tracking-tight">
               <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                 BFI
               </span>
             </p>
-            <h1 className="mt-2 font-display text-[1.1rem] font-semibold tracking-tight text-saffron-glow">
+            <h1 className="mt-2 font-display text-[1.05rem] font-semibold tracking-tight text-saffron-glow">
               Due Diligence
             </h1>
-            <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-white/80">
+            <p className="mx-auto mt-2 max-w-[19rem] text-[0.88rem] leading-relaxed text-night-muted">
               Paste a property address. Verify public-record truth before you commit — and before you
               talk to an agent.
             </p>
@@ -63,7 +66,7 @@ export function HomeScreen() {
 
           <form
             onSubmit={handleSubmit}
-            className="animate-bfi-rise mt-6 w-full"
+            className="animate-bfi-rise mt-5 w-full"
             style={{ animationDelay: '80ms' }}
           >
             <label htmlFor={inputId} className="sr-only">

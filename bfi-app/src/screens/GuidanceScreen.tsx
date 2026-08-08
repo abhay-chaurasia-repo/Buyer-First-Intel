@@ -41,30 +41,35 @@ export function GuidanceScreen() {
     <AppShell scene="guidance" contentClassName="relative overflow-hidden text-night-ink">
       <div className="relative flex min-h-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-20 border-b border-white/15 bg-coastal/80 backdrop-blur-md bfi-status-pad"
+          className="sticky top-0 z-20 bfi-status-pad"
           data-testid="guidance-top-bar"
         >
-          <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-3 pb-2.5 pt-2">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-              aria-label="Back"
-              data-testid="button-guidance-back"
+          <div className="px-3 pb-2.5 pt-2">
+            <div
+              className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 rounded-[1.35rem] border border-white/12 bg-ink/85 px-2 py-1.5 shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl"
+              data-testid="page-title-panel"
             >
-              <ArrowLeft className="h-5 w-5" strokeWidth={2.25} />
-            </button>
-            <div className="min-w-0 text-center">
-              <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
-                {doc.eyebrow}
-              </p>
-              <p className="truncate font-display text-[14px] font-semibold text-saffron-glow/95">
-                {doc.title}
-              </p>
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+                aria-label="Back"
+                data-testid="button-guidance-back"
+              >
+                <ArrowLeft className="h-5 w-5" strokeWidth={2.25} />
+              </button>
+              <div className="min-w-0 text-center">
+                <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
+                  {doc.eyebrow}
+                </p>
+                <p className="truncate font-display text-[14px] font-semibold text-saffron-glow/95">
+                  {doc.title}
+                </p>
+              </div>
+              <span className="justify-self-end rounded-full border border-saffron/40 bg-saffron/20 px-1.5 py-1 text-[9px] font-medium text-saffron-glow sm:px-2.5 sm:text-[10px]">
+                In-app
+              </span>
             </div>
-            <span className="justify-self-end rounded-full border border-saffron/40 bg-saffron/20 px-1.5 py-1 text-[9px] font-medium text-saffron-glow sm:px-2.5 sm:text-[10px]">
-              In-app
-            </span>
           </div>
         </header>
 

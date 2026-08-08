@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { PrimaryNavPanel } from './PrimaryNavPanel'
 import { cn } from '@/lib/utils'
 
 type PageHeaderProps = {
@@ -9,12 +8,11 @@ type PageHeaderProps = {
   testId?: string
   className?: string
   children?: ReactNode
-  /** Show Search / Watchlist / Journey panel under the status area */
-  showPrimaryNav?: boolean
 }
 
 /**
  * Centered page header that clears the phone notch / status area.
+ * Title + description sit inside the same glass panel language as the bottom nav.
  */
 export function PageHeader({
   title,
@@ -22,30 +20,24 @@ export function PageHeader({
   testId,
   className,
   children,
-  showPrimaryNav = false,
 }: PageHeaderProps) {
   return (
     <header
-      className={cn(
-        'sticky top-0 z-20 border-b border-white/15 bg-coastal/80 backdrop-blur-md bfi-status-pad',
-        className,
-      )}
+      className={cn('sticky top-0 z-20 bfi-status-pad', className)}
       data-testid={testId}
     >
-      <div className="px-4 pb-3 pt-2.5">
-        {showPrimaryNav ? (
-          <div className="mb-3" data-testid="page-header-primary-nav">
-            <PrimaryNavPanel placement="top" testId="nav-top-panel" />
-          </div>
-        ) : null}
-        <div className="text-center">
-          <h1 className="mx-auto max-w-[16rem] font-display text-[1.05rem] font-semibold leading-snug tracking-tight">
+      <div className="px-3 pb-2.5 pt-2">
+        <div
+          className="mx-auto rounded-[1.35rem] border border-white/12 bg-ink/85 px-4 py-3.5 text-center shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl"
+          data-testid="page-title-panel"
+        >
+          <h1 className="mx-auto max-w-[18rem] font-display text-[1.05rem] font-semibold leading-snug tracking-tight">
             <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
               {title}
             </span>
           </h1>
           {description ? (
-            <p className="mx-auto mt-1 max-w-[18rem] text-[11px] leading-relaxed text-white/75">
+            <p className="mx-auto mt-1.5 max-w-[19rem] text-[11px] leading-relaxed text-night-muted">
               {description}
             </p>
           ) : null}

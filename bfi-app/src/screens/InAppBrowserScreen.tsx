@@ -39,33 +39,38 @@ export function InAppBrowserScreen() {
     >
       <div className="flex min-h-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-20 shrink-0 border-b border-white/15 bg-coastal/80 backdrop-blur-md bfi-status-pad"
+          className="sticky top-0 z-20 shrink-0 bfi-status-pad"
           data-testid="in-app-browser-top-bar"
         >
-          <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-2 pb-2 pt-2">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-              aria-label="Back"
-              data-testid="button-browse-back"
+          <div className="px-3 pb-2.5 pt-2">
+            <div
+              className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 rounded-[1.35rem] border border-white/12 bg-ink/85 px-2 py-1.5 shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl"
+              data-testid="page-title-panel"
             >
-              <ArrowLeft className="h-5 w-5" strokeWidth={2.25} />
-            </button>
-            <div className="min-w-0 text-center">
-              <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
-                In-app browser
-              </p>
-              <p className="truncate text-[12px] text-saffron-glow/85" title={url}>
-                {host}
-              </p>
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+                aria-label="Back"
+                data-testid="button-browse-back"
+              >
+                <ArrowLeft className="h-5 w-5" strokeWidth={2.25} />
+              </button>
+              <div className="min-w-0 text-center">
+                <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
+                  In-app browser
+                </p>
+                <p className="truncate text-[12px] text-saffron-glow/85" title={url}>
+                  {host}
+                </p>
+              </div>
+              <Link
+                to="/guidance/buyer-commission-brief"
+                className="shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-2.5 py-1 text-[10px] font-semibold text-saffron-glow touch-manipulation"
+              >
+                Buyer brief
+              </Link>
             </div>
-            <Link
-              to="/guidance/buyer-commission-brief"
-              className="shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-2.5 py-1 text-[10px] font-semibold text-saffron-glow touch-manipulation"
-            >
-              Buyer brief
-            </Link>
           </div>
         </header>
 
