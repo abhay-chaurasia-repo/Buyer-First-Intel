@@ -24,7 +24,7 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        'sticky top-0 z-20 border-b border-white/15 bg-coastal/90 backdrop-blur-md',
+        'sticky top-0 z-20 border-b border-white/15 bg-coastal/75 backdrop-blur-md',
         className,
       )}
       data-testid={testId}

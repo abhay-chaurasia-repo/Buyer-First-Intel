@@ -117,10 +117,7 @@
     max-width: 100%;
     flex-direction: column;
     overflow: hidden;
-    background:
-      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.18) 0%, transparent 55%),
-      radial-gradient(ellipse 70% 40% at 100% 0%, rgb(144 93 95 / 0.28) 0%, transparent 50%),
-      linear-gradient(180deg, #3a2a2b 0%, #2a1f20 45%, #1f1617 100%);
+    background: #1f1617;
   }
 
   @media (min-width: 480px) {

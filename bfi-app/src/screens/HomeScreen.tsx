@@ -28,11 +28,10 @@ export function HomeScreen() {
 
   return (
     <AppShell
-      className="bfi-ink-wash"
-      contentClassName="relative min-h-0 overflow-y-auto overscroll-contain bfi-ink-wash text-night-ink"
+      scene="search"
+      sceneIntensity="soft"
+      contentClassName="relative min-h-0 overflow-y-auto overscroll-contain text-night-ink"
     >
-      <div className="pointer-events-none absolute inset-0 bfi-grid-wash opacity-70" aria-hidden />
-
       <div className="relative flex flex-1 flex-col px-5 pb-4 pt-6 sm:px-6">
         <header className="animate-bfi-fade flex items-center justify-between">
           <div className="flex items-center gap-2.5">

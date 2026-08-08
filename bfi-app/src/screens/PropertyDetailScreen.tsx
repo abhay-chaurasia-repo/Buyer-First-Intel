@@ -133,10 +133,7 @@ export function PropertyDetailScreen() {
   const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
 
   return (
-    <AppShell
-      className="bfi-night-wash"
-      contentClassName="min-h-0 bfi-night-wash text-night-ink"
-    >
+    <AppShell scene="property" contentClassName="min-h-0 text-night-ink">
       {activeSurface ? (
         <CatchUpFlow
           key={activeSurface}
@@ -150,7 +147,7 @@ export function PropertyDetailScreen() {
       ) : (
         <>
           <header
-            className="sticky top-0 z-20 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
+            className="sticky top-0 z-20 border-b border-white/15 bg-coastal/75 backdrop-blur-md"
             data-testid="property-top-bar"
           >
             <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-3 py-2.5">

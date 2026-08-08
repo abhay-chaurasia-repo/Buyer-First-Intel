@@ -11,7 +11,7 @@ const navItems = [
 export function BottomNav() {
   return (
     <nav
-      className="absolute inset-x-0 bottom-0 z-50 border-t border-white/15 bg-ink/95 backdrop-blur-md safe-area-pb"
+      className="absolute inset-x-0 bottom-0 z-50 border-t border-white/15 bg-ink/80 backdrop-blur-md safe-area-pb"
       aria-label="Primary"
       data-testid="nav-bottom"
     >

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, ShieldCheck } from 'lucide-react'
+import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
 import { markImpactSeen } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
 
@@ -21,12 +22,12 @@ export function LoginScreen() {
 
   return (
     <div
-      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bfi-ink-wash text-night-ink"
+      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden text-night-ink"
       data-testid="login-screen"
     >
-      <div className="pointer-events-none absolute inset-0 bfi-grid-wash opacity-70" aria-hidden />
+      <SceneBackdrop scene="login" intensity="medium" />
 
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-8 sm:px-6">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-8 sm:px-6">
         <header className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
             <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />

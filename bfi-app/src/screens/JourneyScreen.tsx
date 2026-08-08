@@ -111,10 +111,7 @@ export function JourneyScreen() {
   }
 
   return (
-    <AppShell
-      className="bfi-night-wash"
-      contentClassName="min-h-0 bfi-night-wash text-night-ink"
-    >
+    <AppShell scene="journey" contentClassName="min-h-0 text-night-ink">
       <PageHeader
         title="Buying checklist"
         description="Your path from prepare → diligence → close. Tap to check off."

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { BottomNav } from './BottomNav'
+import { SceneBackdrop } from './SceneBackdrop'
+import type { PageSceneId } from '@/data/pageScenes'
 import { cn } from '@/lib/utils'
 
 type AppShellProps = {
@@ -7,6 +9,9 @@ type AppShellProps = {
   showBottomNav?: boolean
   className?: string
   contentClassName?: string
+  /** Welcome-style house photography behind the screen */
+  scene?: PageSceneId
+  sceneIntensity?: 'soft' | 'medium' | 'strong'
 }
 
 export function AppShell({
@@ -14,17 +19,21 @@ export function AppShell({
   showBottomNav = true,
   className,
   contentClassName,
+  scene,
+  sceneIntensity = 'medium',
 }: AppShellProps) {
   return (
     <div
       className={cn(
-        'relative flex h-full min-h-0 w-full flex-col overflow-hidden bfi-ink-wash text-night-ink',
+        'relative flex h-full min-h-0 w-full flex-col overflow-hidden text-night-ink',
+        !scene && 'bfi-ink-wash',
         className,
       )}
     >
+      {scene ? <SceneBackdrop scene={scene} intensity={sceneIntensity} /> : null}
       <main
         className={cn(
-          'flex min-h-0 flex-1 flex-col',
+          'relative z-10 flex min-h-0 flex-1 flex-col',
           showBottomNav && 'pb-[4.75rem]',
           contentClassName,
         )}

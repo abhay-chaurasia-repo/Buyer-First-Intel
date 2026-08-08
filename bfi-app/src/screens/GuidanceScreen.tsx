@@ -13,10 +13,7 @@ export function GuidanceScreen() {
 
   if (!doc) {
     return (
-      <AppShell
-        className="bfi-ink-wash"
-        contentClassName="relative bfi-ink-wash text-night-ink"
-      >
+      <AppShell scene="guidance" contentClassName="relative text-night-ink">
         <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
           <p className="text-sm text-night-muted">Guidance not found.</p>
           <button
@@ -41,15 +38,10 @@ export function GuidanceScreen() {
       : 'Commission settlement buyer brief'
 
   return (
-    <AppShell
-      className="bfi-ink-wash"
-      contentClassName="relative overflow-hidden bfi-ink-wash text-night-ink"
-    >
-      <div className="pointer-events-none absolute inset-0 bfi-grid-wash opacity-50" aria-hidden />
-
+    <AppShell scene="guidance" contentClassName="relative overflow-hidden text-night-ink">
       <div className="relative flex min-h-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-20 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
+          className="sticky top-0 z-20 border-b border-white/15 bg-coastal/75 backdrop-blur-md"
           data-testid="guidance-top-bar"
         >
           <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-3 py-2.5">

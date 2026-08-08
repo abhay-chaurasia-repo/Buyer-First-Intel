@@ -34,12 +34,12 @@ export function InAppBrowserScreen() {
 
   return (
     <AppShell
-      className="bfi-ink-wash"
-      contentClassName="relative min-h-0 overflow-hidden bfi-ink-wash text-night-ink"
+      scene="browse"
+      contentClassName="relative min-h-0 overflow-hidden text-night-ink"
     >
       <div className="flex min-h-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-20 shrink-0 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
+          className="sticky top-0 z-20 shrink-0 border-b border-white/15 bg-coastal/75 backdrop-blur-md"
           data-testid="in-app-browser-top-bar"
         >
           <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-2 py-2">

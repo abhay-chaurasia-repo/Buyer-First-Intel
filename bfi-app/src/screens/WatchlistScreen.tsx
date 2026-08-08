@@ -372,10 +372,7 @@ export function WatchlistScreen() {
   const visitedCount = items.filter((item) => visitPlanStatus(item) === 'visited').length
 
   return (
-    <AppShell
-      className="bfi-night-wash"
-      contentClassName="min-h-0 bfi-night-wash text-night-ink"
-    >
+    <AppShell scene="watchlist" contentClassName="min-h-0 text-night-ink">
       <PageHeader
         title="Saved properties"
         description="Plan visits, mark visited, and keep private notes on each saved address."
