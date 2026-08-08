@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
+/** Shared title-panel surface — soft enough for the house scene to read through. */
+export const pageTitlePanelClass =
+  'rounded-[1.35rem] border border-white/22 bg-coastal/45 shadow-[0_8px_24px_rgb(42_31_32/0.22)] backdrop-blur-md'
+
 type PageHeaderProps = {
   /** Primary heading — saffron gradient like Search “BFI” */
   title: string
@@ -12,7 +16,7 @@ type PageHeaderProps = {
 
 /**
  * Centered page header that clears the phone notch / status area.
- * Title + description sit inside the same glass panel language as the bottom nav.
+ * Title + description sit in a soft glass panel that blends with the scene.
  */
 export function PageHeader({
   title,
@@ -28,7 +32,7 @@ export function PageHeader({
     >
       <div className="px-3 pb-2.5 pt-2">
         <div
-          className="mx-auto rounded-[1.35rem] border border-white/12 bg-ink/85 px-4 py-3.5 text-center shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl"
+          className={cn(pageTitlePanelClass, 'mx-auto px-4 py-3.5 text-center')}
           data-testid="page-title-panel"
         >
           <h1 className="mx-auto max-w-[18rem] font-display text-[1.05rem] font-semibold leading-snug tracking-tight">
@@ -37,7 +41,7 @@ export function PageHeader({
             </span>
           </h1>
           {description ? (
-            <p className="mx-auto mt-1.5 max-w-[19rem] text-[11px] leading-relaxed text-night-muted">
+            <p className="mx-auto mt-1.5 max-w-[19rem] text-[11px] leading-relaxed text-white/80">
               {description}
             </p>
           ) : null}

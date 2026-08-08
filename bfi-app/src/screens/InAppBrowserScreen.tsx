@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Scale } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { pageTitlePanelClass } from '@/components/layout/PageHeader'
 import { NAR_SETTLEMENT_URL } from '@/data/nrecGuidance'
 
 /**
@@ -44,7 +45,7 @@ export function InAppBrowserScreen() {
         >
           <div className="px-3 pb-2.5 pt-2">
             <div
-              className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 rounded-[1.35rem] border border-white/12 bg-ink/85 px-2 py-1.5 shadow-[0_8px_28px_rgb(0_0_0/0.35)] backdrop-blur-xl"
+              className={`${pageTitlePanelClass} grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-2 py-1.5`}
               data-testid="page-title-panel"
             >
               <button
