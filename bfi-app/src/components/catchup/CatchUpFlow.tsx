@@ -95,7 +95,7 @@ function DetailSection({ card }: { card: CatchUpCard }) {
             !open && '-rotate-90',
           )}
         />
-        <span className="min-w-0 flex-1 truncate font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
+        <span className="min-w-0 flex-1 truncate font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {stripHash(card.headline)}
         </span>
         {fieldCount > 0 ? (

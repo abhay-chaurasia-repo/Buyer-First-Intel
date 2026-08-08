@@ -132,7 +132,7 @@ function CollapsibleSection({
         <ChevronDown
           className={cn('h-4 w-4 text-saffron-glow transition-transform', !open && '-rotate-90')}
         />
-        <span className="min-w-0 flex-1 truncate font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
+        <span className="min-w-0 flex-1 truncate font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {title}
         </span>
         {typeof count === 'number' ? (

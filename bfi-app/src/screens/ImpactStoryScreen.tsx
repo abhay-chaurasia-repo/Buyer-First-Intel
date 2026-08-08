@@ -17,7 +17,7 @@ function SizeSnippet() {
         <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-saffron/25">
           <FileText className="h-4 w-4 text-saffron-glow" strokeWidth={2.25} />
         </span>
-        <p className="font-display text-[10px] font-bold tracking-[0.16em] text-night-muted uppercase">
+        <p className="font-display text-[10px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           Size & records
         </p>
       </div>
@@ -51,7 +51,7 @@ function VisitsSnippet() {
           <ShieldCheck className="h-4 w-4 text-saffron-glow" strokeWidth={2.25} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-display text-[10px] font-bold tracking-[0.16em] text-night-muted uppercase">
+          <p className="font-display text-[10px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
             Verified visits
           </p>
           <p className="text-[11px] text-night-faint">6 visits · 5 with labels</p>
@@ -91,7 +91,7 @@ function CommunitySnippet() {
         <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-saffron/25">
           <Users className="h-4 w-4 text-saffron-glow" strokeWidth={2.25} />
         </span>
-        <p className="font-display text-[10px] font-bold tracking-[0.16em] text-night-muted uppercase">
+        <p className="font-display text-[10px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           Buyer Community
         </p>
       </div>

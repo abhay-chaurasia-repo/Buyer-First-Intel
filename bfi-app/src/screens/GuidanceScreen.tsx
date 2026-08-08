@@ -106,7 +106,7 @@ export function GuidanceScreen() {
                   key={section.heading}
                   className="rounded-2xl border border-white/25 bg-transparent p-4"
                 >
-                  <h2 className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
+                  <h2 className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
                     {section.heading}
                   </h2>
                   <div className="mt-2 space-y-3">

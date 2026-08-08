@@ -103,7 +103,7 @@ function PropertyNotes({
           className={cn('h-4 w-4 text-saffron-glow transition-transform', !open && '-rotate-90')}
         />
         <StickyNote className="h-3.5 w-3.5 text-saffron-glow" aria-hidden />
-        <span className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
+        <span className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           Notes
         </span>
         <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
