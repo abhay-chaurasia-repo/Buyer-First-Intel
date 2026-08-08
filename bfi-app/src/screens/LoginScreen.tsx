@@ -40,8 +40,10 @@ export function LoginScreen() {
           <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
             Buyer-only
           </p>
-          <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-night-ink">
-            Log in
+          <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight">
+            <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
+              Log in
+            </span>
           </h1>
           <p className="mt-2 max-w-sm text-[0.95rem] leading-relaxed text-white/80">
             Sign in to sync Watchlist, Journey, and private notes. Auth wiring comes next — for now,

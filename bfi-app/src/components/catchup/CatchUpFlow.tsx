@@ -190,7 +190,7 @@ export function CatchUpFlow({
 
           <h1
             id="detail-title"
-            className="truncate text-center font-display text-[15px] font-semibold tracking-tight text-night-ink"
+            className="truncate text-center font-display text-[15px] font-semibold tracking-tight text-saffron-glow"
             title={address}
             data-testid="text-tile-address"
           >
@@ -220,11 +220,13 @@ export function CatchUpFlow({
             >
               <Icon className="h-4 w-4 text-saffron-glow" strokeWidth={2.25} />
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
-                {meta.title}
+            <div className="min-w-0 flex-1 text-center">
+              <p className="font-display text-[13px] font-extrabold tracking-tight">
+                <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
+                  {meta.title}
+                </span>
               </p>
-              <p className="mt-0.5 text-[11px] text-night-faint">{meta.blurb}</p>
+              <p className="mt-0.5 text-[11px] text-saffron-glow/90">{meta.blurb}</p>
             </div>
             <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
               {headerCount}

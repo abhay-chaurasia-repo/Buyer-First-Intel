@@ -169,7 +169,7 @@ export function PropertyDetailScreen() {
               </button>
 
               <h1
-                className="truncate text-center font-display text-[15px] font-semibold tracking-tight text-night-ink"
+                className="truncate text-center font-display text-[15px] font-semibold tracking-tight text-saffron-glow"
                 title={fullAddress}
                 data-testid="text-truncated-address"
               >

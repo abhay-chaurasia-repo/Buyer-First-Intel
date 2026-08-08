@@ -52,7 +52,7 @@ export function GuidanceScreen() {
           className="sticky top-0 z-20 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
           data-testid="guidance-top-bar"
         >
-          <div className="flex items-center gap-2 px-3 py-2.5">
+          <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-3 py-2.5">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -62,13 +62,15 @@ export function GuidanceScreen() {
             >
               <ArrowLeft className="h-5 w-5" strokeWidth={2.25} />
             </button>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 text-center">
               <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
                 {doc.eyebrow}
               </p>
-              <p className="truncate text-[13px] font-semibold text-night-ink">{doc.title}</p>
+              <p className="truncate font-display text-[14px] font-semibold text-saffron-glow/95">
+                {doc.title}
+              </p>
             </div>
-            <span className="hidden shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-2.5 py-1 text-[10px] font-medium text-saffron-glow sm:inline">
+            <span className="justify-self-end rounded-full border border-saffron/40 bg-saffron/20 px-1.5 py-1 text-[9px] font-medium text-saffron-glow sm:px-2.5 sm:text-[10px]">
               In-app
             </span>
           </div>
@@ -85,10 +87,12 @@ export function GuidanceScreen() {
                 {doc.updatedLabel}
               </span>
             </div>
-            <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-night-ink">
-              {doc.title}
+            <h1 className="mt-3 text-center font-display text-2xl font-extrabold tracking-tight">
+              <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
+                {doc.title}
+              </span>
             </h1>
-            <p className="mt-2 text-[0.95rem] leading-relaxed text-white/80">{doc.summary}</p>
+            <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-white/80">{doc.summary}</p>
 
             {doc.sourceUrl ? (
               <Link

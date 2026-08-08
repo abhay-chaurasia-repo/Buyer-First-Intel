@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 import {
   JOURNEY_CHECKLIST,
   JOURNEY_PHASES,
@@ -114,28 +115,18 @@ export function JourneyScreen() {
       className="bfi-night-wash"
       contentClassName="min-h-0 bfi-night-wash text-night-ink"
     >
-      <header
-        className="sticky top-0 z-20 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
-        data-testid="journey-top-bar"
-      >
-        <div className="px-4 py-3">
-          <p className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
-            Journey
-          </p>
-          <h1 className="mt-0.5 font-display text-[17px] font-semibold tracking-tight text-night-ink">
-            Buying checklist
-          </h1>
-          <p className="mt-1 text-[12px] text-night-faint">
-            Your path from prepare → diligence → close. Tap to check off.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Journey"
+        subtitle="Buying checklist"
+        description="Your path from prepare → diligence → close. Tap to check off."
+        testId="journey-top-bar"
+      />
 
       <div className="flex-1 overflow-y-auto px-3 py-4 pb-4">
         <div className="rounded-2xl border border-white/25 bg-coastal/90 p-3 shadow-sm backdrop-blur-sm">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
+              <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
                 Progress
               </p>
               <p className="mt-1 text-sm font-semibold text-night-ink">

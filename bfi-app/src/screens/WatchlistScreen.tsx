@@ -11,6 +11,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 import {
   addNote,
   deleteNote,
@@ -375,22 +376,12 @@ export function WatchlistScreen() {
       className="bfi-night-wash"
       contentClassName="min-h-0 bfi-night-wash text-night-ink"
     >
-      <header
-        className="sticky top-0 z-20 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
-        data-testid="watchlist-top-bar"
-      >
-        <div className="px-4 py-3">
-          <p className="font-display text-[11px] font-bold tracking-[0.16em] text-night-muted uppercase">
-            Watchlist
-          </p>
-          <h1 className="mt-0.5 font-display text-[17px] font-semibold tracking-tight text-night-ink">
-            Saved properties
-          </h1>
-          <p className="mt-1 text-[12px] text-night-faint">
-            Plan visits, mark visited, and keep private notes on each saved address.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Watchlist"
+        subtitle="Saved properties"
+        description="Plan visits, mark visited, and keep private notes on each saved address."
+        testId="watchlist-top-bar"
+      />
 
       <div className="flex-1 overflow-y-auto px-3 py-4 pb-4">
         {items.length === 0 ? (
@@ -399,8 +390,8 @@ export function WatchlistScreen() {
             data-testid="watchlist-empty"
           >
             <Star className="mx-auto h-8 w-8 text-saffron-glow" strokeWidth={1.75} />
-            <p className="mt-3 text-sm font-semibold text-night-ink">No saved properties yet</p>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
+            <p className="mt-3 text-sm font-semibold text-saffron-glow">No saved properties yet</p>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-white/75">
               Star an address from its property page. Notes and visit planning live here afterward.
             </p>
             <button
@@ -415,21 +406,21 @@ export function WatchlistScreen() {
         ) : (
           <section className="space-y-3" data-testid="watchlist-list">
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2">
-                <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Saved</p>
+              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2 text-center">
+                <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">Saved</p>
                 <p className="mt-1 text-sm font-semibold text-night-ink">{items.length}</p>
               </div>
-              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2">
-                <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Planned</p>
+              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2 text-center">
+                <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">Planned</p>
                 <p className="mt-1 text-sm font-semibold text-night-ink">{plannedCount}</p>
               </div>
-              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2">
-                <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Visited</p>
+              <div className="rounded-xl border border-white/25 bg-coastal/90 px-3 py-2 text-center">
+                <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">Visited</p>
                 <p className="mt-1 text-sm font-semibold text-night-ink">{visitedCount}</p>
               </div>
             </div>
 
-            <p className="px-1 text-[11px] text-night-faint">
+            <p className="px-1 text-center text-[11px] text-white/65">
               Sorted: upcoming plans first, then not visited, then visited.
             </p>
 

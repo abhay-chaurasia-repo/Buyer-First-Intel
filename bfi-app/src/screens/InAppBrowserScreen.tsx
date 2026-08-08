@@ -42,7 +42,7 @@ export function InAppBrowserScreen() {
           className="sticky top-0 z-20 shrink-0 border-b border-white/15 bg-coastal/90 backdrop-blur-md"
           data-testid="in-app-browser-top-bar"
         >
-          <div className="flex items-center gap-2 px-2 py-2">
+          <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-2 py-2">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -52,11 +52,11 @@ export function InAppBrowserScreen() {
             >
               <ArrowLeft className="h-5 w-5" strokeWidth={2.25} />
             </button>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 text-center">
               <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
                 In-app browser
               </p>
-              <p className="truncate text-[12px] text-night-muted" title={url}>
+              <p className="truncate text-[12px] text-saffron-glow/85" title={url}>
                 {host}
               </p>
             </div>
