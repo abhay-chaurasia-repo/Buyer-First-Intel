@@ -133,7 +133,7 @@ export function PropertyDetailScreen() {
   const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
 
   return (
-    <AppShell scene="property" contentClassName="min-h-0 text-night-ink">
+    <AppShell scene="property" sceneIntensity="soft" contentClassName="min-h-0 text-night-ink">
       {activeSurface ? (
         <CatchUpFlow
           key={activeSurface}
