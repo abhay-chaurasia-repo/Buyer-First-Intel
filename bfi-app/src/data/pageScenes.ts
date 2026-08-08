@@ -36,7 +36,7 @@ export const PAGE_SCENES: Record<PageSceneId, PageScene> = {
   property: {
     id: 'property',
     src: '/scenes/bg-property.png',
-    alt: 'Detailed brick house facade for due diligence',
+    alt: 'Warm golden-hour craftsman facade with glowing windows',
   },
   login: {
     id: 'login',
