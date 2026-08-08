@@ -30,7 +30,7 @@ export function HomeScreen() {
       sceneIntensity="soft"
       contentClassName="relative min-h-0 overflow-y-auto overscroll-contain text-night-ink"
     >
-      <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
+      <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">
         <header className="animate-bfi-fade flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">

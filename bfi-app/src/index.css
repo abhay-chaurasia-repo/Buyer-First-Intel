@@ -101,6 +101,15 @@
     padding-top: max(0.25rem, env(safe-area-inset-top));
   }
 
+  /* Clear Dynamic Island / notch / status area on all screens */
+  :root {
+    --bfi-status-pad: max(0.9rem, env(safe-area-inset-top, 0px));
+  }
+
+  .bfi-status-pad {
+    padding-top: var(--bfi-status-pad);
+  }
+
   /*
    * Modern mobile app shell:
    * - Phones: edge-to-edge screen
@@ -142,6 +151,7 @@
         0 0 0 1px rgb(255 248 247 / 0.06),
         0 28px 80px rgb(0 0 0 / 0.55),
         inset 0 0 0 1px rgb(255 248 247 / 0.04);
+      --bfi-status-pad: 2.2rem;
     }
 
     .bfi-phone-frame::before {

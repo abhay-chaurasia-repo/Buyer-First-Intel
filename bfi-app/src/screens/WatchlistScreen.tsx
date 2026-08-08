@@ -375,7 +375,7 @@ export function WatchlistScreen() {
     <AppShell scene="watchlist" contentClassName="min-h-0 text-night-ink">
       <PageHeader
         title="Saved properties"
-        description="Plan visits, mark visited, and keep private notes on each saved address."
+        description="Plan visits, mark visited, and keep private notes."
         testId="watchlist-top-bar"
       />
 

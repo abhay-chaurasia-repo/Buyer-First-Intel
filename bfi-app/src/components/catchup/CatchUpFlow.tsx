@@ -174,10 +174,10 @@ export function CatchUpFlow({
     >
       {/* Same top-bar language as the searched property page */}
       <header
-        className="sticky top-0 z-20 shrink-0 border-b border-white/15 bg-coastal/75 backdrop-blur-md"
+        className="sticky top-0 z-20 shrink-0 border-b border-white/15 bg-coastal/80 backdrop-blur-md bfi-status-pad"
         data-testid="tile-detail-top-bar"
       >
-        <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-3 py-2.5">
+        <div className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-2 px-3 pb-2.5 pt-2">
           <button
             type="button"
             onClick={onClose}

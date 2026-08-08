@@ -138,7 +138,7 @@ function StorySlide({ page }: { page: ImpactPage }) {
         className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/35 to-ink/92"
         aria-hidden
       />
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(3.5rem,env(safe-area-inset-top))] pb-3">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(3.75rem,calc(var(--bfi-status-pad)+2.5rem))] pb-3">
         <p className="mt-10 font-display text-[10px] font-bold tracking-[0.18em] text-saffron-glow uppercase">
           {page.eyebrow}
         </p>
@@ -224,8 +224,8 @@ export function ImpactStoryScreen() {
         setHolding(false)
       }}
     >
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="pointer-events-auto flex items-center gap-2">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 bfi-status-pad">
+        <div className="pointer-events-auto flex items-center gap-2 pb-2 pt-1">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
             <ShieldCheck className="h-4 w-4" strokeWidth={2.25} />
           </span>
@@ -234,7 +234,7 @@ export function ImpactStoryScreen() {
         <button
           type="button"
           onClick={() => finishAndGo('/')}
-          className="pointer-events-auto min-h-10 rounded-full px-3 text-sm font-medium text-white/80 transition-colors hover:text-white touch-manipulation"
+          className="pointer-events-auto min-h-10 rounded-full px-3 pb-2 pt-1 text-sm font-medium text-white/80 transition-colors hover:text-white touch-manipulation"
           data-testid="button-impact-skip"
         >
           Skip

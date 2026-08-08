@@ -41,10 +41,10 @@ export function GuidanceScreen() {
     <AppShell scene="guidance" contentClassName="relative overflow-hidden text-night-ink">
       <div className="relative flex min-h-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-20 border-b border-white/15 bg-coastal/75 backdrop-blur-md"
+          className="sticky top-0 z-20 border-b border-white/15 bg-coastal/80 backdrop-blur-md bfi-status-pad"
           data-testid="guidance-top-bar"
         >
-          <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-3 py-2.5">
+          <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-3 pb-2.5 pt-2">
             <button
               type="button"
               onClick={() => navigate(-1)}

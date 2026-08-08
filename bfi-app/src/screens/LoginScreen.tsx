@@ -27,7 +27,7 @@ export function LoginScreen() {
     >
       <SceneBackdrop scene="login" intensity="medium" />
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-8">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-[max(0.75rem,calc(var(--bfi-status-pad)+0.5rem))]">
         <header className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
             <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
