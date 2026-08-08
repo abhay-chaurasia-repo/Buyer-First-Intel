@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 type PageHeaderProps = {
-  /** Primary heading — saffron gradient like Search “BFI” */
+  /** Primary heading — saffron gradient like Search “Due Diligence” */
   title: string
   description?: string
   testId?: string
@@ -11,7 +11,7 @@ type PageHeaderProps = {
 }
 
 /**
- * Open page title — same language as Search BFI / Due Diligence (no boxed panel).
+ * Open page title — same language as Search Due Diligence (no boxed panel).
  * Clears the phone notch / status area and sits on the scene backdrop.
  */
 export function PageHeader({

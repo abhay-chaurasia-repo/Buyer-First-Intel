@@ -5,7 +5,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { NAR_SETTLEMENT_URL } from '@/data/nrecGuidance'
 
 /**
- * Opens an official URL inside the app shell (iframe) so buyers stay in BFI.
+ * Opens an official URL inside the app shell (iframe) so buyers stay in Due Diligence.
  */
 export function InAppBrowserScreen() {
   const navigate = useNavigate()
@@ -76,7 +76,7 @@ export function InAppBrowserScreen() {
           <p className="flex items-start gap-2 text-[12px] leading-relaxed text-night-muted">
             <Scale className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow" aria-hidden />
             Official settlement materials. Some sites block embedding — if the frame is blank, use
-            the buyer brief summary still inside BFI.
+            the buyer brief summary still inside Due Diligence.
           </p>
         </div>
 

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Phone, ShieldCheck, UserRoundPlus } from 'lucide-react'
 import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
+import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { markImpactSeen } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
 
@@ -126,7 +127,10 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               <ShieldCheck className="h-8 w-8" strokeWidth={2.2} />
             </span>
             <p className="mt-4 font-display text-[1.85rem] font-bold tracking-tight text-night-ink">
-              Buyer-First Intel
+              {APP_NAME}
+            </p>
+            <p className="mt-1 font-display text-[0.95rem] font-semibold tracking-tight text-saffron-glow">
+              {APP_TAGLINE}
             </p>
             {isSignup ? (
               <p className="mt-2 max-w-[17rem] text-[0.95rem] leading-relaxed text-night-muted">

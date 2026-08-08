@@ -77,7 +77,7 @@ export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
   {
     id: 'search-addresses',
     phaseId: 'search',
-    title: 'Search candidate addresses in BFI',
+    title: 'Search candidate addresses in Due Diligence',
     detail: 'Start from Search and open each property command center.',
   },
   {

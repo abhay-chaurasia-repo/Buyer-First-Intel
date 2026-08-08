@@ -31,7 +31,7 @@ export const IMPACT_PAGES: ImpactPage[] = [
     id: 'size',
     eyebrow: 'County vs listing',
     title: 'See when the listing size doesn’t match the county.',
-    body: 'BFI puts county living area next to what’s claimed in the listing — so you catch sqft gaps before you tour, offer, or talk to an agent.',
+    body: 'Due Diligence puts county living area next to what’s claimed in the listing — so you catch sqft gaps before you tour, offer, or talk to an agent.',
     image: '/impact/impact-georgian-home.png',
     imageAlt: 'Georgian-style home facade',
     snippet: 'size',

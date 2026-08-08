@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
+import { APP_NAME } from '@/data/brand'
 import { cn } from '@/lib/utils'
 
 const AUTO_MS = 3500
@@ -224,7 +225,7 @@ export function ImpactStoryScreen() {
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
             <ShieldCheck className="h-4 w-4" strokeWidth={2.25} />
           </span>
-          <span className="font-display text-sm font-semibold tracking-[0.14em] uppercase">BFI</span>
+          <span className="font-display text-sm font-semibold tracking-tight">{APP_NAME}</span>
         </div>
       </header>
 

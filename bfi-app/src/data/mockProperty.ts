@@ -345,7 +345,7 @@ export function getChannelCanvas(
         { label: 'Deed type', value: property.deedType, source: 'County recorder' },
         { label: 'Document #', value: '2019-084221 (stub)', source: 'Recorder stub' },
       ],
-      notes: ['BFI intentionally de-emphasizes sale price as a decision signal.'],
+      notes: ['Due Diligence intentionally de-emphasizes sale price as a decision signal.'],
     },
     '04-tax-assessment': {
       id: '04-tax-assessment',

@@ -9,6 +9,7 @@ import {
   Star,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { cn } from '@/lib/utils'
 
 export function HomeScreen() {
@@ -31,30 +32,30 @@ export function HomeScreen() {
       contentClassName="relative min-h-0 overflow-y-auto overscroll-contain text-night-ink"
     >
       <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">
-        <header className="animate-bfi-fade flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
+        <header className="animate-bfi-fade flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
               <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
             </div>
-            <span className="font-display text-sm font-semibold tracking-[0.14em] text-night-muted uppercase">
-              BFI
+            <span className="truncate font-display text-sm font-semibold tracking-tight text-night-muted">
+              {APP_NAME}
             </span>
           </div>
-          <span className="rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow">
-            Buyer-only
+          <span className="shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow">
+            {APP_TAGLINE}
           </span>
         </header>
 
         <div className="flex flex-1 flex-col items-center py-5">
           <div className="animate-bfi-rise w-full text-center">
-            <p className="font-display text-[2rem] leading-none font-extrabold tracking-tight">
+            <h1 className="font-display text-[1.85rem] leading-none font-extrabold tracking-tight">
               <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
-                BFI
+                {APP_NAME}
               </span>
-            </p>
-            <h1 className="mt-2 font-display text-[1.1rem] font-semibold tracking-tight text-saffron-glow">
-              Due Diligence
             </h1>
+            <p className="mt-2 font-display text-[1.05rem] font-semibold tracking-tight text-saffron-glow">
+              {APP_TAGLINE}
+            </p>
             <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
               Paste a property address. Verify public-record truth before you commit — and before you
               talk to an agent.

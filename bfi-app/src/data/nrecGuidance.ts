@@ -55,10 +55,10 @@ export const BUYER_COMMISSION_BRIEF: GuidanceDoc = {
       ],
     },
     {
-      heading: 'Why BFI puts facts first',
+      heading: 'Why Due Diligence puts facts first',
       paragraphs: [
         'Talking to an agent or writing an offer is easier when you already know the county record story: living area vs listing claims, tax history, sales history, schools, and what verified visitors labeled on site.',
-        'BFI is buyer-only: no MLS feed, no prices, county records and diligence tools first — so you walk into agent conversations with questions, not a blank slate.',
+        'Due Diligence is for home buyers: no MLS feed, no prices, county records and diligence tools first — so you walk into agent conversations with questions, not a blank slate.',
         'Star properties into Watchlist, verify visits on site, and use Journey to track prepare → diligence → offer → close.',
       ],
     },
@@ -72,14 +72,14 @@ export const BUYER_BEFORE_AGENT_BRIEF: GuidanceDoc = {
   title: 'Do this before you talk to a real estate agent',
   summary:
     'A short sequence so you keep leverage: know the property, know the commission rules, then decide what help you want to pay for.',
-  updatedLabel: 'Buyer playbook · BFI',
+  updatedLabel: 'Buyer playbook · Due Diligence',
   sourceUrl: NAR_SETTLEMENT_URL,
   sourceLabel: 'Official settlement website',
   sections: [
     {
       heading: '1. Diligence the address yourself',
       paragraphs: [
-        'Paste the address in BFI. Compare County’s Fact to listing size. Read sales and tax history. Check schools and surroundings labels from verified visitors.',
+        'Paste the address in Due Diligence. Compare County’s Fact to listing size. Read sales and tax history. Check schools and surroundings labels from verified visitors.',
         'Write private notes on what would change your mind. Star only the addresses worth a second look.',
       ],
     },
@@ -100,7 +100,7 @@ export const BUYER_BEFORE_AGENT_BRIEF: GuidanceDoc = {
     {
       heading: '4. Visit with your eyes open',
       paragraphs: [
-        'BFI Verify logs GPS presence with date and time at no charge inside the app. Use that log — and Buyer Community Plus/Watch labels — to remember what you actually observed before you escalate to an offer.',
+        'Due Diligence Verify logs GPS presence with date and time at no charge inside the app. Use that log — and Buyer Community Plus/Watch labels — to remember what you actually observed before you escalate to an offer.',
       ],
     },
   ],
