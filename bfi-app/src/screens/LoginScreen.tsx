@@ -40,7 +40,7 @@ export function LoginScreen() {
           <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
             Buyer-only
           </p>
-          <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight">
+          <h1 className="mt-2 font-display text-[1.35rem] font-semibold tracking-tight">
             <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
               Log in
             </span>

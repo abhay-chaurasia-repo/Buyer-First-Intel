@@ -29,14 +29,14 @@ export function PageHeader({
       )}
       data-testid={testId}
     >
-      <div className="px-4 py-3.5 text-center">
-        <h1 className="font-display text-[1.65rem] font-extrabold leading-none tracking-tight">
+      <div className="px-4 py-3 text-center">
+        <h1 className="font-display text-[1.15rem] font-semibold leading-snug tracking-tight">
           <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
             {title}
           </span>
         </h1>
         {description ? (
-          <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-relaxed text-white/75">
+          <p className="mx-auto mt-1 max-w-sm text-[11px] leading-relaxed text-white/75">
             {description}
           </p>
         ) : null}

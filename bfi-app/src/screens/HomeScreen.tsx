@@ -55,7 +55,7 @@ export function HomeScreen() {
                 BFI
               </span>
             </p>
-            <h1 className="mt-2 font-display text-xl font-semibold tracking-tight text-saffron-glow sm:text-[1.75rem]">
+            <h1 className="mt-2 font-display text-[1.15rem] font-semibold tracking-tight text-saffron-glow sm:text-xl">
               Due Diligence
             </h1>
             <p className="mx-auto mt-2 max-w-sm text-[0.9rem] leading-relaxed text-white/80">

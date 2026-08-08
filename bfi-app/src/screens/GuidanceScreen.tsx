@@ -87,7 +87,7 @@ export function GuidanceScreen() {
                 {doc.updatedLabel}
               </span>
             </div>
-            <h1 className="mt-3 text-center font-display text-2xl font-extrabold tracking-tight">
+            <h1 className="mt-3 text-center font-display text-[1.25rem] font-semibold tracking-tight">
               <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
                 {doc.title}
               </span>
