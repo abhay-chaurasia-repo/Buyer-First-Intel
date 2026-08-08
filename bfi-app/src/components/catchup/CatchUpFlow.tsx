@@ -152,7 +152,6 @@ export function CatchUpFlow({
   onClose,
 }: CatchUpFlowProps) {
   const meta = surfaceMeta[surface]
-  const Icon = meta.Icon
   const items = response.items
   const truncated = truncateAddress(address)
   const isBuyerCommunity = surface === 'buyer-insights'
@@ -202,24 +201,14 @@ export function CatchUpFlow({
 
       <div className="flex-1 overflow-y-auto overscroll-contain pb-4">
         <section className="px-3 pt-4" data-testid="tile-section-header">
-          <div className="flex items-center gap-2 px-2 py-1.5">
-            <span
-              className={cn(
-                'flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px]',
-                meta.iconWrap,
-              )}
-            >
-              <Icon className="h-4 w-4 text-saffron-glow" strokeWidth={2.25} />
-            </span>
-            <div className="min-w-0 flex-1 text-center">
-              <p className="font-display text-[13px] font-extrabold tracking-tight">
-                <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
-                  {meta.title}
-                </span>
-              </p>
-              <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
-            </div>
-            <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+          <div className="px-2 py-1.5 text-center">
+            <p className="font-display text-[13px] font-extrabold tracking-tight">
+              <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
+                {meta.title}
+              </span>
+            </p>
+            <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
+            <span className="mt-2 inline-flex rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
               {headerCount}
             </span>
           </div>
