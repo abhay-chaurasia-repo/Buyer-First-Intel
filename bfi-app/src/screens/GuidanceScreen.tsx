@@ -87,7 +87,7 @@ export function GuidanceScreen() {
                 {doc.title}
               </span>
             </h1>
-            <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-white/80">{doc.summary}</p>
+            <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-night-muted">{doc.summary}</p>
 
             {doc.sourceUrl ? (
               <Link

@@ -33,7 +33,7 @@ export function PageHeader({
           </span>
         </h1>
         {description ? (
-          <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-white/80">
+          <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
             {description}
           </p>
         ) : null}

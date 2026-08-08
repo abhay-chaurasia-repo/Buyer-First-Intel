@@ -387,7 +387,7 @@ export function WatchlistScreen() {
           >
             <Star className="mx-auto h-8 w-8 text-saffron-glow" strokeWidth={1.75} />
             <p className="mt-3 text-sm font-semibold text-saffron-glow">No saved properties yet</p>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-white/75">
+            <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
               Star an address from its property page. Notes and visit planning live here afterward.
             </p>
             <button
@@ -416,7 +416,7 @@ export function WatchlistScreen() {
               </div>
             </div>
 
-            <p className="px-1 text-center text-[11px] text-white/65">
+            <p className="px-1 text-center text-[11px] text-night-faint">
               Sorted: upcoming plans first, then not visited, then visited.
             </p>
 

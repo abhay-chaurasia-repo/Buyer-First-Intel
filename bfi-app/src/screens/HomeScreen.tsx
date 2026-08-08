@@ -55,7 +55,7 @@ export function HomeScreen() {
             <h1 className="mt-2 font-display text-[1.1rem] font-semibold tracking-tight text-saffron-glow">
               Due Diligence
             </h1>
-            <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-white/80">
+            <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
               Paste a property address. Verify public-record truth before you commit — and before you
               talk to an agent.
             </p>

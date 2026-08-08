@@ -98,7 +98,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
 
   return (
     <div
-      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden text-night-ink"
+      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden text-night-ink bfi-scene-type"
       data-testid={isSignup ? 'signup-screen' : 'login-screen'}
       data-auth-mode={mode}
     >
@@ -129,7 +129,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               Buyer-First Intel
             </p>
             {isSignup ? (
-              <p className="mt-2 max-w-[17rem] text-[0.95rem] leading-relaxed text-white/78">
+              <p className="mt-2 max-w-[17rem] text-[0.95rem] leading-relaxed text-night-muted">
                 Create an account to save Watchlist homes, Journey progress, and private notes.
               </p>
             ) : (
@@ -137,7 +137,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
                 <p className="font-display text-[1.2rem] font-semibold tracking-tight text-night-ink">
                   Welcome back
                 </p>
-                <p className="mt-1.5 text-[0.92rem] leading-relaxed text-white/78">
+                <p className="mt-1.5 text-[0.92rem] leading-relaxed text-night-muted">
                   Pick up where you left off on your property journey.
                 </p>
               </div>
@@ -177,7 +177,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
           </div>
 
           <div className="mt-auto w-full max-w-[21rem] pt-8">
-            <p className="text-center text-[11px] leading-relaxed text-white/70">
+            <p className="text-center text-[11px] leading-relaxed text-night-faint">
               By {isSignup ? 'signing up' : 'logging in'}, you agree to our{' '}
               <button type="button" className="underline underline-offset-2">
                 Terms

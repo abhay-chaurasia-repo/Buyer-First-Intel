@@ -145,7 +145,7 @@ function StorySlide({ page }: { page: ImpactPage }) {
         <h1 className="mt-2 max-w-sm font-display text-[1.45rem] font-semibold leading-tight tracking-tight [@media(min-height:740px)]:text-[1.85rem]">
           {page.title}
         </h1>
-        <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-white/80 [@media(min-height:740px)]:text-[0.95rem]">
+        <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-night-muted [@media(min-height:740px)]:text-[0.95rem]">
           {page.body}
         </p>
         <div className="mt-4 max-w-sm animate-bfi-rise [@media(min-height:740px)]:mt-6">
@@ -202,7 +202,7 @@ export function ImpactStoryScreen() {
 
   return (
     <div
-      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-ink text-white"
+      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-ink text-night-ink bfi-scene-type"
       data-testid="impact-story"
       data-page={page.id}
       onPointerDown={(event) => {
