@@ -24,7 +24,6 @@ import {
   type HistoryAddress,
   type MetricCard,
 } from '@/data/mockProperty'
-import { notesCount } from '@/data/propertyNotesStorage'
 import { isOnWatchlist, toggleWatchlist } from '@/data/watchlistStorage'
 import { cn } from '@/lib/utils'
 
@@ -129,7 +128,6 @@ export function PropertyDetailScreen() {
 
   const metrics = useMemo(() => getMetricCards(property), [property])
   const truncated = truncateAddress(property.address)
-  const savedNoteCount = notesCount(property.id)
 
   function handleToggleStar() {
     const result = toggleWatchlist(property)
@@ -261,37 +259,6 @@ export function PropertyDetailScreen() {
                   )
                 })}
               </div>
-            </section>
-
-            <section className="mt-5 px-3" data-testid="notes-moved-hint">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!starred) handleToggleStar()
-                  navigate('/watchlist')
-                }}
-                className="flex w-full min-h-11 items-center gap-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5 text-left touch-manipulation"
-                data-testid="button-open-watchlist-notes"
-              >
-                <StickyNote className="h-4 w-4 shrink-0 text-saffron-bright" aria-hidden />
-                <span className="min-w-0 flex-1">
-                  <span className="block font-display text-[11px] font-bold tracking-[0.14em] text-night-muted uppercase">
-                    Notes live on Watchlist
-                  </span>
-                  <span className="mt-0.5 block text-[12px] text-night-faint">
-                    {starred
-                      ? savedNoteCount > 0
-                        ? `${savedNoteCount} note${savedNoteCount === 1 ? '' : 's'} on this saved property`
-                        : 'Open Watchlist to add private notes'
-                      : 'Star to save, then add private notes on Watchlist'}
-                  </span>
-                </span>
-                {savedNoteCount > 0 ? (
-                  <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-                    {savedNoteCount}
-                  </span>
-                ) : null}
-              </button>
             </section>
 
             <section className="mt-4 px-3" data-testid="history-section">
