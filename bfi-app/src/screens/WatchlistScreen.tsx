@@ -377,8 +377,7 @@ export function WatchlistScreen() {
       contentClassName="min-h-0 bfi-night-wash text-night-ink"
     >
       <PageHeader
-        title="Watchlist"
-        subtitle="Saved properties"
+        title="Saved properties"
         description="Plan visits, mark visited, and keep private notes on each saved address."
         testId="watchlist-top-bar"
       />

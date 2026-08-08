@@ -116,8 +116,7 @@ export function JourneyScreen() {
       contentClassName="min-h-0 bfi-night-wash text-night-ink"
     >
       <PageHeader
-        title="Journey"
-        subtitle="Buying checklist"
+        title="Buying checklist"
         description="Your path from prepare → diligence → close. Tap to check off."
         testId="journey-top-bar"
       />

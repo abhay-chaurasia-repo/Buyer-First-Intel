@@ -2,10 +2,8 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 type PageHeaderProps = {
-  /** Primary page name — saffron gradient like Search “BFI” */
+  /** Primary heading — saffron gradient like Search “BFI” */
   title: string
-  /** Supporting line — warm cream that matches the palette */
-  subtitle: string
   description?: string
   testId?: string
   className?: string
@@ -13,11 +11,11 @@ type PageHeaderProps = {
 }
 
 /**
- * Centered page header matching Search branding: saffron title + warm subtitle.
+ * Centered page header matching Search branding.
+ * Nav already names the tab, so headers show purpose only (e.g. Saved properties).
  */
 export function PageHeader({
   title,
-  subtitle,
   description,
   testId,
   className,
@@ -37,9 +35,6 @@ export function PageHeader({
             {title}
           </span>
         </h1>
-        <p className="mt-1.5 font-display text-[15px] font-semibold tracking-tight text-saffron-glow">
-          {subtitle}
-        </p>
         {description ? (
           <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-relaxed text-white/75">
             {description}
