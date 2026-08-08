@@ -31,7 +31,7 @@ export const PAGE_SCENES: Record<PageSceneId, PageScene> = {
   journey: {
     id: 'journey',
     src: '/scenes/bg-journey.png',
-    alt: 'Tree-lined residential street toward homes ahead',
+    alt: 'Calm dusk street toward neighborhood homes ahead',
   },
   property: {
     id: 'property',
