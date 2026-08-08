@@ -23,7 +23,7 @@ export function BottomNav() {
             end={end}
             className={({ isActive }) =>
               cn(
-                'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 transition-colors touch-manipulation',
+                'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-2 transition-colors touch-manipulation',
                 isActive ? 'text-saffron-bright' : 'text-night-muted active:text-saffron-glow',
               )
             }
@@ -31,20 +31,14 @@ export function BottomNav() {
           >
             {({ isActive }) => (
               <>
-                {isActive ? (
-                  <span
-                    className="absolute inset-x-3 top-1.5 h-7 rounded-xl bg-saffron/15"
-                    aria-hidden
-                  />
-                ) : null}
                 <Icon
-                  className="relative h-[22px] w-[22px]"
-                  strokeWidth={isActive ? 2.35 : 1.85}
+                  className="h-[22px] w-[22px]"
+                  strokeWidth={isActive ? 2.4 : 1.85}
                   fill={isActive && label === 'Watchlist' ? 'currentColor' : 'none'}
                 />
                 <span
                   className={cn(
-                    'relative max-w-full truncate text-[10px] leading-none',
+                    'max-w-full truncate text-[10px] leading-none',
                     isActive ? 'font-semibold' : 'font-medium',
                   )}
                 >
