@@ -8,7 +8,7 @@ import { JourneyScreen } from '@/screens/JourneyScreen'
 import { GuidanceScreen } from '@/screens/GuidanceScreen'
 import { InAppBrowserScreen } from '@/screens/InAppBrowserScreen'
 import { ImpactStoryScreen } from '@/screens/ImpactStoryScreen'
-import { LoginScreen } from '@/screens/LoginScreen'
+import { LoginScreen, SignupScreen } from '@/screens/AuthOptionsScreen'
 
 function RootEntry() {
   if (!hasSeenImpact()) {
@@ -23,6 +23,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<RootEntry />} />
         <Route path="/welcome" element={<ImpactStoryScreen />} />
+        <Route path="/signup" element={<SignupScreen />} />
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/property/:address" element={<PropertyDetailScreen />} />
         <Route path="/watchlist" element={<WatchlistScreen />} />

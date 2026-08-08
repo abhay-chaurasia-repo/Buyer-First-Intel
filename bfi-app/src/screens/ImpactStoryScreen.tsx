@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
-import { IMPACT_PAGES, markImpactSeen, type ImpactPage } from '@/data/impactStory'
+import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
 
 const AUTO_MS = 3500
@@ -181,11 +181,6 @@ export function ImpactStoryScreen() {
     setIndex(next)
   }
 
-  function finishAndGo(path: string) {
-    markImpactSeen()
-    navigate(path)
-  }
-
   function onPointerDown(clientX: number) {
     touchStartX.current = clientX
     setHolding(true)
@@ -224,21 +219,13 @@ export function ImpactStoryScreen() {
         setHolding(false)
       }}
     >
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 bfi-status-pad">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center px-5 bfi-status-pad">
         <div className="pointer-events-auto flex items-center gap-2 pb-2 pt-1">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.35)]">
             <ShieldCheck className="h-4 w-4" strokeWidth={2.25} />
           </span>
           <span className="font-display text-sm font-semibold tracking-[0.14em] uppercase">BFI</span>
         </div>
-        <button
-          type="button"
-          onClick={() => finishAndGo('/')}
-          className="pointer-events-auto min-h-10 rounded-full px-3 pb-2 pt-1 text-sm font-medium text-white/80 transition-colors hover:text-white touch-manipulation"
-          data-testid="button-impact-skip"
-        >
-          Skip
-        </button>
       </header>
 
       <div className="relative min-h-0 flex-1 overflow-hidden">
@@ -282,7 +269,7 @@ export function ImpactStoryScreen() {
 
         <button
           type="button"
-          onClick={() => finishAndGo('/')}
+          onClick={() => navigate('/signup')}
           className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-saffron text-base font-semibold text-white shadow-[0_10px_28px_rgb(232_145_58/0.4)] transition-colors hover:bg-saffron-deep touch-manipulation"
           data-testid="button-impact-continue"
         >
@@ -292,11 +279,11 @@ export function ImpactStoryScreen() {
 
         <button
           type="button"
-          onClick={() => finishAndGo('/login')}
-          className="inline-flex min-h-10 w-full items-center justify-center text-sm font-semibold text-white/90 underline-offset-2 hover:underline touch-manipulation"
+          onClick={() => navigate('/login')}
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 text-base font-semibold text-night-ink backdrop-blur-sm transition-colors hover:bg-white/16 touch-manipulation"
           data-testid="button-impact-login"
         >
-          Log in
+          Already have an account? Log in
         </button>
       </div>
     </div>
