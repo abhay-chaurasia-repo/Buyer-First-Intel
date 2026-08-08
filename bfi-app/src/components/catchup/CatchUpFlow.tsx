@@ -164,6 +164,26 @@ export function CatchUpFlow({
       ? getVerifiedVisitsBundle(property).visits.length
       : items.length
 
+  const [verified, setVerified] = useState(() => {
+    try {
+      return localStorage.getItem(`bfi.gpsVerified.${propertyId}`) === '1'
+    } catch {
+      return false
+    }
+  })
+
+  function handleToggleVerify() {
+    setVerified((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(`bfi.gpsVerified.${propertyId}`, next ? '1' : '0')
+      } catch {
+        /* ignore */
+      }
+      return next
+    })
+  }
+
   return (
     <div
       className="animate-bfi-fade flex min-h-0 flex-1 flex-col text-night-ink"
@@ -199,12 +219,19 @@ export function CatchUpFlow({
 
           <button
             type="button"
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-saffron/45 bg-saffron/20 px-3 text-xs font-bold tracking-wide text-saffron-glow transition-colors hover:bg-saffron/30 touch-manipulation"
-            aria-label="GPS Verify"
+            onClick={handleToggleVerify}
+            className={cn(
+              'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-bold tracking-wide transition-colors touch-manipulation',
+              verified
+                ? 'border-saffron/55 bg-saffron/30 text-saffron-glow shadow-[0_0_0_1px_rgb(232_145_58/0.12)] hover:bg-saffron/40'
+                : 'border-white/30 bg-white/12 text-night-ink hover:border-saffron/45 hover:bg-saffron/20 hover:text-saffron-glow',
+            )}
+            aria-label={verified ? 'Clear GPS verification' : 'GPS Verify'}
+            aria-pressed={verified}
             data-testid="badge-gps-verify-tile"
           >
-            <Crosshair className="h-3.5 w-3.5" />
-            Verify
+            <Crosshair className="h-3.5 w-3.5" strokeWidth={2.25} />
+            {verified ? 'Verified' : 'Verify'}
           </button>
         </div>
       </header>
