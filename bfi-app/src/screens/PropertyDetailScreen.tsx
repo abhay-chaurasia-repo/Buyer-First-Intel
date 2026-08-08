@@ -180,47 +180,50 @@ export function PropertyDetailScreen() {
                 type="button"
                 onClick={handleToggleStar}
                 className={cn(
-                  'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-bold tracking-wide transition-colors touch-manipulation',
-                  starred
-                    ? 'border-saffron/55 bg-saffron/30 text-saffron-glow shadow-[0_0_0_1px_rgb(232_145_58/0.12)] hover:bg-saffron/40'
-                    : 'border-white/30 bg-white/12 text-night-ink hover:border-saffron/45 hover:bg-saffron/20 hover:text-saffron-glow',
+                  'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color] touch-manipulation',
+                  'hover:border-white/35 hover:bg-white/8 focus-visible:border-white/35 focus-visible:bg-white/8 active:border-white/35',
+                  starred ? 'text-saffron-glow' : 'text-night-ink',
                 )}
                 aria-label={starred ? 'Remove from watchlist' : 'Save to watchlist'}
                 aria-pressed={starred}
                 data-testid="button-star-property"
               >
                 <Star
-                  className={cn('h-3.5 w-3.5', starred && 'fill-saffron-glow')}
+                  className={cn('h-4 w-4', starred && 'fill-saffron-glow')}
                   strokeWidth={starred ? 0 : 2.25}
                 />
-                {starred ? 'Saved' : 'Save'}
+                <span>{starred ? 'Saved' : 'Save'}</span>
               </button>
 
-              <h1
-                className="min-w-0 truncate text-center font-display text-[1.05rem] font-semibold tracking-tight"
+              <div
+                className="min-w-0 rounded-xl border border-transparent px-2.5 py-1.5 text-center transition-[border-color,background-color] hover:border-white/35 hover:bg-white/8 focus-within:border-white/35"
+                data-testid="property-address-box"
                 title={fullAddress}
-                data-testid="text-truncated-address"
               >
-                <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
-                  {truncated}
-                </span>
-              </h1>
+                <h1
+                  className="truncate font-display text-[1.05rem] font-semibold tracking-tight"
+                  data-testid="text-truncated-address"
+                >
+                  <span className="bg-gradient-to-br from-saffron-glow via-saffron to-saffron-bright bg-clip-text text-transparent">
+                    {truncated}
+                  </span>
+                </h1>
+              </div>
 
               <button
                 type="button"
                 onClick={handleToggleVerify}
                 className={cn(
-                  'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-bold tracking-wide transition-colors touch-manipulation',
-                  verified
-                    ? 'border-saffron/55 bg-saffron/30 text-saffron-glow shadow-[0_0_0_1px_rgb(232_145_58/0.12)] hover:bg-saffron/40'
-                    : 'border-white/30 bg-white/12 text-night-ink hover:border-saffron/45 hover:bg-saffron/20 hover:text-saffron-glow',
+                  'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color] touch-manipulation',
+                  'hover:border-white/35 hover:bg-white/8 focus-visible:border-white/35 focus-visible:bg-white/8 active:border-white/35',
+                  verified ? 'text-saffron-glow' : 'text-night-ink',
                 )}
                 aria-label={verified ? 'Clear GPS verification' : 'GPS Verify'}
                 aria-pressed={verified}
                 data-testid="badge-gps-verify"
               >
-                <Crosshair className="h-3.5 w-3.5" strokeWidth={2.25} />
-                {verified ? 'Verified' : 'Verify'}
+                <Crosshair className="h-4 w-4" strokeWidth={2.25} />
+                <span>{verified ? 'Verified' : 'Verify'}</span>
               </button>
             </div>
           </header>
