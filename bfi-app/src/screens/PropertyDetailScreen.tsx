@@ -196,8 +196,7 @@ export function PropertyDetailScreen() {
                       type="button"
                       onClick={() => setActiveSurface(metricToSurface[card.id])}
                       className="relative flex w-full flex-col items-center gap-1.5 rounded-2xl bg-transparent px-1 py-1 text-center transition-opacity active:opacity-70 touch-manipulation"
-                      aria-label={`${card.title}. ${card.subtitle}`}
-                      title={card.detail}
+                      aria-label={card.title}
                       data-testid={`metric-${card.id}`}
                     >
                       <span className="relative flex h-14 w-14 items-center justify-center rounded-[18px] bg-coastal-soft shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_0_0_1px_rgb(255_248_247/0.12)]">
@@ -209,11 +208,6 @@ export function PropertyDetailScreen() {
                         >
                           <Icon className="h-5 w-5" strokeWidth={2.25} />
                         </span>
-                        {card.badge ? (
-                          <span className="absolute -top-1 -right-1 max-w-[2.75rem] truncate rounded-full bg-saffron px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-[0_4px_10px_rgb(232_145_58/0.35)]">
-                            {card.badge}
-                          </span>
-                        ) : null}
                       </span>
                       <span className="w-full text-[11px] font-medium leading-tight text-night-ink">
                         {card.title}
