@@ -45,83 +45,117 @@ export function AppIcon({
         fill={APP_ICON_SAFFRON}
       />
 
-      {/* House */}
+      {/* =====================================================
+          HOUSE
+          ===================================================== */}
+
       <g
         fill="none"
         stroke="#FFFFFF"
-        strokeWidth="27"
+        strokeWidth="22"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        {/* Roof */}
-        <path d="M112 250 L256 130 L400 250" />
+        {/* Slightly thinner / more inclined roof */}
+        <path d="M104 250 L256 126 L408 250" />
 
-        {/* Left wall and bottom */}
-        <path d="M140 250 V385 H215" />
-
-        {/* Right wall */}
-        <path d="M372 250 V270" />
+        {/* Left wall + bottom floor.
+            Stops well before the magnifying glass. */}
+        <path d="M136 250 V382 H205" />
       </g>
 
-      {/* Chimney */}
-      <path
-        d="M332 178 V128 H358 V198"
+      {/* =====================================================
+          CHIMNEY
+          ===================================================== */}
+
+      <rect
+        x="332"
+        y="126"
+        width="26"
+        height="62"
+        rx="2"
         fill="#FFFFFF"
       />
 
-      {/* Magnifying glass */}
+      {/* =====================================================
+          MAGNIFYING GLASS
+          Smaller than previous version and separated
+          from the house wall/floor.
+          ===================================================== */}
+
       <circle
         cx="258"
         cy="300"
-        r="78"
+        r="70"
         fill={APP_ICON_SAFFRON}
         stroke="#FFFFFF"
-        strokeWidth="27"
+        strokeWidth="25"
       />
 
-      {/* Four-pane window */}
+      {/* =====================================================
+          FOUR-PANE WINDOW
+          ===================================================== */}
+
       <g fill="#FFFFFF">
         <rect
-          x="232"
-          y="274"
-          width="17"
-          height="17"
+          x="235"
+          y="277"
+          width="15"
+          height="15"
           rx="2"
         />
 
         <rect
-          x="257"
-          y="274"
-          width="17"
-          height="17"
+          x="258"
+          y="277"
+          width="15"
+          height="15"
           rx="2"
         />
 
         <rect
-          x="232"
-          y="299"
-          width="17"
-          height="17"
+          x="235"
+          y="300"
+          width="15"
+          height="15"
           rx="2"
         />
 
         <rect
-          x="257"
-          y="299"
-          width="17"
-          height="17"
+          x="258"
+          y="300"
+          width="15"
+          height="15"
           rx="2"
         />
       </g>
 
-      {/* Magnifying glass handle */}
+      {/* =====================================================
+          MAGNIFYING GLASS HANDLE
+
+          Thin where it meets the circle,
+          becoming thicker toward the end.
+          ===================================================== */}
+
+      {/* Thin connection from magnifying glass */}
       <line
-        x1="313"
-        y1="355"
-        x2="365"
-        y2="407"
+        x1="307"
+        y1="349"
+        x2="330"
+        y2="372"
         stroke="#FFFFFF"
-        strokeWidth="27"
+        strokeWidth="16"
+        strokeLinecap="round"
+      />
+
+      {/* Thick/bold outer handle */}
+      <line
+        x1="327"
+        y1="369"
+        x2="371"
+        y2="413"
+        stroke="#FFFFFF"
+        strokeWidth="28"
         strokeLinecap="round"
       />
     </svg>
