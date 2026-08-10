@@ -60,8 +60,11 @@ export function AppIcon({
         strokeLinejoin="round"
       />
 
-      {/* Solid chimney on right roof slope — a little wider, same length */}
-      <rect x="326" y="124" width="45" height="52" rx="3" fill="#FFFFFF" />
+      {/* Solid chimney — bottom follows the right roof slope so both sides touch */}
+      <path
+        d="M328 130.5 L368 130.5 L368 217.3 L328 182.5 Z"
+        fill="#FFFFFF"
+      />
 
       {/* Smaller floating loupe — not touching house walls */}
       <circle
