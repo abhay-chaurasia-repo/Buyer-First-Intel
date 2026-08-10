@@ -14,7 +14,7 @@ import {
 import { VisitPlanPicker } from '@/components/VisitPlanPicker'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { persistBuyerVerified } from '@/data/buyerCommunityStorage'
+import { persistBuyerVerified, loadBuyerVoteState } from '@/data/buyerCommunityStorage'
 import {
   addNote,
   deleteNote,
@@ -66,12 +66,14 @@ function WatchlistMetaRail({
   visitedAt,
   noteCount = 0,
   reminderEnabled = false,
+  hasShared = false,
   onContribute,
 }: {
   plannedVisitAt?: string | null
   visitedAt?: string | null
   noteCount?: number
   reminderEnabled?: boolean
+  hasShared?: boolean
   onContribute?: () => void
 }) {
   const hasPlanned = Boolean(plannedVisitAt)
@@ -127,14 +129,26 @@ function WatchlistMetaRail({
             event.stopPropagation()
             onContribute?.()
           }}
-          className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-[#e85d5d]/60 bg-[#e85d5d]/22 px-1.5 py-1 text-[#ffb0b0] transition-colors hover:bg-[#e85d5d]/32 touch-manipulation"
-          title="Contribute labels to Buyer Community"
-          aria-label="Contribute to Buyer Community"
+          className={cn(
+            'inline-flex shrink-0 items-center gap-0.5 rounded-md border px-1.5 py-1 touch-manipulation',
+            hasShared
+              ? 'border-[#e85d5d]/40 bg-[#e85d5d]/14 text-[#ffc2c2]'
+              : 'animate-bfi-share-blow border-[#e85d5d]/70 bg-[#e85d5d]/28 text-[#ffb0b0] hover:bg-[#e85d5d]/36',
+          )}
+          title={
+            hasShared
+              ? 'Shared with Buyer Community — tap to update'
+              : 'Contribute labels to Buyer Community'
+          }
+          aria-label={
+            hasShared ? 'Shared with Buyer Community' : 'Contribute to Buyer Community'
+          }
           data-testid="watchlist-contribute-chip"
+          data-shared={hasShared ? '1' : '0'}
         >
           <Users className="h-3 w-3 shrink-0" strokeWidth={2.25} aria-hidden />
           <span className="text-[8px] font-bold leading-none tracking-[0.12em] uppercase">
-            Share
+            {hasShared ? 'Shared' : 'Share'}
           </span>
         </button>
       ) : null}
@@ -308,12 +322,24 @@ function WatchlistRow({
   const [planning, setPlanning] = useState(false)
   const status = visitPlanStatus(item)
   const [noteCount, setNoteCount] = useState(() => loadNotes(item.id).length)
+  const [hasShared, setHasShared] = useState(
+    () => loadBuyerVoteState(item.id).myVotes.length > 0,
+  )
   const rowRef = useRef<HTMLLIElement>(null)
 
   useEffect(() => {
     if (!planning || !rowRef.current) return
     rowRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [planning])
+
+  useEffect(() => {
+    const refreshShared = () => {
+      setHasShared(loadBuyerVoteState(item.id).myVotes.length > 0)
+    }
+    refreshShared()
+    window.addEventListener('focus', refreshShared)
+    return () => window.removeEventListener('focus', refreshShared)
+  }, [item.id])
 
   function handleMarkVisited() {
     const markingVisited = status !== 'visited'
@@ -389,6 +415,7 @@ function WatchlistRow({
             visitedAt={item.visitedAt}
             noteCount={noteCount}
             reminderEnabled={Boolean(item.reminderEnabled)}
+            hasShared={hasShared}
             onContribute={
               item.visitedAt ? () => onContribute(item) : undefined
             }
@@ -434,11 +461,16 @@ function WatchlistRow({
                   <button
                     type="button"
                     onClick={() => onContribute(item)}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[#e85d5d]/55 bg-[#e85d5d]/22 px-3 text-xs font-semibold text-[#ffb0b0] transition-colors hover:bg-[#e85d5d]/32 touch-manipulation"
+                    className={cn(
+                      'inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold touch-manipulation',
+                      hasShared
+                        ? 'border-[#e85d5d]/40 bg-[#e85d5d]/14 text-[#ffc2c2]'
+                        : 'animate-bfi-share-blow border-[#e85d5d]/60 bg-[#e85d5d]/22 text-[#ffb0b0] hover:bg-[#e85d5d]/32',
+                    )}
                     data-testid={`button-contribute-community-${item.id}`}
                   >
                     <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
-                    Share with community
+                    {hasShared ? 'Shared with community' : 'Share with community'}
                   </button>
                 ) : null}
 
