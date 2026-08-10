@@ -1,8 +1,10 @@
+import { AppIcon } from '@/components/AppIcon'
+import { APP_NAME } from '@/data/brand'
 import { cn } from '@/lib/utils'
 
 type BrandLogoProps = {
   className?: string
-  /** Pixel box size — image fills the rounded saffron mark */
+  /** Pixel box size for the saffron app mark */
   size?: number
   alt?: string
   testId?: string
@@ -10,24 +12,20 @@ type BrandLogoProps = {
 
 /**
  * App mark: house + magnifier on saffron tile (logo-only, no wordmark).
- * Matches the flat header mock (open house + loupe with 2×2 window).
+ * Renders the high-fidelity inline SVG {@link AppIcon}.
  */
 export function BrandLogo({
   className,
   size = 36,
-  alt = 'Due Diligence',
+  alt = APP_NAME,
   testId = 'brand-logo',
 }: BrandLogoProps) {
   return (
-    <img
-      src="/logo.svg"
-      alt={alt}
-      width={size}
-      height={size}
-      className={cn('shrink-0 rounded-[22%] object-cover', className)}
-      style={{ width: size, height: size }}
-      data-testid={testId}
-      decoding="async"
+    <AppIcon
+      size={size}
+      title={alt}
+      testId={testId}
+      className={cn(className)}
     />
   )
 }

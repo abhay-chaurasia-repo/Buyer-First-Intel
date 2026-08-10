@@ -1,26 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="Due Diligence">
-  <!-- Self-explanatory: wider/shorter home + search loupe + window -->
-  <rect width="512" height="512" fill="#C68955"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Due Diligence">
+  <!-- Saffron app-icon squircle + white house / loupe / 2x2 window -->
+  <rect width="512" height="512" rx="114" ry="114" fill="#e8913a"/>
 
-  <g
-    stroke="#FFFFFF"
-    stroke-width="26"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <!-- Straight gable roof (two diagonals only — no L) -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
     <path d="M78 255 L256 145 L434 255"/>
-    <!-- Straight vertical chimney (not an L) -->
     <line x1="352" y1="175" x2="352" y2="118"/>
-    <!-- Wider body, shorter walls; open bottom-right for handle -->
     <path d="M112 255 V375 H275"/>
     <path d="M400 255 V280"/>
   </g>
 
-  <!-- Loupe centered in the house -->
-  <circle cx="256" cy="290" r="82" fill="#C68955" stroke="#FFFFFF" stroke-width="26"/>
+  <circle cx="256" cy="290" r="82" fill="#e8913a" stroke="#FFFFFF" stroke-width="26"/>
 
-  <!-- 2×2 white window — reads as “inspect this home” -->
   <g fill="#FFFFFF">
     <rect x="230" y="264" width="22" height="22" rx="3"/>
     <rect x="260" y="264" width="22" height="22" rx="3"/>
@@ -28,14 +18,5 @@
     <rect x="260" y="294" width="22" height="22" rx="3"/>
   </g>
 
-  <!-- Handle 45° -->
-  <line
-    x1="316"
-    y1="348"
-    x2="390"
-    y2="422"
-    stroke="#FFFFFF"
-    stroke-width="26"
-    stroke-linecap="round"
-  />
+  <line x1="316" y1="348" x2="390" y2="422" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round"/>
 </svg>
