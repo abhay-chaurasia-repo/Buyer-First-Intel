@@ -178,17 +178,17 @@ function StorySlide({ page }: { page: ImpactPage }) {
         className="absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-8%,rgb(232_145_58/0.16),transparent_58%)]"
         aria-hidden
       />
-      {/* Clear the logo + tagline row, then a little air before the eyebrow */}
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(6.25rem,calc(var(--bfi-status-pad)+4.75rem))] pb-[11.5rem]">
+      {/* Clear the logo + tagline, with a little air — not as much as before */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(5.5rem,calc(var(--bfi-status-pad)+4rem))] pb-[11.5rem]">
         <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {page.eyebrow}
         </p>
-        <h1 className="mt-2.5 max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight">
+        <h1 className="mt-3.5 max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight">
           <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
             {page.title}
           </span>
         </h1>
-        <p className="mt-2.5 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
+        <p className="mt-3.5 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
           {page.body}
         </p>
         <div className="mt-5 max-w-sm animate-bfi-rise">
