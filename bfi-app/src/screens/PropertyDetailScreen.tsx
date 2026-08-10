@@ -307,13 +307,21 @@ export function PropertyDetailScreen() {
               </button>
 
               {historyOpen ? (
-                <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
+                <div
+                  className="animate-bfi-fade mt-1 rounded-2xl border border-white/25 bg-transparent p-2"
+                  data-testid="history-panel"
+                >
                   <p className="px-2 pb-1 text-[11px] text-night-faint">
-                    Previously searched and saved addresses
+                    Previously searched addresses — scroll for your full history
                   </p>
-                  {SEARCH_HISTORY.map((item) => (
-                    <HistoryRow key={item.id} item={item} onSelect={openHistoryAddress} />
-                  ))}
+                  <div
+                    className="max-h-[11.5rem] space-y-0.5 overflow-y-auto overscroll-contain pr-0.5"
+                    data-testid="history-scroll"
+                  >
+                    {SEARCH_HISTORY.map((item) => (
+                      <HistoryRow key={item.id} item={item} onSelect={openHistoryAddress} />
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </section>
