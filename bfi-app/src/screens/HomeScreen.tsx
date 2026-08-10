@@ -46,9 +46,6 @@ export function HomeScreen() {
                 {APP_NAME}
               </span>
             </h1>
-            <p className="mt-2 font-display text-[1.05rem] font-semibold tracking-tight text-saffron-glow">
-              {APP_TAGLINE}
-            </p>
             <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
               Paste a property address. Verify public-record truth before you commit — and before you
               talk to an agent.
