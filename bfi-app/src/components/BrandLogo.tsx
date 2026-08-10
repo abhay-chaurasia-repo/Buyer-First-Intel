@@ -10,6 +10,7 @@ type BrandLogoProps = {
 
 /**
  * App mark: house + magnifier on saffron tile (logo-only, no wordmark).
+ * Matches the flat header mock (open house + loupe with 2×2 window).
  */
 export function BrandLogo({
   className,
@@ -23,10 +24,7 @@ export function BrandLogo({
       alt={alt}
       width={size}
       height={size}
-      className={cn(
-        'shrink-0 rounded-[22%] object-cover shadow-[0_6px_16px_rgb(232_145_58/0.35)]',
-        className,
-      )}
+      className={cn('shrink-0 rounded-[22%] object-cover', className)}
       style={{ width: size, height: size }}
       data-testid={testId}
       decoding="async"

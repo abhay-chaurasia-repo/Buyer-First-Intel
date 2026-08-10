@@ -1,39 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Due Diligence">
-  <!-- Saffron squircle (~#E28B3E) -->
-  <rect width="512" height="512" rx="112" ry="112" fill="#E28B3E"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="Due Diligence">
+  <!-- Full-bleed terracotta; CSS rounds to squircle in-header -->
+  <rect width="512" height="512" fill="#D68C45"/>
 
-  <!-- House outline + chimney (white stroke) -->
   <g
-    fill="none"
     stroke="#FFFFFF"
-    stroke-width="26"
+    stroke-width="28"
     stroke-linecap="round"
     stroke-linejoin="round"
   >
-    <path d="M142 242 L256 138 L370 242 V378 H142 Z"/>
-    <!-- Chimney on right roof slope -->
-    <path d="M334 172 V122 H378"/>
+    <!-- Continuous house with eaves; bottom-right left open for the handle -->
+    <path d="M152 236 L118 236 L256 128 L394 236 L360 236 V372 H300"/>
+    <path d="M152 236 V372"/>
+    <!-- Chimney -->
+    <path d="M328 168 V124 H368"/>
   </g>
 
-  <!-- Magnifier lens — centered in house body; saffron fill masks house strokes behind lens -->
-  <circle cx="256" cy="286" r="68" fill="#E28B3E" stroke="#FFFFFF" stroke-width="26"/>
+  <!-- Magnifier centered in house body -->
+  <circle cx="256" cy="286" r="70" fill="#D68C45" stroke="#FFFFFF" stroke-width="28"/>
 
-  <!-- 2x2 window grid inside lens -->
+  <!-- 2×2 window -->
   <g fill="#FFFFFF">
-    <rect x="228" y="258" width="22" height="22" rx="3"/>
-    <rect x="262" y="258" width="22" height="22" rx="3"/>
-    <rect x="228" y="292" width="22" height="22" rx="3"/>
-    <rect x="262" y="292" width="22" height="22" rx="3"/>
+    <rect x="226" y="256" width="24" height="24" rx="3"/>
+    <rect x="262" y="256" width="24" height="24" rx="3"/>
+    <rect x="226" y="292" width="24" height="24" rx="3"/>
+    <rect x="262" y="292" width="24" height="24" rx="3"/>
   </g>
 
-  <!-- Magnifier handle — diagonal down-right, overlaps bottom-right house corner -->
+  <!-- Handle through open bottom-right corner -->
   <line
-    x1="306"
-    y1="334"
-    x2="398"
-    y2="426"
+    x1="308"
+    y1="336"
+    x2="392"
+    y2="420"
     stroke="#FFFFFF"
-    stroke-width="30"
+    stroke-width="28"
     stroke-linecap="round"
   />
 </svg>

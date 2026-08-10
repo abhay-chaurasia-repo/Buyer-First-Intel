@@ -121,7 +121,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
 
         <div className="mt-6 flex flex-1 flex-col items-center">
           <div className="flex flex-col items-center text-center">
-            <BrandLogo size={64} className="rounded-[1.35rem] shadow-[0_14px_36px_rgb(232_145_58/0.45)]" />
+            <BrandLogo size={64} className="rounded-[1.35rem]" />
             <p className="mt-4 font-display text-[1.85rem] font-bold tracking-tight text-night-ink">
               {APP_NAME}
             </p>
