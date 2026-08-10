@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarClock, Check, X } from 'lucide-react'
+import { CalendarClock, Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const DAY_COUNT = 45
@@ -121,6 +121,22 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
   const dateRailRef = useRef<HTMLDivElement>(null)
   const timeWheelRef = useRef<HTMLDivElement>(null)
   const timeScrollLock = useRef(false)
+  const [canScrollDatesLeft, setCanScrollDatesLeft] = useState(false)
+  const [canScrollDatesRight, setCanScrollDatesRight] = useState(false)
+
+  function updateDateScrollHints() {
+    const rail = dateRailRef.current
+    if (!rail) return
+    const max = rail.scrollWidth - rail.clientWidth
+    setCanScrollDatesLeft(rail.scrollLeft > 4)
+    setCanScrollDatesRight(rail.scrollLeft < max - 4)
+  }
+
+  function scrollDates(direction: -1 | 1) {
+    const rail = dateRailRef.current
+    if (!rail) return
+    rail.scrollBy({ left: direction * Math.max(140, rail.clientWidth * 0.7), behavior: 'smooth' })
+  }
 
   const today = useMemo(() => startOfDay(new Date()), [open])
   const now = useMemo(() => new Date(), [open])
@@ -145,6 +161,14 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
     )
   }, [open, value, today])
 
+  const selectedDayKey = `${draft.getFullYear()}-${draft.getMonth()}-${draft.getDate()}`
+
+  useEffect(() => {
+    if (!open) return
+    const frame = window.requestAnimationFrame(() => updateDateScrollHints())
+    return () => window.cancelAnimationFrame(frame)
+  }, [open, days.length])
+
   useEffect(() => {
     if (!open || !dateRailRef.current) return
     const index = Math.max(
@@ -153,9 +177,9 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
     )
     const node = dateRailRef.current.querySelector<HTMLElement>(`[data-day-index="${index}"]`)
     node?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
-  }, [open, draft, days])
-
-  const selectedDayKey = `${draft.getFullYear()}-${draft.getMonth()}-${draft.getDate()}`
+    const timer = window.setTimeout(updateDateScrollHints, 360)
+    return () => window.clearTimeout(timer)
+  }, [open, selectedDayKey, days])
 
   useEffect(() => {
     if (!open || !timeWheelRef.current || times.length === 0) return
@@ -252,61 +276,103 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
 
       {open ? (
         <div
-          className="animate-bfi-fade overflow-hidden rounded-2xl border border-saffron/35 bg-gradient-to-b from-[#3a2a2b] via-[#322426] to-[#2a1f20] p-3 shadow-[0_12px_28px_rgb(0_0_0/0.35)]"
+          className="animate-bfi-fade min-w-0 overflow-hidden rounded-2xl border border-saffron/35 bg-gradient-to-b from-[#3a2a2b] via-[#322426] to-[#2a1f20] p-3 shadow-[0_12px_28px_rgb(0_0_0/0.35)]"
           data-testid={testId ? `${testId}-panel` : undefined}
         >
           <p className="mb-3 text-center font-display text-[13px] font-semibold tracking-tight text-saffron-glow">
             Schedule a visit
           </p>
 
-          <p className="mb-1.5 px-0.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
-            Date
-          </p>
-          <div
-            ref={dateRailRef}
-            className="mb-3 flex gap-2 overflow-x-auto scroll-smooth px-0.5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            data-testid={testId ? `${testId}-dates` : undefined}
-          >
-            {days.map((day, index) => {
-              const selected = sameDay(day, draft)
-              const label = formatDayChip(day, today)
-              const month = day.toLocaleDateString(undefined, { month: 'short' })
-              return (
-                <button
-                  key={day.toISOString()}
-                  type="button"
-                  data-day-index={index}
-                  onClick={() => pickDay(day)}
-                  className={cn(
-                    'flex w-[4.35rem] shrink-0 snap-center flex-col items-center justify-center rounded-2xl border px-2 py-2.5 touch-manipulation transition-colors',
-                    selected
-                      ? 'border-saffron/60 bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)]'
-                      : 'border-white/15 bg-night/35 text-night-muted hover:border-saffron/35 hover:text-saffron-glow',
-                  )}
-                  aria-pressed={selected}
-                >
-                  <span
+          <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
+            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Date</p>
+            <p className="text-[10px] text-night-faint">Swipe left or right</p>
+          </div>
+          <div className="relative mb-3 min-w-0">
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#322426] to-transparent transition-opacity',
+                canScrollDatesLeft ? 'opacity-100' : 'opacity-0',
+              )}
+              aria-hidden
+            />
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#2a1f20] to-transparent transition-opacity',
+                canScrollDatesRight ? 'opacity-100' : 'opacity-0',
+              )}
+              aria-hidden
+            />
+            <button
+              type="button"
+              onClick={() => scrollDates(-1)}
+              disabled={!canScrollDatesLeft}
+              className={cn(
+                'absolute left-0 top-1/2 z-20 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-saffron/35 bg-night/80 text-saffron-glow shadow-md touch-manipulation transition-opacity',
+                canScrollDatesLeft ? 'opacity-100' : 'pointer-events-none opacity-0',
+              )}
+              aria-label="Scroll dates left"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollDates(1)}
+              disabled={!canScrollDatesRight}
+              className={cn(
+                'absolute right-0 top-1/2 z-20 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-saffron/35 bg-night/80 text-saffron-glow shadow-md touch-manipulation transition-opacity',
+                canScrollDatesRight ? 'opacity-100' : 'pointer-events-none opacity-0',
+              )}
+              aria-label="Scroll dates right"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <div
+              ref={dateRailRef}
+              onScroll={updateDateScrollHints}
+              className="flex w-full min-w-0 max-w-full snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-8 pb-1 [-webkit-overflow-scrolling:touch] [touch-action:pan-x]"
+              data-testid={testId ? `${testId}-dates` : undefined}
+            >
+              {days.map((day, index) => {
+                const selected = sameDay(day, draft)
+                const label = formatDayChip(day, today)
+                const month = day.toLocaleDateString(undefined, { month: 'short' })
+                return (
+                  <button
+                    key={day.toISOString()}
+                    type="button"
+                    data-day-index={index}
+                    onClick={() => pickDay(day)}
                     className={cn(
-                      'text-[9px] font-bold tracking-[0.08em] uppercase',
-                      selected ? 'text-white/85' : 'text-night-faint',
+                      'flex w-[4.35rem] shrink-0 snap-center flex-col items-center justify-center rounded-2xl border px-2 py-2.5 transition-colors [touch-action:pan-x]',
+                      selected
+                        ? 'border-saffron/60 bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)]'
+                        : 'border-white/15 bg-night/35 text-night-muted hover:border-saffron/35 hover:text-saffron-glow',
                     )}
+                    aria-pressed={selected}
                   >
-                    {label.top}
-                  </span>
-                  <span className="mt-0.5 font-display text-lg font-semibold leading-none">
-                    {label.bottom}
-                  </span>
-                  <span
-                    className={cn(
-                      'mt-1 text-[9px] font-semibold',
-                      selected ? 'text-white/80' : 'text-night-faint',
-                    )}
-                  >
-                    {month}
-                  </span>
-                </button>
-              )
-            })}
+                    <span
+                      className={cn(
+                        'text-[9px] font-bold tracking-[0.08em] uppercase',
+                        selected ? 'text-white/85' : 'text-night-faint',
+                      )}
+                    >
+                      {label.top}
+                    </span>
+                    <span className="mt-0.5 font-display text-lg font-semibold leading-none">
+                      {label.bottom}
+                    </span>
+                    <span
+                      className={cn(
+                        'mt-1 text-[9px] font-semibold',
+                        selected ? 'text-white/80' : 'text-night-faint',
+                      )}
+                    >
+                      {month}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <p className="mb-1.5 px-0.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
