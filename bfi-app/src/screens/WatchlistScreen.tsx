@@ -281,26 +281,30 @@ function WatchlistRow({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full min-h-12 items-center gap-2 px-3 py-2.5 text-left touch-manipulation"
+        className="flex w-full min-h-12 items-start gap-2 px-3 py-2.5 text-left touch-manipulation"
         aria-expanded={open}
         data-testid={`button-toggle-watchlist-${item.id}`}
       >
         <ChevronDown
           className={cn(
-            'h-4 w-4 shrink-0 text-saffron-glow transition-transform',
+            'mt-1 h-4 w-4 shrink-0 text-saffron-glow transition-transform',
             !open && '-rotate-90',
           )}
         />
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-saffron-glow">
-          {item.address}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold text-saffron-glow">
+            {item.address}
+          </span>
+          {!open ? (
+            <span className="mt-1.5 flex justify-end">
+              <WatchlistMetaRail
+                plannedVisitAt={item.plannedVisitAt}
+                visitedAt={item.visitedAt}
+                noteCount={noteCount}
+              />
+            </span>
+          ) : null}
         </span>
-        {!open ? (
-          <WatchlistMetaRail
-            plannedVisitAt={item.plannedVisitAt}
-            visitedAt={item.visitedAt}
-            noteCount={noteCount}
-          />
-        ) : null}
       </button>
 
       {open ? (
@@ -312,7 +316,14 @@ function WatchlistRow({
               className="min-w-0 flex-1 text-left touch-manipulation"
             >
               <p className="truncate text-sm font-semibold text-saffron-glow">{item.address}</p>
-              <p className="mt-0.5 truncate text-[12px] text-night-muted">
+              <div className="mt-1.5 flex justify-end">
+                <WatchlistMetaRail
+                  plannedVisitAt={item.plannedVisitAt}
+                  visitedAt={item.visitedAt}
+                  noteCount={noteCount}
+                />
+              </div>
+              <p className="mt-1.5 truncate text-[12px] text-night-muted">
                 {item.city}, {item.state} {item.zipCode}
               </p>
               <p className="mt-1 text-[11px] text-night-faint">
@@ -321,22 +332,15 @@ function WatchlistRow({
               </p>
               <p className="mt-2 text-[12px] font-semibold text-saffron-glow">Open property →</p>
             </button>
-            <div className="flex shrink-0 flex-col items-end gap-2">
-              <WatchlistMetaRail
-                plannedVisitAt={item.plannedVisitAt}
-                visitedAt={item.visitedAt}
-                noteCount={noteCount}
-              />
-              <button
-                type="button"
-                onClick={() => onRemove(item.id)}
-                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-                aria-label={`Remove ${item.address} from watchlist`}
-                data-testid={`button-remove-watchlist-${item.id}`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => onRemove(item.id)}
+              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+              aria-label={`Remove ${item.address} from watchlist`}
+              data-testid={`button-remove-watchlist-${item.id}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
 
           <div className="space-y-2 border-t border-white/15 pt-3">
