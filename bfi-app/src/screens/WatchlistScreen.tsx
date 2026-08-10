@@ -423,6 +423,7 @@ function WatchlistRow({
 export function WatchlistScreen() {
   const navigate = useNavigate()
   const [items, setItems] = useState<WatchlistItem[]>(() => loadWatchlist())
+  const [filter, setFilter] = useState<'all' | 'planned' | 'visited'>('all')
 
   useEffect(() => {
     const refresh = () => {
@@ -440,6 +441,18 @@ export function WatchlistScreen() {
 
   const plannedCount = items.filter((item) => visitPlanStatus(item) === 'planned').length
   const visitedCount = items.filter((item) => visitPlanStatus(item) === 'visited').length
+
+  const visibleItems =
+    filter === 'all'
+      ? items
+      : items.filter((item) => visitPlanStatus(item) === filter)
+
+  const filterHint =
+    filter === 'planned'
+      ? 'Showing planned visits only.'
+      : filter === 'visited'
+        ? 'Showing visited properties only.'
+        : 'Sorted: upcoming plans first, then not visited, then visited.'
 
   return (
     <AppShell scene="watchlist" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
@@ -471,36 +484,91 @@ export function WatchlistScreen() {
           </div>
         ) : (
           <section className="space-y-3" data-testid="watchlist-list">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2 text-center">
-                <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">Saved</p>
-                <p className="mt-1 text-sm font-semibold text-night-ink">{items.length}</p>
-              </div>
-              <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2 text-center">
-                <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">Planned</p>
-                <p className="mt-1 text-sm font-semibold text-night-ink">{plannedCount}</p>
-              </div>
-              <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2 text-center">
-                <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">Visited</p>
-                <p className="mt-1 text-sm font-semibold text-night-ink">{visitedCount}</p>
-              </div>
+            <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Filter saved properties">
+              {(
+                [
+                  { id: 'all' as const, label: 'Saved', count: items.length, testId: 'watchlist-filter-saved' },
+                  {
+                    id: 'planned' as const,
+                    label: 'Planned',
+                    count: plannedCount,
+                    testId: 'watchlist-filter-planned',
+                  },
+                  {
+                    id: 'visited' as const,
+                    label: 'Visited',
+                    count: visitedCount,
+                    testId: 'watchlist-filter-visited',
+                  },
+                ] as const
+              ).map((stat) => {
+                const active = filter === stat.id
+                return (
+                  <button
+                    key={stat.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setFilter(stat.id)}
+                    className={cn(
+                      'rounded-xl border px-3 py-2 text-center transition-colors touch-manipulation',
+                      active
+                        ? 'border-saffron/50 bg-saffron/15'
+                        : 'border-white/25 bg-transparent hover:border-saffron/35',
+                    )}
+                    data-testid={stat.testId}
+                  >
+                    <p
+                      className={cn(
+                        'text-[10px] font-bold tracking-wide uppercase',
+                        active ? 'text-saffron-glow' : 'text-saffron-glow/90',
+                      )}
+                    >
+                      {stat.label}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-night-ink">{stat.count}</p>
+                  </button>
+                )
+              })}
             </div>
 
-            <p className="px-1 text-center text-[11px] text-night-faint">
-              Sorted: upcoming plans first, then not visited, then visited.
-            </p>
+            <p className="px-1 text-center text-[11px] text-night-faint">{filterHint}</p>
 
-            <ul className="space-y-2">
-              {items.map((item) => (
-                <WatchlistRow
-                  key={item.id}
-                  item={item}
-                  onChange={setItems}
-                  onRemove={(id) => setItems(removeFromWatchlist(id))}
-                  onOpen={(row) => navigate(propertyPath(row))}
-                />
-              ))}
-            </ul>
+            {visibleItems.length === 0 ? (
+              <div
+                className="rounded-2xl border border-white/25 bg-transparent p-5 text-center"
+                data-testid="watchlist-filter-empty"
+              >
+                <p className="text-sm font-semibold text-saffron-glow">
+                  {filter === 'planned' ? 'No planned visits' : 'No visited properties'}
+                </p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
+                  {filter === 'planned'
+                    ? 'Schedule a visit on a saved property, then come back here.'
+                    : 'Mark a property visited after you go, then it will show up here.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setFilter('all')}
+                  className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 px-4 text-sm font-semibold text-night-muted transition-colors hover:border-saffron/40 hover:text-saffron-glow touch-manipulation"
+                  data-testid="button-watchlist-show-all"
+                >
+                  Show all saved
+                </button>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {visibleItems.map((item) => (
+                  <WatchlistRow
+                    key={item.id}
+                    item={item}
+                    onChange={setItems}
+                    onRemove={(id) => setItems(removeFromWatchlist(id))}
+                    onOpen={(row) => navigate(propertyPath(row))}
+                  />
+                ))}
+              </ul>
+            )}
           </section>
         )}
       </div>
