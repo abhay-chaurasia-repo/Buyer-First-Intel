@@ -82,12 +82,12 @@ function WatchlistMetaRail({
 
   return (
     <div
-      className="flex min-w-0 flex-wrap items-center justify-end gap-1.5"
+      className="flex min-w-0 max-w-full flex-nowrap items-center justify-end gap-1 overflow-hidden"
       data-testid="watchlist-meta-rail"
     >
       {hasPlanned && plannedVisitAt ? (
         <span
-          className="inline-flex items-center gap-1 rounded-md border border-saffron/35 bg-saffron/12 px-1.5 py-1 text-saffron-glow"
+          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-saffron/35 bg-saffron/12 px-1.5 py-1 text-saffron-glow"
           title={`Planned ${formatVisitWhen(plannedVisitAt)}`}
           data-testid="visit-date-planned"
         >
@@ -106,7 +106,7 @@ function WatchlistMetaRail({
 
       {hasVisited && visitedAt ? (
         <span
-          className="inline-flex items-center gap-1 rounded-md border border-saffron/45 bg-saffron/18 px-1.5 py-1 text-saffron-glow"
+          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-saffron/45 bg-saffron/18 px-1.5 py-1 text-saffron-glow"
           title={`Visited ${formatVisitWhen(visitedAt)}`}
           data-testid="visit-date-visited"
         >
@@ -127,20 +127,21 @@ function WatchlistMetaRail({
             event.stopPropagation()
             onContribute?.()
           }}
-          className="inline-flex items-center gap-1 rounded-md border border-saffron/50 bg-saffron/22 px-1.5 py-1 text-saffron-glow transition-colors hover:bg-saffron/30 touch-manipulation"
+          className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-verified/55 bg-verified/25 px-1.5 py-1 text-[#b7e6cb] transition-colors hover:bg-verified/35 touch-manipulation"
           title="Contribute labels to Buyer Community"
+          aria-label="Contribute to Buyer Community"
           data-testid="watchlist-contribute-chip"
         >
           <Users className="h-3 w-3 shrink-0" strokeWidth={2.25} aria-hidden />
-          <span className="whitespace-nowrap text-[10px] font-semibold leading-none tracking-tight">
-            <span className="text-[8px] font-bold tracking-[0.12em] uppercase">Contribute</span>
+          <span className="text-[8px] font-bold leading-none tracking-[0.12em] uppercase">
+            Share
           </span>
         </button>
       ) : null}
 
       {hasNotes ? (
         <span
-          className="inline-flex items-center gap-0.5 rounded-md border border-saffron/30 bg-saffron/12 px-1.5 py-1 text-[10px] font-bold leading-none text-saffron-glow"
+          className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-saffron/30 bg-saffron/12 px-1.5 py-1 text-[10px] font-bold leading-none text-saffron-glow"
           title={`${noteCount} note${noteCount === 1 ? '' : 's'}`}
           data-testid="watchlist-notes-badge"
         >
@@ -432,11 +433,11 @@ function WatchlistRow({
                   <button
                     type="button"
                     onClick={() => onContribute(item)}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-saffron/45 bg-saffron/18 px-3 text-xs font-semibold text-saffron-glow touch-manipulation"
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-verified/50 bg-verified/25 px-3 text-xs font-semibold text-[#b7e6cb] transition-colors hover:bg-verified/35 touch-manipulation"
                     data-testid={`button-contribute-community-${item.id}`}
                   >
                     <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
-                    Contribute
+                    Share with community
                   </button>
                 ) : null}
 
