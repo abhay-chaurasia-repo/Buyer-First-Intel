@@ -167,18 +167,18 @@ function StorySlide({ page }: { page: ImpactPage }) {
       <img
         src={page.image}
         alt={page.imageAlt}
-        className="absolute inset-0 h-full w-full scale-105 object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
       />
       {/* Same dark-warm readability wash as inner SceneBackdrop */}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/48 to-ink/86"
+        className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/40 to-ink/90"
         aria-hidden
       />
       <div
         className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]"
         aria-hidden
       />
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-3 pt-2">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(3.75rem,calc(var(--bfi-status-pad)+2.75rem))] pb-[11.5rem]">
         <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {page.eyebrow}
         </p>
@@ -261,16 +261,8 @@ export function ImpactStoryScreen() {
         setHolding(false)
       }}
     >
-      <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 px-5 bfi-status-pad">
-        <div className="flex items-center gap-2 pb-2 pt-1">
-          <BrandLogo size={36} />
-        </div>
-        <span className="shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow">
-          {APP_TAGLINE}
-        </span>
-      </header>
-
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+      {/* Full-bleed carousel — image fills the entire phone frame */}
+      <div className="absolute inset-0 overflow-hidden">
         <div
           className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
           style={{ transform: `translateX(-${index * 100}%)` }}
@@ -284,7 +276,16 @@ export function ImpactStoryScreen() {
         </div>
       </div>
 
-      <div className="relative z-20 shrink-0 space-y-3 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 px-5 bfi-status-pad">
+        <div className="pointer-events-auto flex items-center gap-2 pb-2 pt-1">
+          <BrandLogo size={36} />
+        </div>
+        <span className="pointer-events-none shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow">
+          {APP_TAGLINE}
+        </span>
+      </header>
+
+      <div className="absolute inset-x-0 bottom-0 z-20 space-y-3 bg-gradient-to-t from-ink via-ink/90 to-transparent px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
         <div className="flex items-center justify-center gap-2" aria-label="Story progress">
           {IMPACT_PAGES.map((item, i) => (
             <button
