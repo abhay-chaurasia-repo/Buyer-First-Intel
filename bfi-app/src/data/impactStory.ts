@@ -24,6 +24,11 @@ export type ImpactPage = {
   image: string
   imageAlt: string
   snippet: 'size' | 'visits' | 'community'
+  /**
+   * dusk — already low-key photo (visits reference).
+   * day — brighter exterior; grade toward the visits dusk feel.
+   */
+  mood: 'dusk' | 'day'
 }
 
 export const IMPACT_PAGES: ImpactPage[] = [
@@ -35,6 +40,7 @@ export const IMPACT_PAGES: ImpactPage[] = [
     image: '/impact/impact-georgian-home.png',
     imageAlt: 'Georgian-style home facade',
     snippet: 'size',
+    mood: 'day',
   },
   {
     id: 'visits',
@@ -44,6 +50,7 @@ export const IMPACT_PAGES: ImpactPage[] = [
     image: '/impact/impact-visits.png',
     imageAlt: 'Quiet residential street at dusk',
     snippet: 'visits',
+    mood: 'dusk',
   },
   {
     id: 'community',
@@ -53,5 +60,6 @@ export const IMPACT_PAGES: ImpactPage[] = [
     image: '/impact/impact-community.png',
     imageAlt: 'Neighborhood community atmosphere',
     snippet: 'community',
+    mood: 'day',
   },
 ]

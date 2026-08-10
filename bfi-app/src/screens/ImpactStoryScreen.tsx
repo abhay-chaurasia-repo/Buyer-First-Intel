@@ -162,20 +162,31 @@ function Snippet({ kind }: { kind: ImpactPage['snippet'] }) {
 }
 
 function StorySlide({ page }: { page: ImpactPage }) {
+  const isDay = page.mood === 'day'
+
   return (
     <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
       <img
         src={page.image}
         alt={page.imageAlt}
-        className="absolute inset-0 h-full w-full object-cover"
+        className={cn(
+          'absolute inset-0 h-full w-full object-cover',
+          // Bright exteriors → dusk luminance like the visits slide
+          isDay && 'brightness-[0.62] contrast-[1.12] saturate-[0.88]',
+        )}
       />
-      {/* Strong dark-warm wash on every slide so type shines over the photo */}
+      {/* Same pleasing visits wash: open mid so the scene shows; type still pops */}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-ink/72 via-ink/62 to-ink/94"
+        className="absolute inset-0 bg-gradient-to-b from-ink/58 via-ink/38 to-ink/90"
+        aria-hidden
+      />
+      {/* Soft left scrim for copy — keeps brick / stoop / porch glow visible on the right */}
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-ink/45 via-ink/18 to-transparent"
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-8%,rgb(232_145_58/0.16),transparent_58%)]"
+        className="absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-8%,rgb(232_145_58/0.18),transparent_58%)]"
         aria-hidden
       />
       {/* Clear the logo + tagline, with a little air — not as much as before */}
