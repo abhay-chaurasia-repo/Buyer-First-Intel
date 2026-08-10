@@ -251,10 +251,10 @@ export function VisitPlanPicker({ value, onSave, onOpenChange, testId }: VisitPl
         >
           <CalendarClock className="h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
           <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-night-muted">
-            {saved ? formatPreview(saved) : 'Plan visit date & time'}
+            {saved ? formatPreview(saved) : 'Select a date to plan a visit'}
           </span>
-          <span className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
-            Open
+          <span className="shrink-0 text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
+            {saved ? 'Change' : 'Make plan'}
           </span>
         </button>
       </div>
