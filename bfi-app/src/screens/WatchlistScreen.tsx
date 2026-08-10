@@ -9,10 +9,12 @@ import {
   Star,
   StickyNote,
   Trash2,
+  Users,
 } from 'lucide-react'
 import { VisitPlanPicker } from '@/components/VisitPlanPicker'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { persistBuyerVerified } from '@/data/buyerCommunityStorage'
 import {
   addNote,
   deleteNote,
@@ -64,20 +66,23 @@ function WatchlistMetaRail({
   visitedAt,
   noteCount = 0,
   reminderEnabled = false,
+  onContribute,
 }: {
   plannedVisitAt?: string | null
   visitedAt?: string | null
   noteCount?: number
   reminderEnabled?: boolean
+  onContribute?: () => void
 }) {
   const hasPlanned = Boolean(plannedVisitAt)
   const hasVisited = Boolean(visitedAt)
   const hasNotes = noteCount > 0
-  if (!hasPlanned && !hasVisited && !hasNotes) return null
+  const canContribute = hasVisited && Boolean(onContribute)
+  if (!hasPlanned && !hasVisited && !hasNotes && !canContribute) return null
 
   return (
     <div
-      className="flex shrink-0 items-center gap-1.5"
+      className="flex min-w-0 flex-wrap items-center justify-end gap-1.5"
       data-testid="watchlist-meta-rail"
     >
       {hasPlanned && plannedVisitAt ? (
@@ -113,6 +118,24 @@ function WatchlistMetaRail({
             {formatVisitDateCompact(visitedAt)}
           </span>
         </span>
+      ) : null}
+
+      {canContribute ? (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onContribute?.()
+          }}
+          className="inline-flex items-center gap-1 rounded-md border border-saffron/50 bg-saffron/22 px-1.5 py-1 text-saffron-glow transition-colors hover:bg-saffron/30 touch-manipulation"
+          title="Contribute labels to Buyer Community"
+          data-testid="watchlist-contribute-chip"
+        >
+          <Users className="h-3 w-3 shrink-0" strokeWidth={2.25} aria-hidden />
+          <span className="whitespace-nowrap text-[10px] font-semibold leading-none tracking-tight">
+            <span className="text-[8px] font-bold tracking-[0.12em] uppercase">Contribute</span>
+          </span>
+        </button>
       ) : null}
 
       {hasNotes ? (
@@ -272,11 +295,13 @@ function WatchlistRow({
   onChange,
   onRemove,
   onOpen,
+  onContribute,
 }: {
   item: WatchlistItem
   onChange: (items: WatchlistItem[]) => void
   onRemove: (id: string) => void
   onOpen: (item: WatchlistItem) => void
+  onContribute: (item: WatchlistItem) => void
 }) {
   const [open, setOpen] = useState(false)
   const [planning, setPlanning] = useState(false)
@@ -290,7 +315,12 @@ function WatchlistRow({
   }, [planning])
 
   function handleMarkVisited() {
-    onChange(markWatchlistVisited(item.id, status !== 'visited'))
+    const markingVisited = status !== 'visited'
+    onChange(markWatchlistVisited(item.id, markingVisited))
+    if (markingVisited) {
+      // Unlock community voting when they mark the visit from this list
+      persistBuyerVerified(item.id, true)
+    }
   }
 
   function handleSavePlan(iso: string | null) {
@@ -317,30 +347,40 @@ function WatchlistRow({
             setOpen((value) => !value)
             setPlanning(false)
           }}
-          className="flex min-h-11 min-w-0 flex-1 items-start gap-2 px-1 py-0.5 text-left touch-manipulation"
+          className="mt-0.5 inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl text-saffron-glow touch-manipulation"
           aria-expanded={open}
+          aria-label={open ? `Collapse ${item.address}` : `Expand ${item.address}`}
           data-testid={`button-toggle-watchlist-${item.id}`}
         >
           <ChevronDown
-            className={cn(
-              'mt-1 h-4 w-4 shrink-0 text-saffron-glow transition-transform',
-              !open && '-rotate-90',
-            )}
+            className={cn('h-4 w-4 transition-transform', !open && '-rotate-90')}
           />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-night-muted">
-              {item.address}
-            </span>
-            <span className="mt-1.5 flex justify-end">
-              <WatchlistMetaRail
-                plannedVisitAt={item.plannedVisitAt}
-                visitedAt={item.visitedAt}
-                noteCount={noteCount}
-                reminderEnabled={Boolean(item.reminderEnabled)}
-              />
-            </span>
-          </span>
         </button>
+
+        <div className="min-w-0 flex-1 pt-0.5">
+          <button
+            type="button"
+            onClick={() => {
+              setOpen((value) => !value)
+              setPlanning(false)
+            }}
+            className="block w-full truncate text-left text-sm font-semibold text-night-muted touch-manipulation"
+          >
+            {item.address}
+          </button>
+          <div className="mt-1.5">
+            <WatchlistMetaRail
+              plannedVisitAt={item.plannedVisitAt}
+              visitedAt={item.visitedAt}
+              noteCount={noteCount}
+              reminderEnabled={Boolean(item.reminderEnabled)}
+              onContribute={
+                item.visitedAt ? () => onContribute(item) : undefined
+              }
+            />
+          </div>
+        </div>
+
         {open ? (
           <button
             type="button"
@@ -388,6 +428,18 @@ function WatchlistRow({
                   {status === 'visited' ? 'Visited' : 'Mark visited'}
                 </button>
 
+                {status === 'visited' ? (
+                  <button
+                    type="button"
+                    onClick={() => onContribute(item)}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-saffron/45 bg-saffron/18 px-3 text-xs font-semibold text-saffron-glow touch-manipulation"
+                    data-testid={`button-contribute-community-${item.id}`}
+                  >
+                    <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    Contribute
+                  </button>
+                ) : null}
+
                 {item.plannedVisitAt ? (
                   <button
                     type="button"
@@ -399,8 +451,6 @@ function WatchlistRow({
                   </button>
                 ) : null}
               </div>
-
-
             </>
           ) : null}
 
@@ -565,6 +615,10 @@ export function WatchlistScreen() {
                     onChange={setItems}
                     onRemove={(id) => setItems(removeFromWatchlist(id))}
                     onOpen={(row) => navigate(propertyPath(row))}
+                    onContribute={(row) => {
+                      persistBuyerVerified(row.id, true)
+                      navigate(propertyPath(row, { catchup: 'buyer-insights' }))
+                    }}
                   />
                 ))}
               </ul>
