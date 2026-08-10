@@ -46,7 +46,7 @@ export function HomeScreen() {
                 {APP_NAME}
               </span>
             </h1>
-            <p className="mx-auto mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
+            <p className="mx-auto mt-10 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
               Paste a property address. Verify public-record truth before you commit — and before you
               talk to an agent.
             </p>
