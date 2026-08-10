@@ -1,10 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CalendarClock,
   Check,
   ChevronDown,
-  MapPin,
   Plus,
   Star,
   StickyNote,
@@ -29,18 +28,6 @@ import {
   type WatchlistItem,
 } from '@/data/watchlistStorage'
 import { cn } from '@/lib/utils'
-
-function formatSavedAt(iso: string) {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  } catch {
-    return ''
-  }
-}
 
 function formatVisitWhen(iso: string) {
   try {
@@ -139,7 +126,7 @@ function PropertyNotes({
   propertyId: string
   onNotesChange?: (count: number) => void
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const [notes, setNotes] = useState<SavedNote[]>(() => loadNotes(propertyId))
   const [draft, setDraft] = useState('')
 
@@ -268,32 +255,43 @@ function WatchlistRow({
   onOpen: (item: WatchlistItem) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [planning, setPlanning] = useState(false)
   const status = visitPlanStatus(item)
   const [noteCount, setNoteCount] = useState(() => loadNotes(item.id).length)
+  const rowRef = useRef<HTMLLIElement>(null)
+
+  useEffect(() => {
+    if (!planning || !rowRef.current) return
+    rowRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [planning])
 
   return (
     <li
+      ref={rowRef}
       className="rounded-xl border border-white/25 bg-transparent"
       data-testid={`watchlist-item-${item.id}`}
     >
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full min-h-12 items-start gap-2 px-3 py-2.5 text-left touch-manipulation"
-        aria-expanded={open}
-        data-testid={`button-toggle-watchlist-${item.id}`}
-      >
-        <ChevronDown
-          className={cn(
-            'mt-1 h-4 w-4 shrink-0 text-saffron-glow transition-transform',
-            !open && '-rotate-90',
-          )}
-        />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-night-muted">
-            {item.address}
-          </span>
-          {!open ? (
+      <div className="flex items-start gap-1 px-2 py-2">
+        <button
+          type="button"
+          onClick={() => {
+            setOpen((value) => !value)
+            setPlanning(false)
+          }}
+          className="flex min-h-11 min-w-0 flex-1 items-start gap-2 px-1 py-0.5 text-left touch-manipulation"
+          aria-expanded={open}
+          data-testid={`button-toggle-watchlist-${item.id}`}
+        >
+          <ChevronDown
+            className={cn(
+              'mt-1 h-4 w-4 shrink-0 text-saffron-glow transition-transform',
+              !open && '-rotate-90',
+            )}
+          />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-night-muted">
+              {item.address}
+            </span>
             <span className="mt-1.5 flex justify-end">
               <WatchlistMetaRail
                 plannedVisitAt={item.plannedVisitAt}
@@ -301,107 +299,79 @@ function WatchlistRow({
                 noteCount={noteCount}
               />
             </span>
-          ) : null}
-        </span>
-      </button>
+          </span>
+        </button>
+        {open ? (
+          <button
+            type="button"
+            onClick={() => onRemove(item.id)}
+            className="mt-0.5 inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+            aria-label={`Remove ${item.address} from watchlist`}
+            data-testid={`button-remove-watchlist-${item.id}`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        ) : null}
+      </div>
 
       {open ? (
-        <div className="animate-bfi-fade space-y-3 border-t border-white/15 px-3 pb-3 pt-3">
-          <div className="flex items-start gap-2">
-            <button
-              type="button"
-              onClick={() => onOpen(item)}
-              className="min-w-0 flex-1 text-left touch-manipulation"
-            >
-              <p className="truncate text-sm font-semibold text-night-muted">{item.address}</p>
-              <div className="mt-1.5 flex justify-end">
-                <WatchlistMetaRail
-                  plannedVisitAt={item.plannedVisitAt}
-                  visitedAt={item.visitedAt}
-                  noteCount={noteCount}
-                />
-              </div>
-              <p className="mt-1.5 truncate text-[12px] text-night-muted">
-                {item.city}, {item.state} {item.zipCode}
-              </p>
-              <p className="mt-1 text-[11px] text-night-faint">
-                {item.bedrooms} bed · {item.bathrooms} bath · {item.sqft.toLocaleString()} sqft
-                <span> · Saved {formatSavedAt(item.starredAt)}</span>
-              </p>
-              <p className="mt-2 text-[12px] font-semibold text-saffron-glow">Open property →</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => onRemove(item.id)}
-              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-              aria-label={`Remove ${item.address} from watchlist`}
-              data-testid={`button-remove-watchlist-${item.id}`}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="space-y-2 border-t border-white/15 pt-3">
-            {!item.plannedVisitAt && !item.visitedAt ? (
-              <p className="flex items-center gap-1.5 text-[12px] text-night-faint">
-                <MapPin className="h-3.5 w-3.5" aria-hidden />
-                No visit planned yet
-              </p>
-            ) : (
-              <p className="text-[11px] text-night-faint">
-                {item.plannedVisitAt ? (
-                  <span className="text-saffron-glow">
-                    Planned {formatVisitWhen(item.plannedVisitAt)}
-                  </span>
-                ) : null}
-                {item.plannedVisitAt && item.visitedAt ? (
-                  <span className="mx-1.5 text-night-faint/70">·</span>
-                ) : null}
-                {item.visitedAt ? (
-                  <span className="text-saffron-glow">
-                    Visited {formatVisitWhen(item.visitedAt)}
-                  </span>
-                ) : null}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => onChange(markWatchlistVisited(item.id, status !== 'visited'))}
-                className={cn(
-                  'inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold touch-manipulation',
-                  status === 'visited'
-                    ? 'border-saffron/55 bg-saffron/25 text-saffron-glow'
-                    : 'border-white/25 bg-transparent text-night-muted hover:border-saffron/40 hover:text-saffron-glow',
-                )}
-                aria-pressed={status === 'visited'}
-                data-testid={`button-mark-visited-${item.id}`}
-              >
-                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                {status === 'visited' ? 'Visited' : 'Mark visited'}
-              </button>
-
-              {item.plannedVisitAt ? (
+        <div className="animate-bfi-fade space-y-2 border-t border-white/15 px-3 pb-3 pt-2">
+          {!planning ? (
+            <>
+              <div className="flex items-center gap-2">
+                <p className="min-w-0 flex-1 truncate text-[11px] text-night-faint">
+                  {item.city}, {item.state} · {item.bedrooms} bd · {item.bathrooms} ba
+                </p>
                 <button
                   type="button"
-                  onClick={() => onChange(setWatchlistPlannedVisit(item.id, null))}
-                  className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/25 bg-transparent px-3 text-xs font-semibold text-night-muted touch-manipulation"
-                  data-testid={`button-clear-plan-${item.id}`}
+                  onClick={() => onOpen(item)}
+                  className="shrink-0 text-[12px] font-semibold text-saffron-glow touch-manipulation"
                 >
-                  Clear plan
+                  Open →
                 </button>
-              ) : null}
-            </div>
+              </div>
 
-            <VisitPlanPicker
-              value={item.plannedVisitAt}
-              onSave={(iso) => onChange(setWatchlistPlannedVisit(item.id, iso))}
-              testId={`plan-visit-${item.id}`}
-            />
-          </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => onChange(markWatchlistVisited(item.id, status !== 'visited'))}
+                  className={cn(
+                    'inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold touch-manipulation',
+                    status === 'visited'
+                      ? 'border-saffron/55 bg-saffron/25 text-saffron-glow'
+                      : 'border-white/25 bg-transparent text-night-muted hover:border-saffron/40 hover:text-saffron-glow',
+                  )}
+                  aria-pressed={status === 'visited'}
+                  data-testid={`button-mark-visited-${item.id}`}
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  {status === 'visited' ? 'Visited' : 'Mark visited'}
+                </button>
 
-          <PropertyNotes propertyId={item.id} onNotesChange={setNoteCount} />
+                {item.plannedVisitAt ? (
+                  <button
+                    type="button"
+                    onClick={() => onChange(setWatchlistPlannedVisit(item.id, null))}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-white/25 bg-transparent px-3 text-xs font-semibold text-night-muted touch-manipulation"
+                    data-testid={`button-clear-plan-${item.id}`}
+                  >
+                    Clear plan
+                  </button>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+
+          <VisitPlanPicker
+            value={item.plannedVisitAt}
+            onSave={(iso) => onChange(setWatchlistPlannedVisit(item.id, iso))}
+            onOpenChange={setPlanning}
+            testId={`plan-visit-${item.id}`}
+          />
+
+          {!planning ? (
+            <PropertyNotes propertyId={item.id} onNotesChange={setNoteCount} />
+          ) : null}
         </div>
       ) : null}
     </li>

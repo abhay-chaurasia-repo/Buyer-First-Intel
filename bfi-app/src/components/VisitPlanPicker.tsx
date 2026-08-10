@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 
 const DAY_COUNT = 45
 const TIME_STEP_MINUTES = 15
-const WHEEL_ITEM_H = 44
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -55,7 +54,7 @@ function formatDayChip(day: Date, today: Date) {
   if (sameDay(day, today)) return { top: 'Today', bottom: String(day.getDate()) }
   const tomorrow = new Date(today)
   tomorrow.setDate(today.getDate() + 1)
-  if (sameDay(day, tomorrow)) return { top: 'Tomorrow', bottom: String(day.getDate()) }
+  if (sameDay(day, tomorrow)) return { top: 'Tmrw', bottom: String(day.getDate()) }
   return {
     top: day.toLocaleDateString(undefined, { weekday: 'short' }),
     bottom: String(day.getDate()),
@@ -79,7 +78,7 @@ function buildDays(today: Date) {
 
 function buildTimesForDay(day: Date, now: Date) {
   const times: Array<{ hours: number; minutes: number; key: string }> = []
-  for (let minutesOfDay = 0; minutesOfDay < 24 * 60; minutesOfDay += TIME_STEP_MINUTES) {
+  for (let minutesOfDay = 7 * 60; minutesOfDay <= 21 * 60; minutesOfDay += TIME_STEP_MINUTES) {
     const hours = Math.floor(minutesOfDay / 60)
     const minutes = minutesOfDay % 60
     const slot = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hours, minutes, 0, 0)
@@ -111,18 +110,23 @@ function nearestTimeIndex(
 type VisitPlanPickerProps = {
   value?: string | null
   onSave: (iso: string | null) => void
+  onOpenChange?: (open: boolean) => void
   testId?: string
 }
 
-export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps) {
+export function VisitPlanPicker({ value, onSave, onOpenChange, testId }: VisitPlanPickerProps) {
   const saved = parseIso(value)
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(() => defaultDraft(saved))
   const dateRailRef = useRef<HTMLDivElement>(null)
-  const timeWheelRef = useRef<HTMLDivElement>(null)
-  const timeScrollLock = useRef(false)
+  const timeRailRef = useRef<HTMLDivElement>(null)
   const [canScrollDatesLeft, setCanScrollDatesLeft] = useState(false)
   const [canScrollDatesRight, setCanScrollDatesRight] = useState(false)
+
+  function setPickerOpen(next: boolean) {
+    setOpen(next)
+    onOpenChange?.(next)
+  }
 
   function updateDateScrollHints() {
     const rail = dateRailRef.current
@@ -135,13 +139,15 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
   function scrollDates(direction: -1 | 1) {
     const rail = dateRailRef.current
     if (!rail) return
-    rail.scrollBy({ left: direction * Math.max(140, rail.clientWidth * 0.7), behavior: 'smooth' })
+    rail.scrollBy({ left: direction * Math.max(120, rail.clientWidth * 0.65), behavior: 'smooth' })
   }
 
   const today = useMemo(() => startOfDay(new Date()), [open])
   const now = useMemo(() => new Date(), [open])
   const days = useMemo(() => buildDays(today), [today])
   const times = useMemo(() => buildTimesForDay(startOfDay(draft), now), [draft, now])
+  const selectedDayKey = `${draft.getFullYear()}-${draft.getMonth()}-${draft.getDate()}`
+  const selectedTimeKey = `${draft.getHours()}:${draft.getMinutes()}`
 
   useEffect(() => {
     if (!open) return
@@ -160,8 +166,6 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
       new Date(next.getFullYear(), next.getMonth(), next.getDate(), slot.hours, slot.minutes, 0, 0),
     )
   }, [open, value, today])
-
-  const selectedDayKey = `${draft.getFullYear()}-${draft.getMonth()}-${draft.getDate()}`
 
   useEffect(() => {
     if (!open) return
@@ -182,24 +186,23 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
   }, [open, selectedDayKey, days])
 
   useEffect(() => {
-    if (!open || !timeWheelRef.current || times.length === 0) return
+    if (!open || !timeRailRef.current || times.length === 0) return
     const index = nearestTimeIndex(times, draft)
-    timeScrollLock.current = true
-    timeWheelRef.current.scrollTo({
-      top: index * WHEEL_ITEM_H,
-      behavior: 'smooth',
-    })
-    const timer = window.setTimeout(() => {
-      timeScrollLock.current = false
-    }, 320)
-    return () => window.clearTimeout(timer)
-    // Re-center the wheel when the chosen day changes or the picker opens.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, selectedDayKey, times.length])
+    const node = timeRailRef.current.querySelector<HTMLElement>(`[data-time-index="${index}"]`)
+    node?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  }, [open, selectedDayKey, selectedTimeKey, times])
 
   function pickDay(day: Date) {
     setDraft((prev) => {
-      const next = new Date(day.getFullYear(), day.getMonth(), day.getDate(), prev.getHours(), prev.getMinutes(), 0, 0)
+      const next = new Date(
+        day.getFullYear(),
+        day.getMonth(),
+        day.getDate(),
+        prev.getHours(),
+        prev.getMinutes(),
+        0,
+        0,
+      )
       const dayTimes = buildTimesForDay(day, new Date())
       if (dayTimes.length === 0) {
         next.setDate(next.getDate() + 1)
@@ -221,16 +224,6 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
     })
   }
 
-  function onTimeScroll() {
-    if (!timeWheelRef.current || timeScrollLock.current || times.length === 0) return
-    const index = Math.round(timeWheelRef.current.scrollTop / WHEEL_ITEM_H)
-    const clamped = Math.max(0, Math.min(times.length - 1, index))
-    const slot = times[clamped]
-    if (!slot) return
-    if (draft.getHours() === slot.hours && draft.getMinutes() === slot.minutes) return
-    pickTime(slot.hours, slot.minutes)
-  }
-
   function handleSave() {
     onSave(
       new Date(
@@ -243,230 +236,171 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
         0,
       ).toISOString(),
     )
-    setOpen(false)
+    setPickerOpen(false)
+  }
+
+  if (!open) {
+    return (
+      <div data-testid={testId}>
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          className="flex w-full min-h-10 items-center gap-2 rounded-xl border border-white/20 bg-night-elevated/70 px-3 text-left touch-manipulation transition-colors hover:border-saffron/40"
+          aria-expanded={false}
+          data-testid={testId ? `${testId}-trigger` : undefined}
+        >
+          <CalendarClock className="h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
+          <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-night-muted">
+            {saved ? formatPreview(saved) : 'Plan visit date & time'}
+          </span>
+          <span className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
+            Open
+          </span>
+        </button>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-2" data-testid={testId}>
-      <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
-        <CalendarClock className="h-3 w-3 text-saffron-glow" aria-hidden />
-        Plan visit date & time
-      </span>
+    <div
+      className="animate-bfi-fade min-w-0 space-y-2.5 rounded-2xl border border-saffron/40 bg-gradient-to-b from-[#3a2a2b] to-[#2a1f20] p-2.5 shadow-[0_10px_24px_rgb(0_0_0/0.3)]"
+      data-testid={testId ? `${testId}-panel` : testId}
+    >
+      <div className="flex items-center gap-2 px-0.5">
+        <CalendarClock className="h-3.5 w-3.5 shrink-0 text-saffron-glow" aria-hidden />
+        <p className="min-w-0 flex-1 truncate font-display text-[12px] font-semibold text-saffron-glow">
+          {formatPreview(draft)}
+        </p>
+        <button
+          type="button"
+          onClick={() => setPickerOpen(false)}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-night-faint hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+          aria-label="Close planner"
+          data-testid={testId ? `${testId}-cancel` : undefined}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="relative min-w-0">
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-[#322426] to-transparent transition-opacity',
+            canScrollDatesLeft ? 'opacity-100' : 'opacity-0',
+          )}
+          aria-hidden
+        />
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-[#2a1f20] to-transparent transition-opacity',
+            canScrollDatesRight ? 'opacity-100' : 'opacity-0',
+          )}
+          aria-hidden
+        />
+        <button
+          type="button"
+          onClick={() => scrollDates(-1)}
+          disabled={!canScrollDatesLeft}
+          className={cn(
+            'absolute left-0 top-1/2 z-20 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-saffron/35 bg-night/85 text-saffron-glow touch-manipulation transition-opacity',
+            canScrollDatesLeft ? 'opacity-100' : 'pointer-events-none opacity-0',
+          )}
+          aria-label="Scroll dates left"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollDates(1)}
+          disabled={!canScrollDatesRight}
+          className={cn(
+            'absolute right-0 top-1/2 z-20 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-saffron/35 bg-night/85 text-saffron-glow touch-manipulation transition-opacity',
+            canScrollDatesRight ? 'opacity-100' : 'pointer-events-none opacity-0',
+          )}
+          aria-label="Scroll dates right"
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+        <div
+          ref={dateRailRef}
+          onScroll={updateDateScrollHints}
+          className="flex w-full min-w-0 max-w-full snap-x snap-mandatory gap-1.5 overflow-x-auto overscroll-x-contain scroll-smooth px-7 [-webkit-overflow-scrolling:touch] [touch-action:pan-x]"
+          data-testid={testId ? `${testId}-dates` : undefined}
+        >
+          {days.map((day, index) => {
+            const selected = sameDay(day, draft)
+            const label = formatDayChip(day, today)
+            return (
+              <button
+                key={day.toISOString()}
+                type="button"
+                data-day-index={index}
+                onClick={() => pickDay(day)}
+                className={cn(
+                  'flex h-14 w-12 shrink-0 snap-center flex-col items-center justify-center rounded-xl border transition-colors [touch-action:pan-x]',
+                  selected
+                    ? 'border-saffron/60 bg-saffron text-white shadow-[0_4px_12px_rgb(232_145_58/0.3)]'
+                    : 'border-white/15 bg-night/40 text-night-muted',
+                )}
+                aria-pressed={selected}
+              >
+                <span
+                  className={cn(
+                    'text-[8px] font-bold tracking-wide uppercase',
+                    selected ? 'text-white/85' : 'text-night-faint',
+                  )}
+                >
+                  {label.top}
+                </span>
+                <span className="font-display text-base font-semibold leading-none">{label.bottom}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div
+        ref={timeRailRef}
+        className="flex w-full min-w-0 max-w-full snap-x snap-mandatory gap-1.5 overflow-x-auto overscroll-x-contain scroll-smooth px-0.5 [-webkit-overflow-scrolling:touch] [touch-action:pan-x]"
+        data-testid={testId ? `${testId}-times` : undefined}
+      >
+        {times.length === 0 ? (
+          <p className="w-full py-2 text-center text-[12px] text-night-faint">No times left today</p>
+        ) : (
+          times.map((slot, index) => {
+            const selected =
+              draft.getHours() === slot.hours && draft.getMinutes() === slot.minutes
+            return (
+              <button
+                key={slot.key}
+                type="button"
+                data-time-index={index}
+                onClick={() => pickTime(slot.hours, slot.minutes)}
+                className={cn(
+                  'inline-flex h-9 shrink-0 snap-center items-center justify-center rounded-xl border px-2.5 text-[12px] font-semibold tabular-nums transition-colors [touch-action:pan-x]',
+                  selected
+                    ? 'border-saffron/55 bg-saffron/25 text-saffron-glow'
+                    : 'border-white/15 bg-night/35 text-night-faint',
+                )}
+                aria-pressed={selected}
+              >
+                {formatTimeLabel(slot.hours, slot.minutes)}
+              </button>
+            )
+          })
+        )}
+      </div>
 
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
-        className={cn(
-          'flex w-full min-h-11 items-center gap-2 rounded-xl border px-3 text-left touch-manipulation transition-colors',
-          open
-            ? 'border-saffron/55 bg-saffron/15 text-saffron-glow'
-            : 'border-white/20 bg-night-elevated/70 text-night-muted hover:border-saffron/40',
-        )}
-        aria-expanded={open}
-        data-testid={testId ? `${testId}-trigger` : undefined}
+        onClick={handleSave}
+        disabled={times.length === 0}
+        className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-saffron px-3 text-sm font-semibold text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)] touch-manipulation hover:bg-saffron-deep disabled:opacity-50"
+        data-testid={testId ? `${testId}-save` : undefined}
       >
-        <CalendarClock className="h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-          {saved ? formatPreview(saved) : 'Choose a date & time'}
-        </span>
-        <span className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
-          {open ? 'Close' : 'Open'}
-        </span>
+        <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+        Save plan
       </button>
-
-      {open ? (
-        <div
-          className="animate-bfi-fade min-w-0 overflow-hidden rounded-2xl border border-saffron/35 bg-gradient-to-b from-[#3a2a2b] via-[#322426] to-[#2a1f20] p-3 shadow-[0_12px_28px_rgb(0_0_0/0.35)]"
-          data-testid={testId ? `${testId}-panel` : undefined}
-        >
-          <p className="mb-3 text-center font-display text-[13px] font-semibold tracking-tight text-saffron-glow">
-            Schedule a visit
-          </p>
-
-          <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
-            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Date</p>
-            <p className="text-[10px] text-night-faint">Swipe left or right</p>
-          </div>
-          <div className="relative mb-3 min-w-0">
-            <div
-              className={cn(
-                'pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#322426] to-transparent transition-opacity',
-                canScrollDatesLeft ? 'opacity-100' : 'opacity-0',
-              )}
-              aria-hidden
-            />
-            <div
-              className={cn(
-                'pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#2a1f20] to-transparent transition-opacity',
-                canScrollDatesRight ? 'opacity-100' : 'opacity-0',
-              )}
-              aria-hidden
-            />
-            <button
-              type="button"
-              onClick={() => scrollDates(-1)}
-              disabled={!canScrollDatesLeft}
-              className={cn(
-                'absolute left-0 top-1/2 z-20 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-saffron/35 bg-night/80 text-saffron-glow shadow-md touch-manipulation transition-opacity',
-                canScrollDatesLeft ? 'opacity-100' : 'pointer-events-none opacity-0',
-              )}
-              aria-label="Scroll dates left"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollDates(1)}
-              disabled={!canScrollDatesRight}
-              className={cn(
-                'absolute right-0 top-1/2 z-20 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-saffron/35 bg-night/80 text-saffron-glow shadow-md touch-manipulation transition-opacity',
-                canScrollDatesRight ? 'opacity-100' : 'pointer-events-none opacity-0',
-              )}
-              aria-label="Scroll dates right"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            <div
-              ref={dateRailRef}
-              onScroll={updateDateScrollHints}
-              className="flex w-full min-w-0 max-w-full snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-8 pb-1 [-webkit-overflow-scrolling:touch] [touch-action:pan-x]"
-              data-testid={testId ? `${testId}-dates` : undefined}
-            >
-              {days.map((day, index) => {
-                const selected = sameDay(day, draft)
-                const label = formatDayChip(day, today)
-                const month = day.toLocaleDateString(undefined, { month: 'short' })
-                return (
-                  <button
-                    key={day.toISOString()}
-                    type="button"
-                    data-day-index={index}
-                    onClick={() => pickDay(day)}
-                    className={cn(
-                      'flex w-[4.35rem] shrink-0 snap-center flex-col items-center justify-center rounded-2xl border px-2 py-2.5 transition-colors [touch-action:pan-x]',
-                      selected
-                        ? 'border-saffron/60 bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)]'
-                        : 'border-white/15 bg-night/35 text-night-muted hover:border-saffron/35 hover:text-saffron-glow',
-                    )}
-                    aria-pressed={selected}
-                  >
-                    <span
-                      className={cn(
-                        'text-[9px] font-bold tracking-[0.08em] uppercase',
-                        selected ? 'text-white/85' : 'text-night-faint',
-                      )}
-                    >
-                      {label.top}
-                    </span>
-                    <span className="mt-0.5 font-display text-lg font-semibold leading-none">
-                      {label.bottom}
-                    </span>
-                    <span
-                      className={cn(
-                        'mt-1 text-[9px] font-semibold',
-                        selected ? 'text-white/80' : 'text-night-faint',
-                      )}
-                    >
-                      {month}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <p className="mb-1.5 px-0.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
-            Time
-          </p>
-          <div className="relative mx-auto max-w-[14rem]">
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-gradient-to-b from-[#322426] to-transparent"
-              aria-hidden
-            />
-            <div
-              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-[#2a1f20] to-transparent"
-              aria-hidden
-            />
-            <div
-              className="pointer-events-none absolute inset-x-1 top-1/2 z-[5] h-11 -translate-y-1/2 rounded-xl border border-saffron/45 bg-saffron/15"
-              aria-hidden
-            />
-            <div
-              ref={timeWheelRef}
-              onScroll={onTimeScroll}
-              className="h-[11rem] snap-y snap-mandatory overflow-y-auto scroll-smooth px-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              style={{
-                paddingTop: WHEEL_ITEM_H * 2,
-                paddingBottom: WHEEL_ITEM_H * 2,
-              }}
-              data-testid={testId ? `${testId}-times` : undefined}
-            >
-              {times.length === 0 ? (
-                <p className="py-8 text-center text-[12px] text-night-faint">No times left today</p>
-              ) : (
-                times.map((slot) => {
-                  const selected =
-                    draft.getHours() === slot.hours && draft.getMinutes() === slot.minutes
-                  return (
-                    <button
-                      key={slot.key}
-                      type="button"
-                      onClick={() => {
-                        pickTime(slot.hours, slot.minutes)
-                        const index = times.findIndex((item) => item.key === slot.key)
-                        if (index >= 0 && timeWheelRef.current) {
-                          timeScrollLock.current = true
-                          timeWheelRef.current.scrollTo({
-                            top: index * WHEEL_ITEM_H,
-                            behavior: 'smooth',
-                          })
-                          window.setTimeout(() => {
-                            timeScrollLock.current = false
-                          }, 320)
-                        }
-                      }}
-                      className={cn(
-                        'flex w-full snap-center items-center justify-center text-[15px] font-semibold tabular-nums touch-manipulation transition-colors',
-                        selected ? 'text-saffron-glow' : 'text-night-faint/80',
-                      )}
-                      style={{ height: WHEEL_ITEM_H }}
-                      aria-pressed={selected}
-                    >
-                      {formatTimeLabel(slot.hours, slot.minutes)}
-                    </button>
-                  )
-                })
-              )}
-            </div>
-          </div>
-
-          <p className="mt-3 rounded-xl border border-saffron/25 bg-saffron/10 px-3 py-2 text-center text-[12px] font-semibold text-saffron-glow">
-            {formatPreview(draft)}
-          </p>
-
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-transparent px-3 text-sm font-semibold text-night-muted touch-manipulation"
-              data-testid={testId ? `${testId}-cancel` : undefined}
-            >
-              <X className="h-3.5 w-3.5" />
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={times.length === 0}
-              className="inline-flex min-h-11 flex-[1.4] items-center justify-center gap-1.5 rounded-xl bg-saffron px-3 text-sm font-semibold text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)] touch-manipulation hover:bg-saffron-deep disabled:opacity-50"
-              data-testid={testId ? `${testId}-save` : undefined}
-            >
-              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-              Save plan
-            </button>
-          </div>
-        </div>
-      ) : null}
     </div>
   )
 }
