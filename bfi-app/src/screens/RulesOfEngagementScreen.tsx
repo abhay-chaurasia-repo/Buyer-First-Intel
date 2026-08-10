@@ -26,10 +26,7 @@ export function RulesOfEngagementScreen() {
           className="rounded-2xl border border-white/25 bg-transparent p-3"
           data-testid="rules-intro"
         >
-          <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
-            {RULES_UPDATED_LABEL}
-          </p>
-          <p className="mt-2 text-[13px] leading-relaxed text-night-ink">{RULES_INTRO}</p>
+          <p className="text-[13px] leading-relaxed text-night-ink">{RULES_INTRO}</p>
         </div>
 
         <div
@@ -82,6 +79,13 @@ export function RulesOfEngagementScreen() {
             <ArrowRight className="h-4 w-4 shrink-0 text-saffron-glow" />
           </Link>
         </div>
+
+        <p
+          className="mt-5 px-1 pb-1 text-center text-[10px] leading-relaxed text-night-faint"
+          data-testid="rules-draft-footer"
+        >
+          {RULES_UPDATED_LABEL}
+        </p>
       </div>
     </AppShell>
   )

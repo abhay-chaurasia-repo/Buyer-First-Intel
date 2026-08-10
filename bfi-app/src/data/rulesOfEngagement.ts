@@ -9,7 +9,7 @@ export type RulesSection = {
   paragraphs: string[]
 }
 
-export const RULES_UPDATED_LABEL = 'Draft · modify anytime · not legal advice'
+export const RULES_UPDATED_LABEL = 'Draft content · we may revise this anytime · not legal advice'
 
 export const RULES_INTRO =
   'How touring, visit costs, and commissions usually work for buyers after the residential broker-commission settlements. Confirm everything with your agent and local rules before you sign.'
