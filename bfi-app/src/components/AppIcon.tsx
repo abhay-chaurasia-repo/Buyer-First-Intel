@@ -61,7 +61,7 @@ export function AppIcon({
       />
 
       {/* Solid chimney on right roof slope — a little wider, same length */}
-      <rect x="326" y="124" width="38" height="52" rx="3" fill="#FFFFFF" />
+      <rect x="326" y="124" width="45" height="52" rx="3" fill="#FFFFFF" />
 
       {/* Smaller floating loupe — not touching house walls */}
       <circle
