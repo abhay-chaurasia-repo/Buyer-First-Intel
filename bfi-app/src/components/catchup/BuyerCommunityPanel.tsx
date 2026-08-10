@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ShieldCheck, ThumbsUp } from 'lucide-react'
+import { PlusWatchLegend } from '@/components/PlusWatchLegend'
 import {
   BUYER_LABEL_CATEGORIES,
   BUYER_COMMUNITY_LABELS,
@@ -194,9 +195,12 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
     <div className="mt-3 space-y-4 px-3" data-testid="buyer-community-panel">
       <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
-          Pre-set labels only — both upsides (Plus) and watch-outs (Watch). Most need a verified
-          visit; remote size insights can be upvoted while comparing listings.
+          Pre-set community labels only — no free text. Most need a verified visit; remote size
+          insights can be upvoted while comparing listings.
         </p>
+
+        <PlusWatchLegend className="mt-3 rounded-xl border border-white/20 bg-night/20 px-2.5 py-2.5" />
+
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-night-faint">
           <span>
             {BUYER_COMMUNITY_LABELS.length} labels · {totalVotes} community upvotes

@@ -195,3 +195,12 @@ export function labelRequiresVisit(label: BuyerCommunityLabel) {
 export function labelToneById(labelId: string): BuyerLabelTone | undefined {
   return BUYER_COMMUNITY_LABELS.find((label) => label.id === labelId)?.tone
 }
+
+/** Shared Plus / Watch definitions — keep UI copy consistent */
+export const PLUS_LABEL_MEANING =
+  'Upsides verified buyers noticed — encouraging signals that support interest.'
+export const WATCH_LABEL_MEANING =
+  'Watch-outs to dig into — caution signals before you commit more time or money.'
+export const PLUS_WATCH_LEGEND_INTRO =
+  'Labels are fixed (no free text). Buyers upvote what they observe; identities stay private.'
+

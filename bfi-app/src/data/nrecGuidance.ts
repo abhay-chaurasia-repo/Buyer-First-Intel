@@ -100,7 +100,7 @@ export const BUYER_BEFORE_AGENT_BRIEF: GuidanceDoc = {
     {
       heading: '4. Visit with your eyes open',
       paragraphs: [
-        'Due Diligence Verify logs GPS presence with date and time at no charge inside the app. Use that log — and Buyer Community Plus/Watch labels — to remember what you actually observed before you escalate to an offer.',
+        'Due Diligence Verify logs GPS presence with date and time at no charge inside the app. Use that log — and Buyer Community Plus (upsides) / Watch (watch-outs) labels — to remember what you actually observed before you escalate to an offer.',
       ],
     },
   ],

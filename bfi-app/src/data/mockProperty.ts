@@ -266,7 +266,7 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
       title: 'Buyer Community',
       subtitle: 'Label votes',
       badge: String(BUYER_LABEL_CATEGORIES.length),
-      detail: 'Pre-set labels · verified visitors upvote',
+      detail: 'Plus = upsides · Watch = watch-outs · verified visitors upvote',
       accent: 'buyer-insights',
     },
     {

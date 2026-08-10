@@ -51,13 +51,13 @@ const surfaceMeta: Record<
     title: 'Verified Visits',
     Icon: ShieldCheck,
     iconWrap: 'bg-night-ink/15 text-saffron-glow',
-    blurb: 'Dated GPS presence — community labels show when visitors labelled',
+    blurb: 'Dated GPS presence — Plus/Watch labels appear when visitors labelled',
   },
   'buyer-insights': {
     title: 'Buyer Community',
     Icon: Users,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'Pre-set Plus & Watch labels — verified visitors upvote what they observe',
+    blurb: 'Plus = upsides · Watch = watch-outs — verified visitors upvote fixed labels',
   },
   schools: {
     title: 'Schools',

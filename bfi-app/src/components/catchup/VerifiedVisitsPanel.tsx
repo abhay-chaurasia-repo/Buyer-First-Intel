@@ -8,6 +8,7 @@ import {
   Tag,
   Users,
 } from 'lucide-react'
+import { PlusWatchLegend } from '@/components/PlusWatchLegend'
 import type { MockProperty } from '@/data/mockProperty'
 import {
   formatVisitDate,
@@ -183,9 +184,14 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
       <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
           Each row is a GPS presence check within {bundle.radiusMeters}m — with date and time so you
-          can judge the pattern yourself. If a visitor also labelled in Buyer Community, those
-          labels show here.
+          can judge the pattern yourself. Visitor identities stay hidden. If someone also labelled in
+          Buyer Community, those Plus and Watch labels show here.
         </p>
+
+        <PlusWatchLegend
+          variant="compact"
+          className="mt-3 rounded-xl border border-white/20 bg-night/20 px-2.5 py-2"
+        />
 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">

@@ -116,7 +116,7 @@ export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
     id: 'community-labels',
     phaseId: 'diligence',
     title: 'Read and upvote Buyer Community labels',
-    detail: 'Plus and Watch signals from verified visitors on that address.',
+    detail: 'Plus (upsides) and Watch (watch-outs) from verified visitors on that address.',
   },
   {
     id: 'schools-check',

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
+import { PlusWatchLegend } from '@/components/PlusWatchLegend'
 import { APP_TAGLINE } from '@/data/brand'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,7 @@ function SizeSnippet() {
         <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
           Remote insight · no visit needed
         </p>
+        <PlusWatchLegend variant="compact" showIntro={false} className="mt-1.5" />
         <div className="mt-1.5 space-y-1">
           {[
             { text: 'Published listing size matches county', tone: 'plus' as const, votes: 4 },
@@ -120,7 +122,8 @@ function CommunitySnippet() {
           Buyer Community
         </p>
       </div>
-      <div className="mt-3 space-y-1">
+      <PlusWatchLegend variant="compact" className="mt-2.5" />
+      <div className="mt-2 space-y-1">
         {[
           { text: 'Quiet at night', tone: 'plus' as const, votes: 4 },
           { text: 'High-tension cables nearby', tone: 'watch' as const, votes: 2 },

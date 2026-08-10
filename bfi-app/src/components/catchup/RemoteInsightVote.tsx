@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ThumbsUp } from 'lucide-react'
+import { PlusWatchLegend } from '@/components/PlusWatchLegend'
 import {
   labelById,
   labelRequiresVisit,
@@ -86,6 +87,7 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
       <p className="mt-1 text-[10px] text-night-faint">
         Compare county sqft with the published size on Zillow or Redfin, then upvote one.
       </p>
+      <PlusWatchLegend variant="compact" showIntro={false} className="mt-1.5" />
       <div className="mt-1.5 space-y-1">
         {labels.map((label) => {
           const canVote = verified || !labelRequiresVisit(label)
