@@ -162,6 +162,8 @@ function Snippet({ kind }: { kind: ImpactPage['snippet'] }) {
 }
 
 function StorySlide({ page }: { page: ImpactPage }) {
+  const wash = page.wash ?? 'medium'
+
   return (
     <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
       <img
@@ -169,13 +171,23 @@ function StorySlide({ page }: { page: ImpactPage }) {
         alt={page.imageAlt}
         className="absolute inset-0 h-full w-full object-cover"
       />
-      {/* Same dark-warm readability wash as inner SceneBackdrop */}
+      {/* Visits-slide readability: strong wash on brighter photos so type shines */}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/40 to-ink/90"
+        className={cn(
+          'absolute inset-0 bg-gradient-to-b',
+          wash === 'strong'
+            ? 'from-ink/72 via-ink/62 to-ink/94'
+            : 'from-ink/55 via-ink/48 to-ink/90',
+        )}
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]"
+        className={cn(
+          'absolute inset-0',
+          wash === 'strong'
+            ? 'bg-[radial-gradient(ellipse_80%_55%_at_50%_-8%,rgb(232_145_58/0.16),transparent_58%)]'
+            : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
+        )}
         aria-hidden
       />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(3.75rem,calc(var(--bfi-status-pad)+2.75rem))] pb-[11.5rem]">
