@@ -122,8 +122,7 @@ function CommunitySnippet() {
           Buyer Community
         </p>
       </div>
-      <PlusWatchLegend variant="compact" className="mt-2.5" />
-      <div className="mt-2 space-y-1">
+      <div className="mt-3 space-y-1">
         {[
           { text: 'Quiet at night', tone: 'plus' as const, votes: 4 },
           { text: 'High-tension cables nearby', tone: 'watch' as const, votes: 2 },
