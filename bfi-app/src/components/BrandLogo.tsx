@@ -1,4 +1,3 @@
-import { AppIcon } from '@/components/AppIcon'
 import { APP_NAME } from '@/data/brand'
 import { cn } from '@/lib/utils'
 
@@ -11,8 +10,7 @@ type BrandLogoProps = {
 }
 
 /**
- * App mark: house + magnifier on saffron tile (logo-only, no wordmark).
- * Renders the high-fidelity inline SVG {@link AppIcon}.
+ * App mark from the attached reference: house + magnifier on saffron tile.
  */
 export function BrandLogo({
   className,
@@ -21,11 +19,15 @@ export function BrandLogo({
   testId = 'brand-logo',
 }: BrandLogoProps) {
   return (
-    <AppIcon
-      size={size}
-      title={alt}
-      testId={testId}
-      className={cn(className)}
+    <img
+      src="/logo.png"
+      alt={alt}
+      width={size}
+      height={size}
+      className={cn('shrink-0 rounded-[22%] object-cover', className)}
+      style={{ width: size, height: size }}
+      data-testid={testId}
+      decoding="async"
     />
   )
 }
