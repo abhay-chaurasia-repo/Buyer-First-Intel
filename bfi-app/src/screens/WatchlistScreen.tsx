@@ -119,6 +119,17 @@ function WatchlistMetaRail({
   )
 }
 
+function formatNoteWhen(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    })
+  } catch {
+    return ''
+  }
+}
+
 function PropertyNotes({
   propertyId,
   onNotesChange,
@@ -126,14 +137,15 @@ function PropertyNotes({
   propertyId: string
   onNotesChange?: (count: number) => void
 }) {
-  const [open, setOpen] = useState(false)
   const [notes, setNotes] = useState<SavedNote[]>(() => loadNotes(propertyId))
   const [draft, setDraft] = useState('')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     const next = loadNotes(propertyId)
     setNotes(next)
     setDraft('')
+    setExpandedId(null)
     onNotesChange?.(next.length)
   }, [propertyId, onNotesChange])
 
@@ -144,100 +156,102 @@ function PropertyNotes({
     setNotes(next)
     onNotesChange?.(next.length)
     setDraft('')
+    setExpandedId(next[0]?.id ?? null)
   }
 
   function handleDelete(noteId: string) {
     const next = deleteNote(propertyId, noteId)
     setNotes(next)
     onNotesChange?.(next.length)
+    if (expandedId === noteId) setExpandedId(null)
   }
 
   return (
-    <div className="border-t border-white/15 pt-3" data-testid={`notes-section-${propertyId}`}>
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full min-h-10 items-center gap-2 rounded-xl px-1 text-left touch-manipulation"
-        aria-expanded={open}
-        data-testid={`button-toggle-notes-${propertyId}`}
+    <div className="border-t border-white/15 pt-2" data-testid={`notes-section-${propertyId}`}>
+      <form
+        onSubmit={handleSave}
+        className="flex items-center gap-1.5"
+        data-testid={`notes-form-${propertyId}`}
       >
-        <ChevronDown
-          className={cn('h-4 w-4 text-saffron-glow transition-transform', !open && '-rotate-90')}
-        />
-        <StickyNote className="h-3.5 w-3.5 text-saffron-glow" aria-hidden />
-        <span className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-          Notes
-        </span>
-        <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-          {notes.length}
-        </span>
-      </button>
-
-      {open ? (
-        <div className="animate-bfi-fade mt-2 space-y-2">
-          <p className="px-0.5 text-[11px] text-night-faint">
-            Private notes for this saved address
-          </p>
-          <form onSubmit={handleSave} className="space-y-2" data-testid={`notes-form-${propertyId}`}>
-            <textarea
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              rows={2}
-              placeholder="Add a note…"
-              className="w-full resize-none rounded-xl border border-white/20 bg-transparent px-3 py-2.5 text-sm text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/60"
-              data-testid={`input-property-note-${propertyId}`}
-            />
-            <button
-              type="submit"
-              disabled={!draft.trim()}
-              className={cn(
-                'inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-colors touch-manipulation',
-                draft.trim()
-                  ? 'bg-saffron text-white hover:bg-saffron-deep shadow-[0_6px_16px_rgb(232_145_58/0.3)]'
-                  : 'bg-night-ink/10 text-night-faint',
-              )}
-              data-testid={`button-save-note-${propertyId}`}
-            >
-              <Plus className="h-4 w-4" />
-              Save note
-            </button>
-          </form>
-
-          {notes.length > 0 ? (
-            <ul className="space-y-2" data-testid={`notes-list-${propertyId}`}>
-              {notes.map((note) => (
-                <li
-                  key={note.id}
-                  className="flex gap-2 rounded-xl border border-white/20 bg-transparent px-3 py-2.5"
-                >
-                  <StickyNote
-                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow"
-                    aria-hidden
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm leading-relaxed text-night-ink whitespace-pre-wrap">
-                      {note.text}
-                    </p>
-                    <p className="mt-1 text-[10px] text-night-faint">
-                      {new Date(note.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(note.id)}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-                    aria-label="Delete note"
-                    data-testid={`button-delete-note-${note.id}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="px-0.5 pb-1 text-[12px] text-night-faint">No notes yet.</p>
-          )}
+        <div className="relative min-w-0 flex-1">
+          <StickyNote
+            className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-saffron-glow/80"
+            aria-hidden
+          />
+          <input
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder="Jot a quick note…"
+            className="min-h-9 w-full rounded-xl border border-white/20 bg-night/30 py-2 pr-3 pl-8 text-[13px] text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/55"
+            data-testid={`input-property-note-${propertyId}`}
+          />
         </div>
+        <button
+          type="submit"
+          disabled={!draft.trim()}
+          className={cn(
+            'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors touch-manipulation',
+            draft.trim()
+              ? 'bg-saffron text-white shadow-[0_4px_12px_rgb(232_145_58/0.3)]'
+              : 'border border-white/15 text-night-faint',
+          )}
+          aria-label="Add note"
+          data-testid={`button-save-note-${propertyId}`}
+        >
+          <Plus className="h-4 w-4" strokeWidth={2.5} />
+        </button>
+      </form>
+
+      {notes.length > 0 ? (
+        <ul
+          className="mt-1.5 max-h-[5.5rem] space-y-1 overflow-y-auto overscroll-contain"
+          data-testid={`notes-list-${propertyId}`}
+        >
+          {notes.map((note, index) => {
+            const expanded = expandedId === note.id
+            return (
+              <li
+                key={note.id}
+                className={cn(
+                  'animate-bfi-fade flex items-start gap-1.5 rounded-lg border-l-2 py-1.5 pr-1 pl-2',
+                  index % 2 === 0
+                    ? 'border-saffron/55 bg-saffron/10'
+                    : 'border-saffron-bright/45 bg-white/[0.04]',
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(expanded ? null : note.id)}
+                  className="min-w-0 flex-1 text-left touch-manipulation"
+                  aria-expanded={expanded}
+                >
+                  <p
+                    className={cn(
+                      'text-[12px] leading-snug text-night-ink',
+                      expanded ? 'whitespace-pre-wrap' : 'truncate',
+                    )}
+                  >
+                    {note.text}
+                  </p>
+                  {expanded ? (
+                    <p className="mt-0.5 text-[9px] font-medium tracking-wide text-night-faint uppercase">
+                      {formatNoteWhen(note.createdAt)}
+                    </p>
+                  ) : null}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(note.id)}
+                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+                  aria-label="Delete note"
+                  data-testid={`button-delete-note-${note.id}`}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </li>
+            )
+          })}
+        </ul>
       ) : null}
     </div>
   )
