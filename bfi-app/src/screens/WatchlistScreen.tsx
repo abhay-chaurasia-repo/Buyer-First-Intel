@@ -193,7 +193,7 @@ function PropertyNotes({
           <input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="Jot a quick note…"
+            placeholder="Jot a quick private note…"
             className="min-h-9 w-full rounded-xl border border-white/20 bg-night/30 py-2 pr-3 pl-8 text-[13px] text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/55"
             data-testid={`input-property-note-${propertyId}`}
           />
