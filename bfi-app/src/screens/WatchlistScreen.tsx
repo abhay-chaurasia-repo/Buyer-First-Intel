@@ -10,6 +10,7 @@ import {
   StickyNote,
   Trash2,
 } from 'lucide-react'
+import { VisitPlanPicker } from '@/components/VisitPlanPicker'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import {
@@ -19,13 +20,11 @@ import {
   type SavedNote,
 } from '@/data/propertyNotesStorage'
 import {
-  fromDatetimeLocalValue,
   loadWatchlist,
   markWatchlistVisited,
   propertyPath,
   removeFromWatchlist,
   setWatchlistPlannedVisit,
-  toDatetimeLocalValue,
   visitPlanStatus,
   type WatchlistItem,
 } from '@/data/watchlistStorage'
@@ -270,7 +269,6 @@ function WatchlistRow({
 }) {
   const [open, setOpen] = useState(false)
   const status = visitPlanStatus(item)
-  const plannedValue = toDatetimeLocalValue(item.plannedVisitAt)
   const [noteCount, setNoteCount] = useState(() => loadNotes(item.id).length)
 
   return (
@@ -396,22 +394,11 @@ function WatchlistRow({
               ) : null}
             </div>
 
-            <label className="block">
-              <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
-                <CalendarClock className="h-3 w-3 text-saffron-glow" aria-hidden />
-                Plan visit date & time
-              </span>
-              <input
-                type="datetime-local"
-                value={plannedValue}
-                onChange={(event) => {
-                  const next = fromDatetimeLocalValue(event.target.value)
-                  onChange(setWatchlistPlannedVisit(item.id, next))
-                }}
-                className="min-h-11 w-full rounded-xl border border-white/20 bg-transparent px-3 text-sm text-night-ink outline-none focus:border-saffron/60"
-                data-testid={`input-plan-visit-${item.id}`}
-              />
-            </label>
+            <VisitPlanPicker
+              value={item.plannedVisitAt}
+              onSave={(iso) => onChange(setWatchlistPlannedVisit(item.id, iso))}
+              testId={`plan-visit-${item.id}`}
+            />
           </div>
 
           <PropertyNotes propertyId={item.id} onNotesChange={setNoteCount} />
