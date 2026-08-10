@@ -23,6 +23,8 @@ export type CatchUpCard = {
   timestamp: string
   source: string
   fields?: Array<{ label: string; value: string }>
+  /** Optional Buyer Community label id for an inline remote upvote */
+  insightLabelId?: string
 }
 
 export type CatchUpApiResponse = {
@@ -65,26 +67,18 @@ function wrapResponse(
 
 /** GET /api/properties/:id/county-facts */
 export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse {
-  const delta =
-    property.claimedSqft && property.sqft
-      ? Math.round(((property.sqft - property.claimedSqft) / property.claimedSqft) * 100)
-      : 0
-
   const items: CatchUpCard[] = [
     {
       id: 'cf-living-area',
       type: 'discrepancy',
       channel: 'county-living-area',
-      unreadCount: 2,
+      unreadCount: 1,
       headline: 'County living-area fact',
-      preview: `County records show ${property.sqft.toLocaleString()} sqft. External claim is ${property.claimedSqft?.toLocaleString() ?? '—'} sqft (${delta}%).`,
+      preview: `County records show ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote if it looks overstated.`,
       timestamp: isoMinutesAgo(18),
-      source: 'ATTOM / county vs external claim',
-      fields: [
-        { label: 'County sqft', value: property.sqft.toLocaleString() },
-        { label: 'Claimed sqft', value: property.claimedSqft?.toLocaleString() ?? '—' },
-        { label: 'Delta', value: `${delta}%` },
-      ],
+      source: 'County assessor living area',
+      fields: [{ label: 'County sqft', value: property.sqft.toLocaleString() }],
+      insightLabelId: 'published-listing-size-overstated',
     },
     {
       id: 'cf-rooms',

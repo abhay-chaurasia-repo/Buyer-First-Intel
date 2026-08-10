@@ -17,6 +17,7 @@ import {
 } from '@/data/catchUpApi'
 import { BUYER_COMMUNITY_LABELS } from '@/data/buyerCommunityLabels'
 import { BuyerCommunityPanel } from '@/components/catchup/BuyerCommunityPanel'
+import { RemoteInsightVote } from '@/components/catchup/RemoteInsightVote'
 import { VerifiedVisitsPanel } from '@/components/catchup/VerifiedVisitsPanel'
 import type { MockProperty } from '@/data/mockProperty'
 import { getVerifiedVisitsBundle } from '@/data/verifiedVisits'
@@ -75,7 +76,7 @@ function truncateAddress(address: string, max = 22) {
   return `${address.slice(0, max - 1)}…`
 }
 
-function DetailSection({ card }: { card: CatchUpCard }) {
+function DetailSection({ card, propertyId }: { card: CatchUpCard; propertyId: string }) {
   const [open, setOpen] = useState(true)
   const fieldCount = card.fields?.length ?? 0
 
@@ -124,6 +125,10 @@ function DetailSection({ card }: { card: CatchUpCard }) {
             : (
                 <p className="px-2 py-2 text-sm text-night-ink">{stripHash(card.preview)}</p>
               )}
+
+          {card.insightLabelId ? (
+            <RemoteInsightVote propertyId={propertyId} labelId={card.insightLabelId} />
+          ) : null}
         </div>
       ) : null}
     </section>
@@ -221,7 +226,9 @@ export function CatchUpFlow({
         ) : (
           <div className="mt-3 space-y-4 px-3">
             {items.length > 0 ? (
-              items.map((card) => <DetailSection key={card.id} card={card} />)
+              items.map((card) => (
+                <DetailSection key={card.id} card={card} propertyId={propertyId} />
+              ))
             ) : (
               <div className="rounded-2xl border border-white/25 bg-transparent p-4 text-center">
                 <p className="text-sm text-night-muted">No details available for this section yet.</p>

@@ -26,6 +26,11 @@ export type BuyerCommunityLabel = {
   tone: BuyerLabelTone
   /** Seed community upvote count before local votes */
   seedVotes: number
+  /**
+   * When false, buyers can upvote remotely (e.g. while comparing listings).
+   * Defaults to true — most labels need an on-site visit.
+   */
+  requiresVisit?: boolean
 }
 
 /** Display order for Buyer Community sections */
@@ -33,7 +38,7 @@ export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
   {
     id: 'size-records',
     title: 'Size & records',
-    blurb: 'Whether listing living area lines up with county — or doesn’t',
+    blurb: 'County vs published listing size — including remote insights while browsing',
   },
   {
     id: 'surroundings',
@@ -72,6 +77,15 @@ export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
  * Visitors cannot invent free-text — they only upvote these.
  */
 export const BUYER_COMMUNITY_LABELS: BuyerCommunityLabel[] = [
+  // Size & records — remote (no visit required; usable while comparing Zillow/Redfin)
+  {
+    id: 'published-listing-size-overstated',
+    categoryId: 'size-records',
+    text: 'Published listing size looks larger than county',
+    tone: 'negative',
+    seedVotes: 5,
+    requiresVisit: false,
+  },
   // Size & records — positive
   { id: 'listing-matches-county', categoryId: 'size-records', text: 'Listing size matches county records', tone: 'positive', seedVotes: 3 },
   { id: 'living-area-feels-accurate', categoryId: 'size-records', text: 'Living area feels accurate on site', tone: 'positive', seedVotes: 2 },
@@ -160,6 +174,14 @@ export function labelsForCategory(categoryId: BuyerLabelCategoryId) {
 
 export function totalSeedVotes() {
   return BUYER_COMMUNITY_LABELS.reduce((sum, label) => sum + label.seedVotes, 0)
+}
+
+export function labelById(labelId: string) {
+  return BUYER_COMMUNITY_LABELS.find((label) => label.id === labelId)
+}
+
+export function labelRequiresVisit(label: BuyerCommunityLabel) {
+  return label.requiresVisit !== false
 }
 
 export function labelToneById(labelId: string): BuyerLabelTone | undefined {

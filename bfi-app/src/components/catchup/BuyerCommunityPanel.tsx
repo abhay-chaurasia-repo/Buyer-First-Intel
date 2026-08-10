@@ -3,6 +3,7 @@ import { ChevronDown, ShieldCheck, ThumbsUp } from 'lucide-react'
 import {
   BUYER_LABEL_CATEGORIES,
   BUYER_COMMUNITY_LABELS,
+  labelRequiresVisit,
   type BuyerLabelCategoryId,
   type BuyerCommunityLabel,
 } from '@/data/buyerCommunityLabels'
@@ -77,6 +78,8 @@ function CategoryBlock({
           {sorted.map((label) => {
             const count = voteCount(label, voteState)
             const voted = voteState.myVotes.includes(label.id)
+            const needsVisit = labelRequiresVisit(label)
+            const canVote = verified || !needsVisit
             return (
               <div
                 key={label.id}
@@ -96,21 +99,27 @@ function CategoryBlock({
                 </span>
                 <span className="min-w-0 flex-1 text-[13px] leading-snug text-night-ink">
                   {label.text}
+                  {!needsVisit ? (
+                    <span className="mt-0.5 block text-[10px] font-medium text-saffron-glow/90">
+                      Remote · no visit needed
+                    </span>
+                  ) : null}
                 </span>
                 <button
                   type="button"
-                  disabled={!verified}
+                  disabled={!canVote}
                   onClick={() => onToggleVote(label.id)}
                   className={cn(
                     'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold transition-colors touch-manipulation',
                     voted
                       ? 'border-saffron/55 bg-saffron/25 text-saffron-glow'
                       : 'border-white/25 bg-transparent text-night-muted hover:border-saffron/40 hover:text-saffron-glow',
-                    !verified && 'cursor-not-allowed opacity-55 hover:border-white/20 hover:text-night-muted',
+                    !canVote &&
+                      'cursor-not-allowed opacity-55 hover:border-white/20 hover:text-night-muted',
                   )}
                   aria-pressed={voted}
                   aria-label={
-                    verified
+                    canVote
                       ? voted
                         ? `Remove upvote from ${label.text}`
                         : `Upvote ${label.text}`
@@ -161,7 +170,9 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
   }
 
   function handleToggleVote(labelId: string) {
-    if (!verified) return
+    const label = BUYER_COMMUNITY_LABELS.find((entry) => entry.id === labelId)
+    if (!label) return
+    if (labelRequiresVisit(label) && !verified) return
 
     setVoteState((prev) => {
       const already = prev.myVotes.includes(labelId)
@@ -183,8 +194,8 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
     <div className="mt-3 space-y-4 px-3" data-testid="buyer-community-panel">
       <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
-          Pre-set labels only — both upsides (Plus) and watch-outs (Watch). Verified visitors upvote
-          what they observe on site.
+          Pre-set labels only — both upsides (Plus) and watch-outs (Watch). Most need a verified
+          visit; remote size insights can be upvoted while comparing listings.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-night-faint">
           <span>
