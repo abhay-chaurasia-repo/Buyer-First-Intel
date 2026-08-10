@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
-import { CalendarClock, Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { CalendarClock, Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] as const
+const DAY_COUNT = 45
+const TIME_STEP_MINUTES = 15
+const WHEEL_ITEM_H = 44
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -22,12 +24,17 @@ function parseIso(iso: string | null | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
+function snapMinutes(date: Date) {
+  const next = new Date(date)
+  let total = next.getHours() * 60 + next.getMinutes()
+  total = Math.round(total / TIME_STEP_MINUTES) * TIME_STEP_MINUTES
+  if (total >= 24 * 60) total = 24 * 60 - TIME_STEP_MINUTES
+  next.setHours(Math.floor(total / 60), total % 60, 0, 0)
+  return next
+}
+
 function defaultDraft(existing: Date | null) {
-  if (existing) {
-    const next = new Date(existing)
-    next.setMinutes(Math.round(next.getMinutes() / 5) * 5, 0, 0)
-    return next
-  }
+  if (existing) return snapMinutes(existing)
   const next = new Date()
   next.setDate(next.getDate() + 1)
   next.setHours(10, 0, 0, 0)
@@ -44,8 +51,61 @@ function formatPreview(date: Date) {
   })
 }
 
-function pad(n: number) {
-  return String(n).padStart(2, '0')
+function formatDayChip(day: Date, today: Date) {
+  if (sameDay(day, today)) return { top: 'Today', bottom: String(day.getDate()) }
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+  if (sameDay(day, tomorrow)) return { top: 'Tomorrow', bottom: String(day.getDate()) }
+  return {
+    top: day.toLocaleDateString(undefined, { weekday: 'short' }),
+    bottom: String(day.getDate()),
+  }
+}
+
+function formatTimeLabel(hours: number, minutes: number) {
+  return new Date(2000, 0, 1, hours, minutes).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+function buildDays(today: Date) {
+  return Array.from({ length: DAY_COUNT }, (_, index) => {
+    const day = new Date(today)
+    day.setDate(today.getDate() + index)
+    return startOfDay(day)
+  })
+}
+
+function buildTimesForDay(day: Date, now: Date) {
+  const times: Array<{ hours: number; minutes: number; key: string }> = []
+  for (let minutesOfDay = 0; minutesOfDay < 24 * 60; minutesOfDay += TIME_STEP_MINUTES) {
+    const hours = Math.floor(minutesOfDay / 60)
+    const minutes = minutesOfDay % 60
+    const slot = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hours, minutes, 0, 0)
+    if (sameDay(day, now) && slot.getTime() <= now.getTime() + 5 * 60 * 1000) continue
+    times.push({ hours, minutes, key: `${hours}:${minutes}` })
+  }
+  return times
+}
+
+function nearestTimeIndex(
+  times: Array<{ hours: number; minutes: number }>,
+  draft: Date,
+) {
+  if (times.length === 0) return 0
+  const target = draft.getHours() * 60 + draft.getMinutes()
+  let best = 0
+  let bestDist = Number.POSITIVE_INFINITY
+  times.forEach((slot, index) => {
+    const value = slot.hours * 60 + slot.minutes
+    const dist = Math.abs(value - target)
+    if (dist < bestDist) {
+      best = index
+      bestDist = dist
+    }
+  })
+  return best
 }
 
 type VisitPlanPickerProps = {
@@ -58,88 +118,107 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
   const saved = parseIso(value)
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(() => defaultDraft(saved))
-  const [monthCursor, setMonthCursor] = useState(
-    () => new Date(defaultDraft(saved).getFullYear(), defaultDraft(saved).getMonth(), 1),
-  )
+  const dateRailRef = useRef<HTMLDivElement>(null)
+  const timeWheelRef = useRef<HTMLDivElement>(null)
+  const timeScrollLock = useRef(false)
+
+  const today = useMemo(() => startOfDay(new Date()), [open])
+  const now = useMemo(() => new Date(), [open])
+  const days = useMemo(() => buildDays(today), [today])
+  const times = useMemo(() => buildTimesForDay(startOfDay(draft), now), [draft, now])
 
   useEffect(() => {
     if (!open) return
     const next = defaultDraft(parseIso(value))
-    setDraft(next)
-    setMonthCursor(new Date(next.getFullYear(), next.getMonth(), 1))
-  }, [open, value])
-
-  const today = startOfDay(new Date())
-
-  const cells = useMemo(() => {
-    const year = monthCursor.getFullYear()
-    const month = monthCursor.getMonth()
-    const firstDow = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const slots: Array<Date | null> = []
-    for (let i = 0; i < firstDow; i += 1) slots.push(null)
-    for (let day = 1; day <= daysInMonth; day += 1) {
-      slots.push(new Date(year, month, day))
+    const dayTimes = buildTimesForDay(startOfDay(next), new Date())
+    if (dayTimes.length === 0) {
+      const fallback = new Date(today)
+      fallback.setDate(today.getDate() + 1)
+      fallback.setHours(10, 0, 0, 0)
+      setDraft(fallback)
+      return
     }
-    while (slots.length % 7 !== 0) slots.push(null)
-    return slots
-  }, [monthCursor])
+    const idx = nearestTimeIndex(dayTimes, next)
+    const slot = dayTimes[idx]!
+    setDraft(
+      new Date(next.getFullYear(), next.getMonth(), next.getDate(), slot.hours, slot.minutes, 0, 0),
+    )
+  }, [open, value, today])
 
-  const monthLabel = monthCursor.toLocaleDateString(undefined, {
-    month: 'long',
-    year: 'numeric',
-  })
+  useEffect(() => {
+    if (!open || !dateRailRef.current) return
+    const index = Math.max(
+      0,
+      days.findIndex((day) => sameDay(day, draft)),
+    )
+    const node = dateRailRef.current.querySelector<HTMLElement>(`[data-day-index="${index}"]`)
+    node?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  }, [open, draft, days])
 
-  const dirty =
-    (saved?.getTime() ?? null) !==
-    new Date(
-      draft.getFullYear(),
-      draft.getMonth(),
-      draft.getDate(),
-      draft.getHours(),
-      draft.getMinutes(),
-      0,
-      0,
-    ).getTime()
+  const selectedDayKey = `${draft.getFullYear()}-${draft.getMonth()}-${draft.getDate()}`
+
+  useEffect(() => {
+    if (!open || !timeWheelRef.current || times.length === 0) return
+    const index = nearestTimeIndex(times, draft)
+    timeScrollLock.current = true
+    timeWheelRef.current.scrollTo({
+      top: index * WHEEL_ITEM_H,
+      behavior: 'smooth',
+    })
+    const timer = window.setTimeout(() => {
+      timeScrollLock.current = false
+    }, 320)
+    return () => window.clearTimeout(timer)
+    // Re-center the wheel when the chosen day changes or the picker opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectedDayKey, times.length])
 
   function pickDay(day: Date) {
-    setDraft(
-      (prev) =>
-        new Date(day.getFullYear(), day.getMonth(), day.getDate(), prev.getHours(), prev.getMinutes(), 0, 0),
-    )
-  }
-
-  function setHour(hour: number) {
     setDraft((prev) => {
-      const next = new Date(prev)
-      next.setHours(hour)
+      const next = new Date(day.getFullYear(), day.getMonth(), day.getDate(), prev.getHours(), prev.getMinutes(), 0, 0)
+      const dayTimes = buildTimesForDay(day, new Date())
+      if (dayTimes.length === 0) {
+        next.setDate(next.getDate() + 1)
+        next.setHours(10, 0, 0, 0)
+        return next
+      }
+      const idx = nearestTimeIndex(dayTimes, next)
+      const slot = dayTimes[idx]!
+      next.setHours(slot.hours, slot.minutes, 0, 0)
       return next
     })
   }
 
-  function setMinute(minute: number) {
+  function pickTime(hours: number, minutes: number) {
     setDraft((prev) => {
       const next = new Date(prev)
-      next.setMinutes(minute)
+      next.setHours(hours, minutes, 0, 0)
       return next
     })
+  }
+
+  function onTimeScroll() {
+    if (!timeWheelRef.current || timeScrollLock.current || times.length === 0) return
+    const index = Math.round(timeWheelRef.current.scrollTop / WHEEL_ITEM_H)
+    const clamped = Math.max(0, Math.min(times.length - 1, index))
+    const slot = times[clamped]
+    if (!slot) return
+    if (draft.getHours() === slot.hours && draft.getMinutes() === slot.minutes) return
+    pickTime(slot.hours, slot.minutes)
   }
 
   function handleSave() {
-    const iso = new Date(
-      draft.getFullYear(),
-      draft.getMonth(),
-      draft.getDate(),
-      draft.getHours(),
-      draft.getMinutes(),
-      0,
-      0,
-    ).toISOString()
-    onSave(iso)
-    setOpen(false)
-  }
-
-  function handleCancel() {
+    onSave(
+      new Date(
+        draft.getFullYear(),
+        draft.getMonth(),
+        draft.getDate(),
+        draft.getHours(),
+        draft.getMinutes(),
+        0,
+        0,
+      ).toISOString(),
+    )
     setOpen(false)
   }
 
@@ -176,140 +255,122 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
           className="animate-bfi-fade overflow-hidden rounded-2xl border border-saffron/35 bg-gradient-to-b from-[#3a2a2b] via-[#322426] to-[#2a1f20] p-3 shadow-[0_12px_28px_rgb(0_0_0/0.35)]"
           data-testid={testId ? `${testId}-panel` : undefined}
         >
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
-              }
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-              aria-label="Previous month"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <p className="font-display text-sm font-semibold tracking-tight text-saffron-glow">
-              {monthLabel}
-            </p>
-            <button
-              type="button"
-              onClick={() =>
-                setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
-              }
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-              aria-label="Next month"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          <p className="mb-3 text-center font-display text-[13px] font-semibold tracking-tight text-saffron-glow">
+            Schedule a visit
+          </p>
 
-          <div className="mb-1 grid grid-cols-7 gap-1">
-            {WEEKDAYS.map((day) => (
-              <span
-                key={day}
-                className="py-1 text-center text-[10px] font-bold tracking-wide text-night-faint uppercase"
-              >
-                {day}
-              </span>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 gap-1">
-            {cells.map((day, index) => {
-              if (!day) {
-                return <span key={`empty-${index}`} className="h-9" />
-              }
+          <p className="mb-1.5 px-0.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
+            Date
+          </p>
+          <div
+            ref={dateRailRef}
+            className="mb-3 flex gap-2 overflow-x-auto scroll-smooth px-0.5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            data-testid={testId ? `${testId}-dates` : undefined}
+          >
+            {days.map((day, index) => {
               const selected = sameDay(day, draft)
-              const isToday = sameDay(day, today)
+              const label = formatDayChip(day, today)
+              const month = day.toLocaleDateString(undefined, { month: 'short' })
               return (
                 <button
                   key={day.toISOString()}
                   type="button"
+                  data-day-index={index}
                   onClick={() => pickDay(day)}
                   className={cn(
-                    'inline-flex h-9 items-center justify-center rounded-xl text-[12px] font-semibold touch-manipulation transition-colors',
+                    'flex w-[4.35rem] shrink-0 snap-center flex-col items-center justify-center rounded-2xl border px-2 py-2.5 touch-manipulation transition-colors',
                     selected
-                      ? 'bg-saffron text-white shadow-[0_4px_12px_rgb(232_145_58/0.35)]'
-                      : isToday
-                        ? 'border border-saffron/45 text-saffron-glow hover:bg-saffron/20'
-                        : 'text-night-ink hover:bg-white/10',
+                      ? 'border-saffron/60 bg-saffron text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)]'
+                      : 'border-white/15 bg-night/35 text-night-muted hover:border-saffron/35 hover:text-saffron-glow',
                   )}
                   aria-pressed={selected}
                 >
-                  {day.getDate()}
+                  <span
+                    className={cn(
+                      'text-[9px] font-bold tracking-[0.08em] uppercase',
+                      selected ? 'text-white/85' : 'text-night-faint',
+                    )}
+                  >
+                    {label.top}
+                  </span>
+                  <span className="mt-0.5 font-display text-lg font-semibold leading-none">
+                    {label.bottom}
+                  </span>
+                  <span
+                    className={cn(
+                      'mt-1 text-[9px] font-semibold',
+                      selected ? 'text-white/80' : 'text-night-faint',
+                    )}
+                  >
+                    {month}
+                  </span>
                 </button>
               )
             })}
           </div>
 
-          <div className="mt-3 space-y-2">
-            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Time</p>
-            <div className="flex items-center gap-2">
-              <div className="flex min-h-10 flex-1 items-center justify-between rounded-xl border border-white/15 bg-night/60 px-2">
-                <button
-                  type="button"
-                  onClick={() => setHour((draft.getHours() + 23) % 24)}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-saffron-glow hover:bg-saffron/20 touch-manipulation"
-                  aria-label="Decrease hour"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="text-sm font-semibold tabular-nums text-night-ink" data-testid={testId ? `${testId}-hour` : undefined}>
-                  {pad(draft.getHours())}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setHour((draft.getHours() + 1) % 24)}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-saffron-glow hover:bg-saffron/20 touch-manipulation"
-                  aria-label="Increase hour"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-              <span className="text-saffron-glow font-bold">:</span>
-              <div className="flex min-h-10 flex-1 items-center justify-between rounded-xl border border-white/15 bg-night/60 px-2">
-                <button
-                  type="button"
-                  onClick={() => setMinute((draft.getMinutes() - 5 + 60) % 60)}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-saffron-glow hover:bg-saffron/20 touch-manipulation"
-                  aria-label="Decrease minute"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="text-sm font-semibold tabular-nums text-night-ink" data-testid={testId ? `${testId}-minute` : undefined}>
-                  {pad(draft.getMinutes() - (draft.getMinutes() % 5))}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMinute((draft.getMinutes() - (draft.getMinutes() % 5) + 5) % 60)}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-saffron-glow hover:bg-saffron/20 touch-manipulation"
-                  aria-label="Increase minute"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {[9, 10, 12, 14, 16, 18].map((hour) => (
-                <button
-                  key={hour}
-                  type="button"
-                  onClick={() => {
-                    setHour(hour)
-                    setMinute(0)
-                  }}
-                  className={cn(
-                    'rounded-md border px-2 py-1 text-[10px] font-semibold touch-manipulation',
-                    draft.getHours() === hour && draft.getMinutes() < 5
-                      ? 'border-saffron/55 bg-saffron/25 text-saffron-glow'
-                      : 'border-white/15 text-night-faint hover:border-saffron/35 hover:text-saffron-glow',
-                  )}
-                >
-                  {new Date(2000, 0, 1, hour, 0).toLocaleTimeString(undefined, {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })}
-                </button>
-              ))}
+          <p className="mb-1.5 px-0.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
+            Time
+          </p>
+          <div className="relative mx-auto max-w-[14rem]">
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-gradient-to-b from-[#322426] to-transparent"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-[#2a1f20] to-transparent"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute inset-x-1 top-1/2 z-[5] h-11 -translate-y-1/2 rounded-xl border border-saffron/45 bg-saffron/15"
+              aria-hidden
+            />
+            <div
+              ref={timeWheelRef}
+              onScroll={onTimeScroll}
+              className="h-[11rem] snap-y snap-mandatory overflow-y-auto scroll-smooth px-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{
+                paddingTop: WHEEL_ITEM_H * 2,
+                paddingBottom: WHEEL_ITEM_H * 2,
+              }}
+              data-testid={testId ? `${testId}-times` : undefined}
+            >
+              {times.length === 0 ? (
+                <p className="py-8 text-center text-[12px] text-night-faint">No times left today</p>
+              ) : (
+                times.map((slot) => {
+                  const selected =
+                    draft.getHours() === slot.hours && draft.getMinutes() === slot.minutes
+                  return (
+                    <button
+                      key={slot.key}
+                      type="button"
+                      onClick={() => {
+                        pickTime(slot.hours, slot.minutes)
+                        const index = times.findIndex((item) => item.key === slot.key)
+                        if (index >= 0 && timeWheelRef.current) {
+                          timeScrollLock.current = true
+                          timeWheelRef.current.scrollTo({
+                            top: index * WHEEL_ITEM_H,
+                            behavior: 'smooth',
+                          })
+                          window.setTimeout(() => {
+                            timeScrollLock.current = false
+                          }, 320)
+                        }
+                      }}
+                      className={cn(
+                        'flex w-full snap-center items-center justify-center text-[15px] font-semibold tabular-nums touch-manipulation transition-colors',
+                        selected ? 'text-saffron-glow' : 'text-night-faint/80',
+                      )}
+                      style={{ height: WHEEL_ITEM_H }}
+                      aria-pressed={selected}
+                    >
+                      {formatTimeLabel(slot.hours, slot.minutes)}
+                    </button>
+                  )
+                })
+              )}
             </div>
           </div>
 
@@ -320,7 +381,7 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
           <div className="mt-3 flex gap-2">
             <button
               type="button"
-              onClick={handleCancel}
+              onClick={() => setOpen(false)}
               className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-transparent px-3 text-sm font-semibold text-night-muted touch-manipulation"
               data-testid={testId ? `${testId}-cancel` : undefined}
             >
@@ -330,11 +391,12 @@ export function VisitPlanPicker({ value, onSave, testId }: VisitPlanPickerProps)
             <button
               type="button"
               onClick={handleSave}
-              className="inline-flex min-h-11 flex-[1.4] items-center justify-center gap-1.5 rounded-xl bg-saffron px-3 text-sm font-semibold text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)] touch-manipulation hover:bg-saffron-deep"
+              disabled={times.length === 0}
+              className="inline-flex min-h-11 flex-[1.4] items-center justify-center gap-1.5 rounded-xl bg-saffron px-3 text-sm font-semibold text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)] touch-manipulation hover:bg-saffron-deep disabled:opacity-50"
               data-testid={testId ? `${testId}-save` : undefined}
             >
               <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-              {dirty || !saved ? 'Save plan' : 'Save'}
+              Save plan
             </button>
           </div>
         </div>
