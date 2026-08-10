@@ -14,7 +14,7 @@ type AppIconProps = {
 
 /**
  * Due Diligence app icon — flat vector mark on a saffron rounded square.
- * House outline + magnifying glass with a 2×2 window grid in the lens.
+ * Refined house + magnifier with a lighter stroke and proportional 2×2 window.
  */
 export function AppIcon({
   className,
@@ -44,45 +44,51 @@ export function AppIcon({
       <g
         fill="none"
         stroke="#FFFFFF"
-        strokeWidth="26"
+        strokeWidth="20"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        {/* Straight gable roof — wider/shorter house */}
-        <path d="M78 255 L256 145 L434 255" />
-        {/* Straight vertical chimney (not an L) */}
-        <line x1="352" y1="175" x2="352" y2="118" />
-        {/* Left wall + floor; open bottom-right for the loupe handle */}
-        <path d="M112 255 V375 H275" />
-        <path d="M400 255 V280" />
+        {/* Wider/shorter gable — straight roof lines */}
+        <path d="M72 258 L256 148 L440 258" />
+        {/* Simple vertical chimney outline on the right roof slope */}
+        <line x1="350" y1="178" x2="350" y2="118" />
+        {/*
+          House body opens at bottom-right so the loupe handle
+          completes that corner without overlapping strokes.
+        */}
+        <path d="M118 258 V372 H248" />
+        <path d="M394 258 V278" />
       </g>
 
-      {/* Magnifier lens — saffron fill keeps house strokes from showing through */}
+      {/* Magnifier lens — saffron fill clears house strokes behind the ring */}
       <circle
-        cx="256"
-        cy="290"
-        r="82"
+        cx="268"
+        cy="292"
+        r="78"
         fill={APP_ICON_SAFFRON}
         stroke="#FFFFFF"
-        strokeWidth="26"
+        strokeWidth="20"
       />
 
-      {/* 2×2 window grid inside the lens */}
+      {/* Smaller, proportional 2×2 window grid inside the lens */}
       <g fill="#FFFFFF">
-        <rect x="230" y="264" width="22" height="22" rx="3" />
-        <rect x="260" y="264" width="22" height="22" rx="3" />
-        <rect x="230" y="294" width="22" height="22" rx="3" />
-        <rect x="260" y="294" width="22" height="22" rx="3" />
+        <rect x="250" y="274" width="14" height="14" rx="2" />
+        <rect x="272" y="274" width="14" height="14" rx="2" />
+        <rect x="250" y="296" width="14" height="14" rx="2" />
+        <rect x="272" y="296" width="14" height="14" rx="2" />
       </g>
 
-      {/* Magnifier handle at 45° */}
+      {/*
+        Handle at 45° — starts on the lens rim and extends through the
+        open house corner with a clean, single stroke.
+      */}
       <line
-        x1="316"
-        y1="348"
-        x2="390"
-        y2="422"
+        x1="324"
+        y1="346"
+        x2="392"
+        y2="414"
         stroke="#FFFFFF"
-        strokeWidth="26"
+        strokeWidth="20"
         strokeLinecap="round"
       />
     </svg>

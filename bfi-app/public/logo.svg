@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Due Diligence">
-  <!-- Saffron app-icon squircle + white house / loupe / 2x2 window -->
+  <!-- Refined saffron app icon: lighter stroke, smaller window, vertical chimney -->
   <rect width="512" height="512" rx="114" ry="114" fill="#e8913a"/>
 
-  <g fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M78 255 L256 145 L434 255"/>
-    <line x1="352" y1="175" x2="352" y2="118"/>
-    <path d="M112 255 V375 H275"/>
-    <path d="M400 255 V280"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M72 258 L256 148 L440 258"/>
+    <line x1="350" y1="178" x2="350" y2="118"/>
+    <path d="M118 258 V372 H248"/>
+    <path d="M394 258 V278"/>
   </g>
 
-  <circle cx="256" cy="290" r="82" fill="#e8913a" stroke="#FFFFFF" stroke-width="26"/>
+  <circle cx="268" cy="292" r="78" fill="#e8913a" stroke="#FFFFFF" stroke-width="20"/>
 
   <g fill="#FFFFFF">
-    <rect x="230" y="264" width="22" height="22" rx="3"/>
-    <rect x="260" y="264" width="22" height="22" rx="3"/>
-    <rect x="230" y="294" width="22" height="22" rx="3"/>
-    <rect x="260" y="294" width="22" height="22" rx="3"/>
+    <rect x="250" y="274" width="14" height="14" rx="2"/>
+    <rect x="272" y="274" width="14" height="14" rx="2"/>
+    <rect x="250" y="296" width="14" height="14" rx="2"/>
+    <rect x="272" y="296" width="14" height="14" rx="2"/>
   </g>
 
-  <line x1="316" y1="348" x2="390" y2="422" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round"/>
+  <line x1="324" y1="346" x2="392" y2="414" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round"/>
 </svg>
