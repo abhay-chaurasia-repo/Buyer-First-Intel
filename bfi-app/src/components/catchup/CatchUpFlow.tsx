@@ -57,7 +57,7 @@ const surfaceMeta: Record<
     title: 'Buyer Community',
     Icon: Users,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'Plus = upsides · Watch = watch-outs — verified visitors upvote fixed labels',
+    blurb: 'Verified visitors upvote fixed labels',
   },
   schools: {
     title: 'Schools',
@@ -221,7 +221,25 @@ export function CatchUpFlow({
                 {meta.title}
               </span>
             </p>
-            <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
+            {isBuyerCommunity ? (
+              <div
+                className="mt-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5 text-left"
+                data-testid="plus-watch-key"
+              >
+                <p className="text-[12px] leading-snug text-night-ink">
+                  <span className="font-semibold text-saffron-glow">Plus</span>
+                  {' = '}
+                  upsides buyers noticed
+                </p>
+                <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
+                  <span className="font-semibold text-night-muted">Watch</span>
+                  {' = '}
+                  watch-outs to dig into
+                </p>
+              </div>
+            ) : (
+              <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
+            )}
             <span className="mt-2 inline-flex rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
               {headerCount}
             </span>
