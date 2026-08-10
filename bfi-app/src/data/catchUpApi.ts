@@ -25,6 +25,8 @@ export type CatchUpCard = {
   fields?: Array<{ label: string; value: string }>
   /** Optional Buyer Community label id for an inline remote upvote */
   insightLabelId?: string
+  /** Optional set of Buyer Community label ids for a remote Plus/Watch pair */
+  insightLabelIds?: string[]
 }
 
 export type CatchUpApiResponse = {
@@ -74,11 +76,14 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       channel: 'county-living-area',
       unreadCount: 1,
       headline: 'County living-area fact',
-      preview: `County records show ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote if it looks overstated.`,
+      preview: `County records show ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote whether it matches or looks overstated.`,
       timestamp: isoMinutesAgo(18),
       source: 'County assessor living area',
       fields: [{ label: 'County sqft', value: property.sqft.toLocaleString() }],
-      insightLabelId: 'published-listing-size-overstated',
+      insightLabelIds: [
+        'published-listing-size-matches-county',
+        'published-listing-size-overstated',
+      ],
     },
     {
       id: 'cf-rooms',

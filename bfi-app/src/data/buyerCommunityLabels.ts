@@ -79,6 +79,14 @@ export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
 export const BUYER_COMMUNITY_LABELS: BuyerCommunityLabel[] = [
   // Size & records — remote (no visit required; usable while comparing Zillow/Redfin)
   {
+    id: 'published-listing-size-matches-county',
+    categoryId: 'size-records',
+    text: 'Published listing size matches county',
+    tone: 'positive',
+    seedVotes: 4,
+    requiresVisit: false,
+  },
+  {
     id: 'published-listing-size-overstated',
     categoryId: 'size-records',
     text: 'Published listing size looks larger than county',
