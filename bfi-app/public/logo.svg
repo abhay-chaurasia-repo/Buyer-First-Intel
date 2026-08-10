@@ -2,7 +2,7 @@
   <rect width="512" height="512" rx="114" ry="114" fill="#CA8544"/>
   <path d="M104 252 L256 120 L408 252" fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M136 252 V380 H198" fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="330" y="124" width="26" height="52" rx="3" fill="#FFFFFF"/>
+  <rect x="326" y="124" width="34" height="52" rx="3" fill="#FFFFFF"/>
   <circle cx="268" cy="304" r="62" fill="#CA8544" stroke="#FFFFFF" stroke-width="26"/>
   <g fill="#FFFFFF">
     <rect x="248" y="284" width="14" height="14" rx="2.5"/>

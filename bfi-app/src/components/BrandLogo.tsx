@@ -20,7 +20,7 @@ export function BrandLogo({
 }: BrandLogoProps) {
   return (
     <img
-      src="/logo.png?v=user-refine"
+      src="/logo.png?v=chimney-w"
       alt={alt}
       width={size}
       height={size}
