@@ -1,15 +1,16 @@
 import { NavLink } from 'react-router-dom'
-import { ClipboardCheck, Search, Star } from 'lucide-react'
+import { ClipboardCheck, Scale, Search, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { to: '/', icon: Search, label: 'Search', end: true },
   { to: '/watchlist', icon: Star, label: 'Homes in Diligence', end: false },
   { to: '/journey', icon: ClipboardCheck, label: 'Journey', end: false },
+  { to: '/rules', icon: Scale, label: 'Rules', end: false },
 ] as const
 
 /**
- * Bottom Search / Homes in Diligence / Journey dock.
+ * Bottom Search / Homes in Diligence / Journey / Rules dock.
  */
 export function PrimaryNavPanel({
   className,
@@ -28,7 +29,7 @@ export function PrimaryNavPanel({
             end={end}
             className={({ isActive }) =>
               cn(
-                'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-2 transition-colors touch-manipulation',
+                'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1.5 transition-colors touch-manipulation',
                 isActive ? 'text-saffron-glow' : 'text-night-muted active:text-saffron-glow',
               )
             }
@@ -37,7 +38,7 @@ export function PrimaryNavPanel({
             {({ isActive }) => (
               <>
                 <Icon
-                  className="h-[22px] w-[22px]"
+                  className="h-[20px] w-[20px]"
                   strokeWidth={isActive ? 2.4 : 1.85}
                   fill={isActive && to === '/watchlist' ? 'currentColor' : 'none'}
                 />
