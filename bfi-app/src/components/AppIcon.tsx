@@ -30,11 +30,10 @@ export function AppIcon({
   const loupeCy = 292
   const loupeR = 70
   const loupeOuter = loupeR + stroke / 2
-  // Keep floor intersecting the loupe rim (dy must stay < outer radius)
-  const floorY = 368
+  const floorY = 378
   const floorDy = floorY - loupeCy
   const floorEndX =
-    loupeCx - Math.sqrt(Math.max(loupeOuter * loupeOuter - floorDy * floorDy, 1))
+    loupeCx - Math.sqrt(Math.max(loupeOuter * loupeOuter - floorDy * floorDy, 0))
 
   const handleStart = loupeR + stroke * 0.2
   const handleLen = 78
