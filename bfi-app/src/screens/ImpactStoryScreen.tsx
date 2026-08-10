@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
-import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
 import { APP_TAGLINE } from '@/data/brand'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
@@ -165,7 +164,20 @@ function Snippet({ kind }: { kind: ImpactPage['snippet'] }) {
 function StorySlide({ page }: { page: ImpactPage }) {
   return (
     <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
-      <SceneBackdrop scene={page.scene} intensity="medium" />
+      <img
+        src={page.image}
+        alt={page.imageAlt}
+        className="absolute inset-0 h-full w-full scale-105 object-cover"
+      />
+      {/* Same dark-warm readability wash as inner SceneBackdrop */}
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/48 to-ink/86"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]"
+        aria-hidden
+      />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-3 pt-2">
         <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {page.eyebrow}
