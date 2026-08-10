@@ -82,7 +82,7 @@ function WatchlistMetaRail({
 
   return (
     <div
-      className="flex min-w-0 max-w-full flex-nowrap items-center justify-end gap-1 overflow-hidden"
+      className="flex min-w-0 max-w-full flex-nowrap items-center justify-start gap-1 overflow-hidden"
       data-testid="watchlist-meta-rail"
     >
       {hasPlanned && plannedVisitAt ? (
@@ -383,7 +383,7 @@ function WatchlistRow({
           ) : null}
         </div>
 
-        <div className="mt-1.5 pl-10 pr-1">
+        <div className="mt-1 pl-10 pr-1">
           <WatchlistMetaRail
             plannedVisitAt={item.plannedVisitAt}
             visitedAt={item.visitedAt}
