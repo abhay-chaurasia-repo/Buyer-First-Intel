@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
-import { APP_NAME } from '@/data/brand'
 import { cn } from '@/lib/utils'
 
 const AUTO_MS = 3500
