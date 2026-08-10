@@ -162,8 +162,6 @@ function Snippet({ kind }: { kind: ImpactPage['snippet'] }) {
 }
 
 function StorySlide({ page }: { page: ImpactPage }) {
-  const wash = page.wash ?? 'medium'
-
   return (
     <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
       <img
@@ -171,38 +169,29 @@ function StorySlide({ page }: { page: ImpactPage }) {
         alt={page.imageAlt}
         className="absolute inset-0 h-full w-full object-cover"
       />
-      {/* Visits-slide readability: strong wash on brighter photos so type shines */}
+      {/* Strong dark-warm wash on every slide so type shines over the photo */}
       <div
-        className={cn(
-          'absolute inset-0 bg-gradient-to-b',
-          wash === 'strong'
-            ? 'from-ink/72 via-ink/62 to-ink/94'
-            : 'from-ink/55 via-ink/48 to-ink/90',
-        )}
+        className="absolute inset-0 bg-gradient-to-b from-ink/72 via-ink/62 to-ink/94"
         aria-hidden
       />
       <div
-        className={cn(
-          'absolute inset-0',
-          wash === 'strong'
-            ? 'bg-[radial-gradient(ellipse_80%_55%_at_50%_-8%,rgb(232_145_58/0.16),transparent_58%)]'
-            : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
-        )}
+        className="absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-8%,rgb(232_145_58/0.16),transparent_58%)]"
         aria-hidden
       />
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(3.75rem,calc(var(--bfi-status-pad)+2.75rem))] pb-[11.5rem]">
+      {/* Clear the logo + tagline row, then a little air before the eyebrow */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(6.25rem,calc(var(--bfi-status-pad)+4.75rem))] pb-[11.5rem]">
         <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {page.eyebrow}
         </p>
-        <h1 className="mt-2 max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight">
+        <h1 className="mt-2.5 max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight">
           <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
             {page.title}
           </span>
         </h1>
-        <p className="mt-2 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
+        <p className="mt-2.5 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
           {page.body}
         </p>
-        <div className="mt-4 max-w-sm animate-bfi-rise">
+        <div className="mt-5 max-w-sm animate-bfi-rise">
           <Snippet kind={page.snippet} />
         </div>
       </div>

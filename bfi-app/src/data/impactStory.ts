@@ -24,8 +24,6 @@ export type ImpactPage = {
   image: string
   imageAlt: string
   snippet: 'size' | 'visits' | 'community'
-  /** Darker wash for brighter photos so type pops like the visits slide */
-  wash?: 'medium' | 'strong'
 }
 
 export const IMPACT_PAGES: ImpactPage[] = [
@@ -37,7 +35,6 @@ export const IMPACT_PAGES: ImpactPage[] = [
     image: '/impact/impact-georgian-home.png',
     imageAlt: 'Georgian-style home facade',
     snippet: 'size',
-    wash: 'strong',
   },
   {
     id: 'visits',
@@ -47,7 +44,6 @@ export const IMPACT_PAGES: ImpactPage[] = [
     image: '/impact/impact-visits.png',
     imageAlt: 'Quiet residential street at dusk',
     snippet: 'visits',
-    wash: 'medium',
   },
   {
     id: 'community',
@@ -57,6 +53,5 @@ export const IMPACT_PAGES: ImpactPage[] = [
     image: '/impact/impact-community.png',
     imageAlt: 'Neighborhood community atmosphere',
     snippet: 'community',
-    wash: 'medium',
   },
 ]
