@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Due Diligence">
+  <!-- Saffron squircle (~#E28B3E) -->
+  <rect width="512" height="512" rx="112" ry="112" fill="#E28B3E"/>
+
+  <!-- House outline + chimney (white stroke) -->
+  <g
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="26"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M142 242 L256 138 L370 242 V378 H142 Z"/>
+    <!-- Chimney on right roof slope -->
+    <path d="M334 172 V122 H378"/>
+  </g>
+
+  <!-- Magnifier lens — centered in house body; saffron fill masks house strokes behind lens -->
+  <circle cx="256" cy="286" r="68" fill="#E28B3E" stroke="#FFFFFF" stroke-width="26"/>
+
+  <!-- 2x2 window grid inside lens -->
+  <g fill="#FFFFFF">
+    <rect x="228" y="258" width="22" height="22" rx="3"/>
+    <rect x="262" y="258" width="22" height="22" rx="3"/>
+    <rect x="228" y="292" width="22" height="22" rx="3"/>
+    <rect x="262" y="292" width="22" height="22" rx="3"/>
+  </g>
+
+  <!-- Magnifier handle — diagonal down-right, overlaps bottom-right house corner -->
+  <line
+    x1="306"
+    y1="334"
+    x2="398"
+    y2="426"
+    stroke="#FFFFFF"
+    stroke-width="30"
+    stroke-linecap="round"
+  />
+</svg>

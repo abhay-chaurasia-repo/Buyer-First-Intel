@@ -19,7 +19,7 @@ export function BrandLogo({
 }: BrandLogoProps) {
   return (
     <img
-      src="/logo.png"
+      src="/logo.svg"
       alt={alt}
       width={size}
       height={size}
