@@ -14,7 +14,7 @@ type AppIconProps = {
 
 /**
  * Due Diligence app icon — flat vector mark on a saffron rounded square.
- * Refined house + magnifier with a lighter stroke and proportional 2×2 window.
+ * Bold white house + filled chimney + loupe with a tight 2×2 window grid.
  */
 export function AppIcon({
   className,
@@ -38,57 +38,53 @@ export function AppIcon({
     >
       <title id={titleId}>{title}</title>
 
-      {/* Standard app-icon squircle */}
+      {/* App-icon squircle */}
       <rect width="512" height="512" rx="114" ry="114" fill={APP_ICON_SAFFRON} />
+
+      {/* Solid filled chimney block on the right roof slope */}
+      <rect x="338" y="118" width="28" height="52" rx="4" fill="#FFFFFF" />
 
       <g
         fill="none"
         stroke="#FFFFFF"
-        strokeWidth="20"
+        strokeWidth="28"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        {/* Wider/shorter gable — straight roof lines */}
-        <path d="M72 258 L256 148 L440 258" />
-        {/* Simple vertical chimney outline on the right roof slope */}
-        <line x1="350" y1="178" x2="350" y2="118" />
-        {/*
-          House body opens at bottom-right so the loupe handle
-          completes that corner without overlapping strokes.
-        */}
-        <path d="M118 258 V372 H248" />
-        <path d="M394 258 V278" />
+        {/* Gable roof with slight eaves */}
+        <path d="M86 252 L256 132 L426 252" />
+        {/* Left wall + floor — stops cleanly at the loupe */}
+        <path d="M122 252 V380 H250" />
+        {/* Short right wall under the right eave */}
+        <path d="M390 252 V278" />
       </g>
 
-      {/* Magnifier lens — saffron fill clears house strokes behind the ring */}
+      {/* Magnifier — bold ring; saffron fill clears house strokes behind */}
       <circle
         cx="268"
-        cy="292"
-        r="78"
+        cy="300"
+        r="86"
         fill={APP_ICON_SAFFRON}
         stroke="#FFFFFF"
-        strokeWidth="20"
+        strokeWidth="28"
       />
 
-      {/* Smaller, proportional 2×2 window grid inside the lens */}
+      {/* Tight 2×2 solid white window grid */}
       <g fill="#FFFFFF">
-        <rect x="250" y="274" width="14" height="14" rx="2" />
-        <rect x="272" y="274" width="14" height="14" rx="2" />
-        <rect x="250" y="296" width="14" height="14" rx="2" />
-        <rect x="272" y="296" width="14" height="14" rx="2" />
+        <rect x="246" y="278" width="18" height="18" rx="2.5" />
+        <rect x="272" y="278" width="18" height="18" rx="2.5" />
+        <rect x="246" y="304" width="18" height="18" rx="2.5" />
+        <rect x="272" y="304" width="18" height="18" rx="2.5" />
       </g>
 
-      {/*
-        Handle at 45° — starts on the lens rim and extends through the
-        open house corner with a clean, single stroke.
-      */}
+      {/* Thick solid handle toward bottom-right */}
       <line
-        x1="324"
-        y1="346"
-        x2="392"
-        y2="414"
+        x1="332"
+        y1="360"
+        x2="404"
+        y2="432"
         stroke="#FFFFFF"
-        strokeWidth="20"
+        strokeWidth="28"
         strokeLinecap="round"
       />
     </svg>
