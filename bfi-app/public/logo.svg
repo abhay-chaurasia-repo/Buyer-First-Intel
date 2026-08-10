@@ -1,23 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Due Diligence">
   <rect width="512" height="512" rx="114" ry="114" fill="#e8913a"/>
 
-  <!-- Solid filled chimney block -->
-  <rect x="338" y="118" width="28" height="52" rx="4" fill="#FFFFFF"/>
-
   <g fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M86 252 L256 132 L426 252"/>
-    <path d="M122 252 V380 H250"/>
-    <path d="M390 252 V278"/>
+    <path d="M84 250 L256 128 L428 250"/>
+    <!-- Floor ends at loupe outer rim (no lens overhang) -->
+    <path d="M120 250 V386 H212.1"/>
+    <path d="M392 250 V272"/>
   </g>
 
-  <circle cx="268" cy="300" r="86" fill="#e8913a" stroke="#FFFFFF" stroke-width="28"/>
+  <!-- Solid filled chimney block -->
+  <rect x="336" y="122" width="30" height="56" rx="4" fill="#FFFFFF"/>
+
+  <circle cx="270" cy="302" r="88" fill="#e8913a" stroke="#FFFFFF" stroke-width="28"/>
 
   <g fill="#FFFFFF">
-    <rect x="246" y="278" width="18" height="18" rx="2.5"/>
-    <rect x="272" y="278" width="18" height="18" rx="2.5"/>
-    <rect x="246" y="304" width="18" height="18" rx="2.5"/>
-    <rect x="272" y="304" width="18" height="18" rx="2.5"/>
+    <rect x="249" y="281" width="18" height="18" rx="2.5"/>
+    <rect x="273" y="281" width="18" height="18" rx="2.5"/>
+    <rect x="249" y="305" width="18" height="18" rx="2.5"/>
+    <rect x="273" y="305" width="18" height="18" rx="2.5"/>
   </g>
 
-  <line x1="332" y1="360" x2="404" y2="432" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round"/>
+  <line x1="333.4" y1="365.4" x2="411.4" y2="443.4" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round"/>
 </svg>
