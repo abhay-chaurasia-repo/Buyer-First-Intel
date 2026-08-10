@@ -127,7 +127,7 @@ function WatchlistMetaRail({
             event.stopPropagation()
             onContribute?.()
           }}
-          className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-verified/55 bg-verified/25 px-1.5 py-1 text-[#b7e6cb] transition-colors hover:bg-verified/35 touch-manipulation"
+          className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-[#e85d5d]/60 bg-[#e85d5d]/22 px-1.5 py-1 text-[#ffb0b0] transition-colors hover:bg-[#e85d5d]/32 touch-manipulation"
           title="Contribute labels to Buyer Community"
           aria-label="Contribute to Buyer Community"
           data-testid="watchlist-contribute-chip"
@@ -341,58 +341,59 @@ function WatchlistRow({
       className="rounded-xl border border-white/25 bg-transparent"
       data-testid={`watchlist-item-${item.id}`}
     >
-      <div className="flex items-start gap-1 px-2 py-2">
-        <button
-          type="button"
-          onClick={() => {
-            setOpen((value) => !value)
-            setPlanning(false)
-          }}
-          className="mt-0.5 inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl text-saffron-glow touch-manipulation"
-          aria-expanded={open}
-          aria-label={open ? `Collapse ${item.address}` : `Expand ${item.address}`}
-          data-testid={`button-toggle-watchlist-${item.id}`}
-        >
-          <ChevronDown
-            className={cn('h-4 w-4 transition-transform', !open && '-rotate-90')}
-          />
-        </button>
-
-        <div className="min-w-0 flex-1 pt-0.5">
+      <div className="px-2 py-2">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => {
               setOpen((value) => !value)
               setPlanning(false)
             }}
-            className="block w-full truncate text-left text-sm font-semibold text-night-muted touch-manipulation"
+            className="inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl text-saffron-glow touch-manipulation"
+            aria-expanded={open}
+            aria-label={open ? `Collapse ${item.address}` : `Expand ${item.address}`}
+            data-testid={`button-toggle-watchlist-${item.id}`}
+          >
+            <ChevronDown
+              className={cn('h-4 w-4 transition-transform', !open && '-rotate-90')}
+            />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpen((value) => !value)
+              setPlanning(false)
+            }}
+            className="min-w-0 flex-1 truncate py-2 text-left text-sm font-semibold text-night-muted touch-manipulation"
           >
             {item.address}
           </button>
-          <div className="mt-1.5">
-            <WatchlistMetaRail
-              plannedVisitAt={item.plannedVisitAt}
-              visitedAt={item.visitedAt}
-              noteCount={noteCount}
-              reminderEnabled={Boolean(item.reminderEnabled)}
-              onContribute={
-                item.visitedAt ? () => onContribute(item) : undefined
-              }
-            />
-          </div>
+
+          {open ? (
+            <button
+              type="button"
+              onClick={() => onRemove(item.id)}
+              className="inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+              aria-label={`Remove ${item.address} from Homes in Diligence`}
+              data-testid={`button-remove-watchlist-${item.id}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          ) : null}
         </div>
 
-        {open ? (
-          <button
-            type="button"
-            onClick={() => onRemove(item.id)}
-            className="mt-0.5 inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-            aria-label={`Remove ${item.address} from Homes in Diligence`}
-            data-testid={`button-remove-watchlist-${item.id}`}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        ) : null}
+        <div className="mt-1.5 pl-10 pr-1">
+          <WatchlistMetaRail
+            plannedVisitAt={item.plannedVisitAt}
+            visitedAt={item.visitedAt}
+            noteCount={noteCount}
+            reminderEnabled={Boolean(item.reminderEnabled)}
+            onContribute={
+              item.visitedAt ? () => onContribute(item) : undefined
+            }
+          />
+        </div>
       </div>
 
       {open ? (
@@ -433,7 +434,7 @@ function WatchlistRow({
                   <button
                     type="button"
                     onClick={() => onContribute(item)}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-verified/50 bg-verified/25 px-3 text-xs font-semibold text-[#b7e6cb] transition-colors hover:bg-verified/35 touch-manipulation"
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[#e85d5d]/55 bg-[#e85d5d]/22 px-3 text-xs font-semibold text-[#ffb0b0] transition-colors hover:bg-[#e85d5d]/32 touch-manipulation"
                     data-testid={`button-contribute-community-${item.id}`}
                   >
                     <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
