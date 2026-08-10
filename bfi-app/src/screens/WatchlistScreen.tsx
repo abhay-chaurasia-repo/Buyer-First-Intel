@@ -9,12 +9,10 @@ import {
   Star,
   StickyNote,
   Trash2,
-  Users,
 } from 'lucide-react'
 import { VisitPlanPicker } from '@/components/VisitPlanPicker'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { persistBuyerVerified } from '@/data/buyerCommunityStorage'
 import {
   addNote,
   deleteNote,
@@ -274,17 +272,14 @@ function WatchlistRow({
   onChange,
   onRemove,
   onOpen,
-  onContribute,
 }: {
   item: WatchlistItem
   onChange: (items: WatchlistItem[]) => void
   onRemove: (id: string) => void
   onOpen: (item: WatchlistItem) => void
-  onContribute: (item: WatchlistItem) => void
 }) {
   const [open, setOpen] = useState(false)
   const [planning, setPlanning] = useState(false)
-  const [showContributePrompt, setShowContributePrompt] = useState(false)
   const status = visitPlanStatus(item)
   const [noteCount, setNoteCount] = useState(() => loadNotes(item.id).length)
   const rowRef = useRef<HTMLLIElement>(null)
@@ -294,24 +289,12 @@ function WatchlistRow({
     rowRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [planning])
 
-  useEffect(() => {
-    if (status !== 'visited') setShowContributePrompt(false)
-  }, [status])
-
   function handleMarkVisited() {
-    const markingVisited = status !== 'visited'
-    onChange(markWatchlistVisited(item.id, markingVisited))
-    if (markingVisited) {
-      persistBuyerVerified(item.id, true)
-      setShowContributePrompt(true)
-    } else {
-      setShowContributePrompt(false)
-    }
+    onChange(markWatchlistVisited(item.id, status !== 'visited'))
   }
 
   function handleSavePlan(iso: string | null) {
     onChange(setWatchlistPlannedVisit(item.id, iso))
-    setShowContributePrompt(false)
     if (iso) {
       // Default reminder: request permission on Save (user gesture) with no extra UI
       void ensureNotificationPermission().then(() => {
@@ -418,25 +401,6 @@ function WatchlistRow({
               </div>
 
 
-              {showContributePrompt || status === 'visited' ? (
-                <button
-                  type="button"
-                  onClick={() => onContribute(item)}
-                  className="flex w-full items-center gap-2 rounded-xl border border-saffron/40 bg-gradient-to-r from-saffron/20 to-transparent px-2.5 py-2 text-left touch-manipulation"
-                  data-testid={`button-contribute-insights-${item.id}`}
-                >
-                  <Users className="h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[12px] font-semibold text-saffron-glow">
-                      Contribute community insights
-                    </span>
-                    <span className="block text-[11px] text-night-faint">
-                      Share what you noticed on this visit
-                    </span>
-                  </span>
-                  <span className="text-[11px] font-bold text-saffron-glow">Go →</span>
-                </button>
-              ) : null}
             </>
           ) : null}
 
@@ -481,7 +445,7 @@ export function WatchlistScreen() {
     <AppShell scene="watchlist" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <PageHeader
         title="Saved properties"
-        description="Plan visits, mark visited, and share community insights after you visit."
+        description="Plan visits, mark visited, and keep private notes."
         testId="watchlist-top-bar"
       />
 
@@ -534,9 +498,6 @@ export function WatchlistScreen() {
                   onChange={setItems}
                   onRemove={(id) => setItems(removeFromWatchlist(id))}
                   onOpen={(row) => navigate(propertyPath(row))}
-                  onContribute={(row) =>
-                    navigate(propertyPath(row, { catchup: 'buyer-insights' }))
-                  }
                 />
               ))}
             </ul>
