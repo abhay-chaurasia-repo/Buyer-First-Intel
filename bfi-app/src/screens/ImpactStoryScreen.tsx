@@ -328,7 +328,7 @@ export function ImpactStoryScreen() {
           className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-saffron text-base font-semibold text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)] transition-colors hover:bg-saffron-deep touch-manipulation"
           data-testid="button-impact-continue"
         >
-          Start due diligence
+          Start Due Diligence
           <ArrowRight className="h-5 w-5" />
         </button>
 

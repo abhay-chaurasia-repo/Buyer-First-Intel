@@ -35,7 +35,7 @@ export function GuidanceScreen() {
   const relatedLabel =
     doc.id === 'buyer-commission-brief'
       ? 'Before you talk to an agent'
-      : 'Commission settlement buyer brief'
+      : 'What the commission settlements mean for you'
 
   return (
     <AppShell scene="guidance" contentClassName="relative overflow-hidden text-night-ink">

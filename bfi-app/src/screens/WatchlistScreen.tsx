@@ -138,10 +138,10 @@ function WatchlistMetaRail({
           title={
             hasShared
               ? 'Shared with Buyer Community — tap to update'
-              : 'Contribute labels to Buyer Community'
+              : 'Share labels with Buyer Community'
           }
           aria-label={
-            hasShared ? 'Shared with Buyer Community' : 'Contribute to Buyer Community'
+            hasShared ? 'Shared with Buyer Community' : 'Share with Buyer Community'
           }
           data-testid="watchlist-contribute-chip"
           data-shared={hasShared ? '1' : '0'}
@@ -470,7 +470,7 @@ function WatchlistRow({
                     data-testid={`button-contribute-community-${item.id}`}
                   >
                     <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
-                    {hasShared ? 'Shared with community' : 'Share with community'}
+                    {hasShared ? 'Shared with Buyer Community' : 'Share with Buyer Community'}
                   </button>
                 ) : null}
 
@@ -571,7 +571,7 @@ export function WatchlistScreen() {
             <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Filter homes in diligence">
               {(
                 [
-                  { id: 'all' as const, label: 'Saved', count: items.length, testId: 'watchlist-filter-saved' },
+                  { id: 'all' as const, label: 'All', count: items.length, testId: 'watchlist-filter-saved' },
                   {
                     id: 'planned' as const,
                     label: 'Planned',
@@ -628,7 +628,7 @@ export function WatchlistScreen() {
                 </p>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
                   {filter === 'planned'
-                    ? 'Schedule a visit on a saved property, then come back here.'
+                    ? 'Schedule a visit on a home in diligence, then come back here.'
                     : 'Mark a property visited after you go, then it will show up here.'}
                 </p>
                 <button
@@ -637,7 +637,7 @@ export function WatchlistScreen() {
                   className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 px-4 text-sm font-semibold text-night-muted transition-colors hover:border-saffron/40 hover:text-saffron-glow touch-manipulation"
                   data-testid="button-watchlist-show-all"
                 >
-                  Show all saved
+                  Show all homes
                 </button>
               </div>
             ) : (

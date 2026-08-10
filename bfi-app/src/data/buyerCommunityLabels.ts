@@ -48,7 +48,7 @@ export const BUYER_LABEL_CATEGORIES: BuyerLabelCategory[] = [
   {
     id: 'structure',
     title: 'Structure & condition',
-    blurb: 'Observable upsides and care items — not a formal inspection',
+    blurb: 'Observable upsides and watch-outs — not a formal inspection',
   },
   {
     id: 'parking',
@@ -197,8 +197,10 @@ export function labelToneById(labelId: string): BuyerLabelTone | undefined {
 }
 
 /** Shared Plus / Watch definitions — keep UI copy consistent */
+export const PLUS_LABEL_SHORT = 'upsides buyers noticed'
+export const WATCH_LABEL_SHORT = 'watch-outs to dig into'
 export const PLUS_LABEL_MEANING =
-  'Upsides verified buyers noticed — encouraging signals that support interest.'
+  'Upsides buyers noticed — encouraging signals that support interest.'
 export const WATCH_LABEL_MEANING =
   'Watch-outs to dig into — caution signals before you commit more time or money.'
 export const PLUS_WATCH_LEGEND_INTRO =

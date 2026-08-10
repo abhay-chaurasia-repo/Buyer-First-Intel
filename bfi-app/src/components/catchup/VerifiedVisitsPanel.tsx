@@ -97,7 +97,7 @@ function VisitRow({ visit }: { visit: VerifiedVisit }) {
         </div>
       ) : (
         <p className="mt-2 text-[11px] text-night-faint">
-          No community labels from this visitor yet.
+          No community labels on this visit yet.
         </p>
       )}
     </article>
@@ -159,7 +159,7 @@ type VerifiedVisitsPanelProps = {
 
 /**
  * Verified Visits: dated GPS presence log. Buyers judge listing timing themselves.
- * Community labels from Buyer Community appear on each visitor who labelled.
+ * Community labels from Buyer Community appear on visits when labeled.
  */
 export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
   const [tick, setTick] = useState(0)
@@ -184,8 +184,8 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
       <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
           Each row is a GPS presence check within {bundle.radiusMeters}m — with date and time so you
-          can judge the pattern yourself. Visitor identities stay hidden. If someone also labelled in
-          Buyer Community, those Plus and Watch labels show here.
+          can judge the pattern yourself. Visitor identities stay hidden. If a visit also has Buyer
+          Community labels, those Plus and Watch labels show here.
         </p>
 
         <PlusWatchLegend
@@ -200,7 +200,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
             </p>
             <p className="mt-1 text-sm font-semibold text-night-ink">{summary.total}</p>
             <p className="text-[11px] text-night-muted">
-              {summary.distinctDays} days · {summary.distinctVisitors} visitors
+              {summary.distinctDays} days · {summary.total} visits
             </p>
           </div>
           <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
@@ -219,7 +219,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
           </span>
           <span className="inline-flex items-center gap-1">
             <Users className="h-3 w-3 text-saffron-glow" aria-hidden />
-            Anonymized visitors
+            Anonymous visit counts
           </span>
           <span className="inline-flex items-center gap-1">
             <ShieldCheck className="h-3 w-3 text-saffron-glow" aria-hidden />
@@ -289,11 +289,11 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Identity</span>
-            <span className="font-semibold">Anonymized visitor labels</span>
+            <span className="font-semibold">Hidden — counts and timing only</span>
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Buyer Community</span>
-            <span className="font-semibold">Labels appear on that visitor’s visits</span>
+            <span className="font-semibold">Labels appear on visits when upvoted</span>
           </p>
         </div>
       </CollapsibleSection>

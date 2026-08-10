@@ -1,7 +1,7 @@
 import {
-  PLUS_LABEL_MEANING,
+  PLUS_LABEL_SHORT,
   PLUS_WATCH_LEGEND_INTRO,
-  WATCH_LABEL_MEANING,
+  WATCH_LABEL_SHORT,
 } from '@/data/buyerCommunityLabels'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,7 @@ type PlusWatchLegendProps = {
 
 /**
  * Explains Plus vs Watch wherever community labels appear.
+ * Matches the Buyer Community header key.
  */
 export function PlusWatchLegend({
   variant = 'full',
@@ -41,12 +42,11 @@ export function PlusWatchLegend({
           </span>
           <p
             className={cn(
-              'min-w-0 leading-snug text-night-muted',
+              'min-w-0 leading-snug text-night-ink',
               compact ? 'text-[10px]' : 'text-[12px]',
             )}
           >
-            <span className="font-semibold text-night-ink">For upsides. </span>
-            {PLUS_LABEL_MEANING}
+            = {PLUS_LABEL_SHORT}
           </p>
         </div>
         <div className="flex items-start gap-2">
@@ -55,12 +55,11 @@ export function PlusWatchLegend({
           </span>
           <p
             className={cn(
-              'min-w-0 leading-snug text-night-muted',
+              'min-w-0 leading-snug text-night-ink',
               compact ? 'text-[10px]' : 'text-[12px]',
             )}
           >
-            <span className="font-semibold text-night-ink">For watch-outs. </span>
-            {WATCH_LABEL_MEANING}
+            = {WATCH_LABEL_SHORT}
           </p>
         </div>
       </div>

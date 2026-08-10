@@ -50,7 +50,7 @@ export const BUYER_COMMISSION_BRIEF: GuidanceDoc = {
       paragraphs: [
         'Talking to an agent or writing an offer is easier when you already know the county record story: living area vs listing claims, tax history, sales history, schools, and what verified visitors labeled on site.',
         'Due Diligence is for home buyers: no MLS feed, no prices, county records and diligence tools first — so you walk into agent conversations with questions, not a blank slate.',
-        'Star homes into Homes in Diligence, verify visits on site, and use Journey to track prepare → diligence → offer → close.',
+        'Star homes into Homes in Diligence, verify visits on site, and use Journey to track Prepare → Diligence → Offer → Close.',
       ],
     },
   ],
@@ -89,7 +89,7 @@ export const BUYER_BEFORE_AGENT_BRIEF: GuidanceDoc = {
     {
       heading: '4. Visit with your eyes open',
       paragraphs: [
-        'Due Diligence Verify logs GPS presence with date and time at no charge inside the app. Use that log — and Buyer Community Plus (upsides) / Watch (watch-outs) labels — to remember what you actually observed before you escalate to an offer.',
+        'Due Diligence’s Verify action logs GPS presence with date and time at no charge inside the app. Use that log — and Buyer Community Plus (upsides) / Watch (watch-outs) labels — to remember what you actually observed before you escalate to an offer.',
       ],
     },
   ],

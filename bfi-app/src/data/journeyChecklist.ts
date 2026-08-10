@@ -78,13 +78,13 @@ export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
     id: 'search-addresses',
     phaseId: 'search',
     title: 'Search candidate addresses in Due Diligence',
-    detail: 'Start from Search and open each property command center.',
+    detail: 'Start from Search and open each property page.',
   },
   {
     id: 'star-watchlist',
     phaseId: 'search',
     title: 'Star homes into Homes in Diligence',
-    detail: 'Tap the star on a property page — it saves here automatically.',
+    detail: 'Tap the star on a property page — it appears under Homes in Diligence.',
   },
   {
     id: 'compare-shortlist',

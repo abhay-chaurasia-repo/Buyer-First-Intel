@@ -26,7 +26,7 @@ export const PAGE_SCENES: Record<PageSceneId, PageScene> = {
   watchlist: {
     id: 'watchlist',
     src: '/scenes/bg-watchlist.png?v=darkwarm',
-    alt: 'Saved-homes craftsman house, darkened and warmed for readable type',
+    alt: 'Homes in Diligence craftsman house, darkened and warmed for readable type',
   },
   journey: {
     id: 'journey',

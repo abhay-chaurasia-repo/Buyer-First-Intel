@@ -55,8 +55,8 @@ export const IMPACT_PAGES: ImpactPage[] = [
   {
     id: 'community',
     eyebrow: 'Buyer community',
-    title: 'Read what verified buyers labeled on site.',
-    body: 'Plus labels flag upsides buyers noticed. Watch labels flag watch-outs to dig into. Both come from people who confirmed presence — structured signals, not marketing blurbs.',
+    title: 'Read Plus and Watch signals from buyers.',
+    body: 'Plus labels flag upsides buyers noticed. Watch labels flag watch-outs to dig into. Most need an on-site visit; listing-vs-county size labels can be upvoted remotely. Structured signals, not marketing blurbs.',
     image: '/impact/impact-community.png',
     imageAlt: 'Neighborhood community atmosphere',
     snippet: 'community',

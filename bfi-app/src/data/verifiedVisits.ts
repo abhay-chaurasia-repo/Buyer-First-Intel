@@ -93,15 +93,12 @@ function buildSignals(visits: VerifiedVisit[]): VisitPatternSignal[] {
     },
     {
       id: 'vs-labels',
-      title:
-        labelVisitors > 0
-          ? 'Community labels from visitors'
-          : 'No community labels yet',
+      title: withLabels > 0 ? 'Community labels on visits' : 'No community labels yet',
       detail:
-        labelVisitors > 0
-          ? `${labelVisitors} visitor(s) also upvoted Buyer Community labels on ${withLabels} visit row(s). Labels pull from the same community catalog.`
-          : 'Verified presence alone is logged. Label votes appear here when a visitor upvotes in Buyer Community.',
-      tone: labelVisitors > 0 ? 'positive' : 'neutral',
+        withLabels > 0
+          ? `${withLabels} visit(s) also have Buyer Community labels. Labels pull from the same community catalog.`
+          : 'Verified presence alone is logged. Label votes appear here when upvoted in Buyer Community.',
+      tone: withLabels > 0 ? 'positive' : 'neutral',
     },
   ]
 }

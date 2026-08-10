@@ -131,8 +131,8 @@ export function HomeScreen() {
                     <Star className="h-4 w-4 text-saffron-glow" aria-hidden />
                   </span>
                   <p className="text-[13px] leading-relaxed text-night-muted">
-                    <span className="font-semibold text-night-ink">Star homes</span> for visit planning
-                    and private notes.
+                    <span className="font-semibold text-night-ink">Star homes into Homes in Diligence</span>{' '}
+                    for visit planning and private notes.
                   </p>
                 </li>
                 <li className="flex gap-3">
@@ -141,7 +141,7 @@ export function HomeScreen() {
                   </span>
                   <p className="text-[13px] leading-relaxed text-night-muted">
                     <span className="font-semibold text-night-ink">Follow your path</span> from Prepare →
-                    Diligence → Offer.
+                    Diligence → Offer → Close.
                   </p>
                 </li>
               </ul>
