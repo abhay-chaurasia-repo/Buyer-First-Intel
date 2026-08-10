@@ -204,7 +204,7 @@ export function PropertyDetailScreen() {
                   'hover:border-white/35 hover:bg-white/8 focus-visible:border-white/35 focus-visible:bg-white/8 active:border-white/35',
                   starred ? 'text-saffron-glow' : 'text-night-ink',
                 )}
-                aria-label={starred ? 'Remove from watchlist' : 'Save to watchlist'}
+                aria-label={starred ? 'Remove from Saved Homes' : 'Save to Saved Homes'}
                 aria-pressed={starred}
                 data-testid="button-star-property"
               >

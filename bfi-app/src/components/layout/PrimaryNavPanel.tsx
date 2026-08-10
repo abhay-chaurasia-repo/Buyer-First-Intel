@@ -4,12 +4,12 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { to: '/', icon: Search, label: 'Search', end: true },
-  { to: '/watchlist', icon: Star, label: 'Watchlist', end: false },
+  { to: '/watchlist', icon: Star, label: 'Saved Homes', end: false },
   { to: '/journey', icon: ClipboardCheck, label: 'Journey', end: false },
 ] as const
 
 /**
- * Bottom Search / Watchlist / Journey dock.
+ * Bottom Search / Saved Homes / Journey dock.
  */
 export function PrimaryNavPanel({
   className,
@@ -39,7 +39,7 @@ export function PrimaryNavPanel({
                 <Icon
                   className="h-[22px] w-[22px]"
                   strokeWidth={isActive ? 2.4 : 1.85}
-                  fill={isActive && label === 'Watchlist' ? 'currentColor' : 'none'}
+                  fill={isActive && label === 'Saved Homes' ? 'currentColor' : 'none'}
                 />
                 <span
                   className={cn(

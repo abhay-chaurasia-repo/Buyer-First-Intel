@@ -346,7 +346,7 @@ function WatchlistRow({
             type="button"
             onClick={() => onRemove(item.id)}
             className="mt-0.5 inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-            aria-label={`Remove ${item.address} from watchlist`}
+            aria-label={`Remove ${item.address} from Saved Homes`}
             data-testid={`button-remove-watchlist-${item.id}`}
           >
             <Trash2 className="h-4 w-4" />
@@ -457,7 +457,7 @@ export function WatchlistScreen() {
   return (
     <AppShell scene="watchlist" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <PageHeader
-        title="Saved properties"
+        title="Homes in Diligence"
         description="Plan visits, mark visited, and keep private notes."
         testId="watchlist-top-bar"
       />

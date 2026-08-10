@@ -59,7 +59,7 @@ export const BUYER_COMMISSION_BRIEF: GuidanceDoc = {
       paragraphs: [
         'Talking to an agent or writing an offer is easier when you already know the county record story: living area vs listing claims, tax history, sales history, schools, and what verified visitors labeled on site.',
         'Due Diligence is for home buyers: no MLS feed, no prices, county records and diligence tools first — so you walk into agent conversations with questions, not a blank slate.',
-        'Star properties into Watchlist, verify visits on site, and use Journey to track prepare → diligence → offer → close.',
+        'Star homes into Saved Homes, verify visits on site, and use Journey to track prepare → diligence → offer → close.',
       ],
     },
   ],
