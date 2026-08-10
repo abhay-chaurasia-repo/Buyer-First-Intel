@@ -258,7 +258,7 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
       title: 'Verified Visits',
       subtitle: 'GPS presence',
       badge: String(property.verifiedVisits),
-      detail: 'Dated GPS presence · community labels when voted',
+          detail: 'Dated GPS presence · community labels when a visit has them',
       accent: 'verified-visits',
     },
     {

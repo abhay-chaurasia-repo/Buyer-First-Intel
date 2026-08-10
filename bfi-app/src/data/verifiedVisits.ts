@@ -73,7 +73,7 @@ function buildSignals(visits: VerifiedVisit[]): VisitPatternSignal[] {
     {
       id: 'vs-spread',
       title: 'Calendar spread',
-      detail: `${daySpan} distinct day(s) · ${visitors} anonymized visitor(s). Spread across days is harder to manufacture than a same-hour burst.`,
+      detail: `${daySpan} distinct day(s) · ${visits.length} visits. Spread across days is harder to manufacture than a same-hour burst.`,
       tone: daySpan >= 3 && visitors >= 2 ? 'positive' : 'neutral',
     },
     {
