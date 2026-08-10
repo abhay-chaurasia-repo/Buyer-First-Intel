@@ -84,7 +84,7 @@ function VisitDateChip({
   return (
     <span
       className={cn(
-        'inline-flex max-w-full items-center gap-1.5 rounded-lg border',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-lg border whitespace-nowrap',
         compact ? 'px-1.5 py-0.5' : 'px-2.5 py-1.5',
         isVisited
           ? 'border-saffron/45 bg-saffron/18 text-saffron-glow'
@@ -119,15 +119,23 @@ function VisitDatesRow({
   plannedVisitAt,
   visitedAt,
   compact = false,
+  align = 'start',
 }: {
   plannedVisitAt?: string | null
   visitedAt?: string | null
   compact?: boolean
+  align?: 'start' | 'end'
 }) {
   if (!plannedVisitAt && !visitedAt) return null
 
   return (
-    <div className={cn('flex flex-wrap', compact ? 'gap-1.5' : 'gap-2')}>
+    <div
+      className={cn(
+        'flex',
+        compact ? 'flex-col gap-1' : 'flex-wrap gap-2',
+        align === 'end' ? 'items-end justify-end' : 'items-start justify-start',
+      )}
+    >
       {plannedVisitAt ? <VisitDateChip kind="planned" iso={plannedVisitAt} compact={compact} /> : null}
       {visitedAt ? <VisitDateChip kind="visited" iso={visitedAt} compact={compact} /> : null}
     </div>
@@ -282,33 +290,32 @@ function WatchlistRow({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full min-h-12 items-start gap-2 px-3 py-2.5 text-left touch-manipulation"
+        className="flex w-full min-h-12 items-center gap-2 px-3 py-2.5 text-left touch-manipulation"
         aria-expanded={open}
         data-testid={`button-toggle-watchlist-${item.id}`}
       >
         <ChevronDown
           className={cn(
-            'mt-0.5 h-4 w-4 shrink-0 text-saffron-glow transition-transform',
+            'h-4 w-4 shrink-0 text-saffron-glow transition-transform',
             !open && '-rotate-90',
           )}
         />
-        <span className="min-w-0 flex-1 space-y-1.5">
-          <span className="block truncate text-sm font-semibold text-saffron-glow">
-            {item.address}
-          </span>
-          {!open ? (
-            <VisitDatesRow
-              plannedVisitAt={item.plannedVisitAt}
-              visitedAt={item.visitedAt}
-              compact
-            />
-          ) : null}
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-saffron-glow">
+          {item.address}
         </span>
         {!open && noteCount > 0 ? (
-          <span className="mt-0.5 inline-flex shrink-0 items-center gap-0.5 rounded-md bg-saffron/15 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+          <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-saffron/15 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
             <StickyNote className="h-3 w-3" aria-hidden />
             {noteCount}
           </span>
+        ) : null}
+        {!open ? (
+          <VisitDatesRow
+            plannedVisitAt={item.plannedVisitAt}
+            visitedAt={item.visitedAt}
+            compact
+            align="end"
+          />
         ) : null}
       </button>
 
@@ -351,26 +358,32 @@ function WatchlistRow({
               </p>
               <p className="mt-2 text-[12px] font-semibold text-saffron-glow">Open property →</p>
             </button>
-            <button
-              type="button"
-              onClick={() => onRemove(item.id)}
-              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-              aria-label={`Remove ${item.address} from watchlist`}
-              data-testid={`button-remove-watchlist-${item.id}`}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <VisitDatesRow
+                plannedVisitAt={item.plannedVisitAt}
+                visitedAt={item.visitedAt}
+                compact
+                align="end"
+              />
+              <button
+                type="button"
+                onClick={() => onRemove(item.id)}
+                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
+                aria-label={`Remove ${item.address} from watchlist`}
+                data-testid={`button-remove-watchlist-${item.id}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2 border-t border-white/15 pt-3">
-            {item.plannedVisitAt || item.visitedAt ? (
-              <VisitDatesRow plannedVisitAt={item.plannedVisitAt} visitedAt={item.visitedAt} />
-            ) : (
+            {!item.plannedVisitAt && !item.visitedAt ? (
               <p className="flex items-center gap-1.5 text-[12px] text-night-faint">
                 <MapPin className="h-3.5 w-3.5" aria-hidden />
                 No visit planned yet
               </p>
-            )}
+            ) : null}
 
             <div className="flex flex-wrap gap-2">
               <button
