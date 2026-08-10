@@ -12,8 +12,8 @@ type AppIconProps = {
 }
 
 /**
- * Due Diligence app icon — matches the attached reference mark.
- * White house + interlocking magnifier with a 4-pane window on a saffron squircle.
+ * Due Diligence app icon — house + magnifier with 4-pane window on saffron squircle.
+ * Diffs vs prior mark: loupe sits further inside the house; handle is thicker.
  */
 export function AppIcon({
   className,
@@ -24,21 +24,30 @@ export function AppIcon({
   const titleId = `${testId}-title`
 
   const stroke = 30
-  const loupeCx = 268
-  const loupeCy = 300
-  const loupeR = 86
+  // Attached reference: handle is noticeably thicker than house/circle strokes
+  const handleStroke = 42
+  // Pull loupe a bit further inside the house (left + slightly up)
+  const loupeCx = 258
+  const loupeCy = 296
+  const loupeR = 82
   const loupeOuter = loupeR + stroke / 2
-  const floorY = 382
+  const floorY = 380
   const floorDy = floorY - loupeCy
   const floorEndX =
-    loupeCx - Math.sqrt(Math.max(loupeOuter * loupeOuter - floorDy * floorDy, 0))
+    loupeCx - Math.sqrt(Math.max(loupeOuter * loupeOuter - floorDy * floorDy, 1))
 
-  const handleStart = loupeR + stroke * 0.15
-  const handleLen = 72
+  const handleStart = loupeR + stroke * 0.18
+  const handleLen = 70
   const h0x = loupeCx + handleStart * Math.SQRT1_2
   const h0y = loupeCy + handleStart * Math.SQRT1_2
   const h1x = h0x + handleLen * Math.SQRT1_2
   const h1y = h0y + handleLen * Math.SQRT1_2
+
+  const pane = 17
+  const gap = 6
+  const grid = pane * 2 + gap
+  const gx = loupeCx - grid / 2
+  const gy = loupeCy - grid / 2
 
   return (
     <svg
@@ -64,9 +73,10 @@ export function AppIcon({
       >
         <path d="M96 248 L256 136 L416 248" />
         <path d={`M128 248 V${floorY} H${floorEndX.toFixed(1)}`} />
-        <path d="M384 248 V272" />
+        <path d="M384 248 V270" />
       </g>
 
+      {/* Solid filled chimney */}
       <rect x="334" y="128" width="28" height="52" rx="4" fill="#FFFFFF" />
 
       <circle
@@ -79,10 +89,16 @@ export function AppIcon({
       />
 
       <g fill="#FFFFFF">
-        <rect x="247" y="279" width="18" height="18" rx="2.5" />
-        <rect x="271" y="279" width="18" height="18" rx="2.5" />
-        <rect x="247" y="303" width="18" height="18" rx="2.5" />
-        <rect x="271" y="303" width="18" height="18" rx="2.5" />
+        <rect x={gx} y={gy} width={pane} height={pane} rx="2.5" />
+        <rect x={gx + pane + gap} y={gy} width={pane} height={pane} rx="2.5" />
+        <rect x={gx} y={gy + pane + gap} width={pane} height={pane} rx="2.5" />
+        <rect
+          x={gx + pane + gap}
+          y={gy + pane + gap}
+          width={pane}
+          height={pane}
+          rx="2.5"
+        />
       </g>
 
       <line
@@ -91,7 +107,7 @@ export function AppIcon({
         x2={h1x}
         y2={h1y}
         stroke="#FFFFFF"
-        strokeWidth={stroke}
+        strokeWidth={handleStroke}
         strokeLinecap="round"
       />
     </svg>
