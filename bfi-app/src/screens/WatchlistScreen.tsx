@@ -346,7 +346,7 @@ function WatchlistRow({
             type="button"
             onClick={() => onRemove(item.id)}
             className="mt-0.5 inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-            aria-label={`Remove ${item.address} from Saved Homes`}
+            aria-label={`Remove ${item.address} from Homes in Diligence`}
             data-testid={`button-remove-watchlist-${item.id}`}
           >
             <Trash2 className="h-4 w-4" />
@@ -457,7 +457,7 @@ export function WatchlistScreen() {
   return (
     <AppShell scene="watchlist" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <PageHeader
-        title="Saved Homes"
+        title="Homes in Diligence"
         description="Plan visits, mark visited, and keep private notes."
         testId="watchlist-top-bar"
       />
@@ -469,7 +469,7 @@ export function WatchlistScreen() {
             data-testid="watchlist-empty"
           >
             <Star className="mx-auto h-8 w-8 text-saffron-glow" strokeWidth={1.75} />
-            <p className="mt-3 text-sm font-semibold text-saffron-glow">No saved homes yet</p>
+            <p className="mt-3 text-sm font-semibold text-saffron-glow">No homes in diligence yet</p>
             <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
               Star an address from its property page. Notes and visit planning live here afterward.
             </p>
@@ -484,7 +484,7 @@ export function WatchlistScreen() {
           </div>
         ) : (
           <section className="space-y-3" data-testid="watchlist-list">
-            <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Filter saved homes">
+            <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Filter homes in diligence">
               {(
                 [
                   { id: 'all' as const, label: 'Saved', count: items.length, testId: 'watchlist-filter-saved' },

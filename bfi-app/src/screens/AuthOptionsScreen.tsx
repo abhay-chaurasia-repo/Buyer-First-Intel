@@ -130,7 +130,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
             </p>
             {isSignup ? (
               <p className="mt-2 max-w-[17rem] text-[0.95rem] leading-relaxed text-night-muted">
-                Create an account to keep Saved Homes, Journey progress, and private notes.
+                Create an account to keep Homes in Diligence, Journey progress, and private notes.
               </p>
             ) : (
               <div className="mt-3 max-w-[18rem]">
