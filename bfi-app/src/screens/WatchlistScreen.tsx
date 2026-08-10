@@ -457,7 +457,7 @@ export function WatchlistScreen() {
   return (
     <AppShell scene="watchlist" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <PageHeader
-        title="Homes in Diligence"
+        title="Saved Homes"
         description="Plan visits, mark visited, and keep private notes."
         testId="watchlist-top-bar"
       />
@@ -469,7 +469,7 @@ export function WatchlistScreen() {
             data-testid="watchlist-empty"
           >
             <Star className="mx-auto h-8 w-8 text-saffron-glow" strokeWidth={1.75} />
-            <p className="mt-3 text-sm font-semibold text-saffron-glow">No saved properties yet</p>
+            <p className="mt-3 text-sm font-semibold text-saffron-glow">No saved homes yet</p>
             <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
               Star an address from its property page. Notes and visit planning live here afterward.
             </p>
@@ -484,7 +484,7 @@ export function WatchlistScreen() {
           </div>
         ) : (
           <section className="space-y-3" data-testid="watchlist-list">
-            <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Filter saved properties">
+            <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Filter saved homes">
               {(
                 [
                   { id: 'all' as const, label: 'Saved', count: items.length, testId: 'watchlist-filter-saved' },

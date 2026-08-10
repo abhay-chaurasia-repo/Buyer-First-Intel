@@ -83,7 +83,7 @@ export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
   {
     id: 'star-watchlist',
     phaseId: 'search',
-    title: 'Star homes into Saved Homes',
+    title: 'Star homes into Homes in Diligence',
     detail: 'Tap the star on a property page — it saves here automatically.',
   },
   {

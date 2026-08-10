@@ -4,12 +4,12 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { to: '/', icon: Search, label: 'Search', end: true },
-  { to: '/watchlist', icon: Star, label: 'Saved Homes', end: false },
+  { to: '/watchlist', icon: Star, label: 'Homes in Diligence', end: false },
   { to: '/journey', icon: ClipboardCheck, label: 'Journey', end: false },
 ] as const
 
 /**
- * Bottom Search / Saved Homes / Journey dock.
+ * Bottom Search / Homes in Diligence / Journey dock.
  */
 export function PrimaryNavPanel({
   className,
@@ -32,18 +32,18 @@ export function PrimaryNavPanel({
                 isActive ? 'text-saffron-glow' : 'text-night-muted active:text-saffron-glow',
               )
             }
-            data-testid={`nav-${label.toLowerCase()}`}
+            data-testid={`nav-${to === '/watchlist' ? 'homes-in-diligence' : label.toLowerCase()}`}
           >
             {({ isActive }) => (
               <>
                 <Icon
                   className="h-[22px] w-[22px]"
                   strokeWidth={isActive ? 2.4 : 1.85}
-                  fill={isActive && label === 'Saved Homes' ? 'currentColor' : 'none'}
+                  fill={isActive && to === '/watchlist' ? 'currentColor' : 'none'}
                 />
                 <span
                   className={cn(
-                    'max-w-full truncate text-[10px] leading-none',
+                    'max-w-full text-center text-[9px] leading-tight',
                     isActive ? 'font-semibold' : 'font-medium',
                   )}
                 >
