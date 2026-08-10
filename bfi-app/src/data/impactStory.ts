@@ -1,3 +1,5 @@
+import type { PageSceneId } from './pageScenes'
+
 export const IMPACT_SEEN_KEY = 'bfi.impact-seen'
 
 export function hasSeenImpact(): boolean {
@@ -21,8 +23,8 @@ export type ImpactPage = {
   eyebrow: string
   title: string
   body: string
-  image: string
-  imageAlt: string
+  /** Same atmospheric scenes as inner app screens */
+  scene: PageSceneId
   snippet: 'size' | 'visits' | 'community'
 }
 
@@ -30,10 +32,9 @@ export const IMPACT_PAGES: ImpactPage[] = [
   {
     id: 'size',
     eyebrow: 'County vs listing',
-    title: 'See when the listing size doesn’t match the county.',
-    body: 'Due Diligence puts county living area next to what’s claimed in the listing — so you catch sqft gaps before you tour, offer, or talk to an agent.',
-    image: '/impact/impact-georgian-home.png',
-    imageAlt: 'Georgian-style home facade',
+    title: 'County living area first — then check the listing.',
+    body: 'See the county sqft on Due Diligence, compare it with Zillow or Redfin, and upvote whether the published size matches or looks overstated. No typed numbers.',
+    scene: 'property',
     snippet: 'size',
   },
   {
@@ -41,8 +42,7 @@ export const IMPACT_PAGES: ImpactPage[] = [
     eyebrow: 'Verified visits',
     title: 'Know who actually showed up — and when.',
     body: 'Every GPS-verified visit logs date and time. Spot natural diligence patterns, not manufactured urgency, before you commit.',
-    image: '/impact/impact-visits.png',
-    imageAlt: 'Quiet residential street at dusk',
+    scene: 'journey',
     snippet: 'visits',
   },
   {
@@ -50,8 +50,7 @@ export const IMPACT_PAGES: ImpactPage[] = [
     eyebrow: 'Buyer community',
     title: 'Read what verified buyers labeled on site.',
     body: 'Plus and Watch labels — from high-tension lines to quiet nights — come from people who confirmed presence. Structured signals, not marketing blurbs.',
-    image: '/impact/impact-community.png',
-    imageAlt: 'Neighborhood community atmosphere',
+    scene: 'search',
     snippet: 'community',
   },
 ]
