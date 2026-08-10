@@ -224,7 +224,6 @@ export function ImpactStoryScreen() {
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center px-5 bfi-status-pad">
         <div className="pointer-events-auto flex items-center gap-2 pb-2 pt-1">
           <BrandLogo size={32} />
-          <span className="font-display text-sm font-semibold tracking-tight">{APP_NAME}</span>
         </div>
       </header>
 

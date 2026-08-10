@@ -33,12 +33,7 @@ export function HomeScreen() {
     >
       <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">
         <header className="animate-bfi-fade flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <BrandLogo size={36} />
-            <span className="truncate font-display text-sm font-semibold tracking-tight text-night-muted">
-              {APP_NAME}
-            </span>
-          </div>
+          <BrandLogo size={36} />
           <span className="shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow">
             {APP_TAGLINE}
           </span>
