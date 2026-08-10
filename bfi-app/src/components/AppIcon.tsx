@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/data/brand'
 
+/** Warm terracotta from the logo reference */
 export const APP_ICON_SAFFRON = '#CA8544'
 
 type AppIconProps = {
@@ -11,7 +12,9 @@ type AppIconProps = {
 }
 
 /**
- * App icon matching the supplied reference image.
+ * Due Diligence app icon — terracotta squircle, white house + loupe.
+ * Thinner inclined roof; smaller floating loupe (no wall contact);
+ * tapered handle (thin at rim → bold at tip); no right wall.
  */
 export function AppIcon({
   className,
@@ -35,127 +38,66 @@ export function AppIcon({
     >
       <title id={titleId}>{title}</title>
 
-      {/* Orange rounded-square background */}
-      <rect
-        x="8"
-        y="8"
-        width="496"
-        height="496"
-        rx="88"
-        fill={APP_ICON_SAFFRON}
-      />
+      <rect width="512" height="512" rx="114" ry="114" fill={APP_ICON_SAFFRON} />
 
-      {/* =====================================================
-          HOUSE
-          ===================================================== */}
-
-      <g
+      {/* Thinner, more inclined roof — no right wall */}
+      <path
+        d="M104 252 L256 120 L408 252"
         fill="none"
         stroke="#FFFFFF"
-        strokeWidth="22"
+        strokeWidth="20"
         strokeLinecap="round"
         strokeLinejoin="round"
-      >
-        {/* Slightly thinner / more inclined roof */}
-        <path d="M104 250 L256 126 L408 250" />
-
-        {/* Left wall + bottom floor.
-            Stops well before the magnifying glass. */}
-        <path d="M136 250 V382 H205" />
-      </g>
-
-      {/* =====================================================
-          CHIMNEY
-          ===================================================== */}
-
-      <rect
-        x="332"
-        y="126"
-        width="26"
-        height="62"
-        rx="2"
-        fill="#FFFFFF"
       />
 
-      {/* =====================================================
-          MAGNIFYING GLASS
-          Smaller than previous version and separated
-          from the house wall/floor.
-          ===================================================== */}
+      {/* Left wall + floor only; stops short of the loupe */}
+      <path
+        d="M136 252 V380 H198"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeWidth="26"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
 
+      {/* Solid chimney on right roof slope */}
+      <rect x="330" y="124" width="26" height="52" rx="3" fill="#FFFFFF" />
+
+      {/* Smaller floating loupe — not touching house walls */}
       <circle
-        cx="258"
-        cy="300"
-        r="70"
+        cx="268"
+        cy="304"
+        r="62"
         fill={APP_ICON_SAFFRON}
         stroke="#FFFFFF"
-        strokeWidth="25"
+        strokeWidth="26"
       />
 
-      {/* =====================================================
-          FOUR-PANE WINDOW
-          ===================================================== */}
-
+      {/* 4-pane window */}
       <g fill="#FFFFFF">
-        <rect
-          x="235"
-          y="277"
-          width="15"
-          height="15"
-          rx="2"
-        />
-
-        <rect
-          x="258"
-          y="277"
-          width="15"
-          height="15"
-          rx="2"
-        />
-
-        <rect
-          x="235"
-          y="300"
-          width="15"
-          height="15"
-          rx="2"
-        />
-
-        <rect
-          x="258"
-          y="300"
-          width="15"
-          height="15"
-          rx="2"
-        />
+        <rect x="248" y="284" width="14" height="14" rx="2.5" />
+        <rect x="270" y="284" width="14" height="14" rx="2.5" />
+        <rect x="248" y="306" width="14" height="14" rx="2.5" />
+        <rect x="270" y="306" width="14" height="14" rx="2.5" />
       </g>
 
-      {/* =====================================================
-          MAGNIFYING GLASS HANDLE
-
-          Thin where it meets the circle,
-          becoming thicker toward the end.
-          ===================================================== */}
-
-      {/* Thin connection from magnifying glass */}
+      {/* Handle: thin where it meets the circle, bold toward the tip */}
       <line
-        x1="307"
-        y1="349"
-        x2="330"
+        x1="314"
+        y1="348"
+        x2="338"
         y2="372"
         stroke="#FFFFFF"
-        strokeWidth="16"
+        strokeWidth="14"
         strokeLinecap="round"
       />
-
-      {/* Thick/bold outer handle */}
       <line
-        x1="327"
-        y1="369"
-        x2="371"
-        y2="413"
+        x1="334"
+        y1="368"
+        x2="392"
+        y2="426"
         stroke="#FFFFFF"
-        strokeWidth="28"
+        strokeWidth="34"
         strokeLinecap="round"
       />
     </svg>

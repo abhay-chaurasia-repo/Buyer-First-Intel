@@ -1,17 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Due Diligence">
-  <rect width="512" height="512" rx="114" ry="114" fill="#C88A58"/>
-  <g fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M100 250 L256 138 L412 250"/>
-    <path d="M132 250 V378 H219.2"/>
-    <path d="M380 250 V274"/>
-  </g>
-  <rect x="332" y="130" width="26" height="48" rx="3" fill="#FFFFFF"/>
-  <circle cx="268" cy="300" r="78" fill="#C88A58" stroke="#FFFFFF" stroke-width="28"/>
+  <rect width="512" height="512" rx="114" ry="114" fill="#CA8544"/>
+  <path d="M104 252 L256 120 L408 252" fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 252 V380 H198" fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="330" y="124" width="26" height="52" rx="3" fill="#FFFFFF"/>
+  <circle cx="268" cy="304" r="62" fill="#CA8544" stroke="#FFFFFF" stroke-width="26"/>
   <g fill="#FFFFFF">
-    <rect x="248.5" y="280.5" width="16" height="16" rx="2.5"/>
-    <rect x="271.5" y="280.5" width="16" height="16" rx="2.5"/>
-    <rect x="248.5" y="303.5" width="16" height="16" rx="2.5"/>
-    <rect x="271.5" y="303.5" width="16" height="16" rx="2.5"/>
+    <rect x="248" y="284" width="14" height="14" rx="2.5"/>
+    <rect x="270" y="284" width="14" height="14" rx="2.5"/>
+    <rect x="248" y="306" width="14" height="14" rx="2.5"/>
+    <rect x="270" y="306" width="14" height="14" rx="2.5"/>
   </g>
-  <line x1="327.1" y1="359.1" x2="380.9" y2="412.9" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round"/>
+  <line x1="314" y1="348" x2="338" y2="372" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round"/>
+  <line x1="334" y1="368" x2="392" y2="426" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round"/>
 </svg>
