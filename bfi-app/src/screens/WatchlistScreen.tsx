@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  Bell,
   CalendarClock,
   Check,
   ChevronDown,
@@ -8,16 +9,23 @@ import {
   Star,
   StickyNote,
   Trash2,
+  Users,
 } from 'lucide-react'
 import { VisitPlanPicker } from '@/components/VisitPlanPicker'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { persistBuyerVerified } from '@/data/buyerCommunityStorage'
 import {
   addNote,
   deleteNote,
   loadNotes,
   type SavedNote,
 } from '@/data/propertyNotesStorage'
+import {
+  checkDueVisitReminders,
+  enableReminderForPlan,
+  setVisitReminder,
+} from '@/data/visitReminders'
 import {
   loadWatchlist,
   markWatchlistVisited,
@@ -58,10 +66,12 @@ function WatchlistMetaRail({
   plannedVisitAt,
   visitedAt,
   noteCount = 0,
+  reminderEnabled = false,
 }: {
   plannedVisitAt?: string | null
   visitedAt?: string | null
   noteCount?: number
+  reminderEnabled?: boolean
 }) {
   const hasPlanned = Boolean(plannedVisitAt)
   const hasVisited = Boolean(visitedAt)
@@ -86,6 +96,9 @@ function WatchlistMetaRail({
             </span>
             {formatVisitDateCompact(plannedVisitAt)}
           </span>
+          {reminderEnabled ? (
+            <Bell className="h-3 w-3 shrink-0 text-saffron-glow" aria-label="Reminder on" />
+          ) : null}
         </span>
       ) : null}
 
@@ -262,14 +275,18 @@ function WatchlistRow({
   onChange,
   onRemove,
   onOpen,
+  onContribute,
 }: {
   item: WatchlistItem
   onChange: (items: WatchlistItem[]) => void
   onRemove: (id: string) => void
   onOpen: (item: WatchlistItem) => void
+  onContribute: (item: WatchlistItem) => void
 }) {
   const [open, setOpen] = useState(false)
   const [planning, setPlanning] = useState(false)
+  const [reminderMessage, setReminderMessage] = useState<string | null>(null)
+  const [showContributePrompt, setShowContributePrompt] = useState(false)
   const status = visitPlanStatus(item)
   const [noteCount, setNoteCount] = useState(() => loadNotes(item.id).length)
   const rowRef = useRef<HTMLLIElement>(null)
@@ -278,6 +295,48 @@ function WatchlistRow({
     if (!planning || !rowRef.current) return
     rowRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [planning])
+
+  useEffect(() => {
+    if (status !== 'visited') setShowContributePrompt(false)
+  }, [status])
+
+  async function handleToggleReminder() {
+    if (item.reminderEnabled) {
+      onChange(setVisitReminder(item.id, false))
+      setReminderMessage('Reminder off')
+      return
+    }
+    const result = await enableReminderForPlan(item.id)
+    onChange(loadWatchlist())
+    if (result.ok) {
+      setReminderMessage('Reminder on — we will nudge you before this visit')
+    } else if (result.reason === 'denied') {
+      setReminderMessage('Notifications blocked in browser settings')
+    } else {
+      setReminderMessage('Reminders need browser notification support')
+    }
+  }
+
+  function handleMarkVisited() {
+    const markingVisited = status !== 'visited'
+    onChange(markWatchlistVisited(item.id, markingVisited))
+    if (markingVisited) {
+      persistBuyerVerified(item.id, true)
+      setShowContributePrompt(true)
+    } else {
+      setShowContributePrompt(false)
+    }
+  }
+
+  function handleSavePlan(iso: string | null) {
+    onChange(setWatchlistPlannedVisit(item.id, iso))
+    if (iso) {
+      setReminderMessage('Plan saved — turn on a reminder if you want a nudge')
+      setShowContributePrompt(false)
+    } else {
+      setReminderMessage(null)
+    }
+  }
 
   return (
     <li
@@ -311,6 +370,7 @@ function WatchlistRow({
                 plannedVisitAt={item.plannedVisitAt}
                 visitedAt={item.visitedAt}
                 noteCount={noteCount}
+                reminderEnabled={Boolean(item.reminderEnabled)}
               />
             </span>
           </span>
@@ -348,7 +408,7 @@ function WatchlistRow({
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => onChange(markWatchlistVisited(item.id, status !== 'visited'))}
+                  onClick={handleMarkVisited}
                   className={cn(
                     'inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold touch-manipulation',
                     status === 'visited'
@@ -365,7 +425,10 @@ function WatchlistRow({
                 {item.plannedVisitAt ? (
                   <button
                     type="button"
-                    onClick={() => onChange(setWatchlistPlannedVisit(item.id, null))}
+                    onClick={() => {
+                      onChange(setWatchlistPlannedVisit(item.id, null))
+                      setReminderMessage(null)
+                    }}
                     className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-white/25 bg-transparent px-3 text-xs font-semibold text-night-muted touch-manipulation"
                     data-testid={`button-clear-plan-${item.id}`}
                   >
@@ -373,12 +436,62 @@ function WatchlistRow({
                   </button>
                 ) : null}
               </div>
+
+              {item.plannedVisitAt && status !== 'visited' ? (
+                <div
+                  className="rounded-xl border border-saffron/30 bg-saffron/10 px-2.5 py-2"
+                  data-testid={`reminder-prompt-${item.id}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-3.5 w-3.5 shrink-0 text-saffron-glow" aria-hidden />
+                    <p className="min-w-0 flex-1 text-[12px] font-semibold text-saffron-glow">
+                      {item.reminderEnabled ? 'Visit reminder on' : 'Get a reminder before this visit'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void handleToggleReminder()}
+                      className={cn(
+                        'shrink-0 rounded-lg border px-2.5 py-1 text-[11px] font-bold touch-manipulation',
+                        item.reminderEnabled
+                          ? 'border-white/20 text-night-muted'
+                          : 'border-saffron/45 bg-saffron/20 text-saffron-glow',
+                      )}
+                      data-testid={`button-toggle-reminder-${item.id}`}
+                    >
+                      {item.reminderEnabled ? 'Turn off' : 'Remind me'}
+                    </button>
+                  </div>
+                  {reminderMessage ? (
+                    <p className="mt-1.5 text-[11px] text-night-faint">{reminderMessage}</p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {showContributePrompt || status === 'visited' ? (
+                <button
+                  type="button"
+                  onClick={() => onContribute(item)}
+                  className="flex w-full items-center gap-2 rounded-xl border border-saffron/40 bg-gradient-to-r from-saffron/20 to-transparent px-2.5 py-2 text-left touch-manipulation"
+                  data-testid={`button-contribute-insights-${item.id}`}
+                >
+                  <Users className="h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12px] font-semibold text-saffron-glow">
+                      Contribute community insights
+                    </span>
+                    <span className="block text-[11px] text-night-faint">
+                      Share what you noticed on this visit
+                    </span>
+                  </span>
+                  <span className="text-[11px] font-bold text-saffron-glow">Go →</span>
+                </button>
+              ) : null}
             </>
           ) : null}
 
           <VisitPlanPicker
             value={item.plannedVisitAt}
-            onSave={(iso) => onChange(setWatchlistPlannedVisit(item.id, iso))}
+            onSave={handleSavePlan}
             onOpenChange={setPlanning}
             testId={`plan-visit-${item.id}`}
           />
@@ -397,10 +510,17 @@ export function WatchlistScreen() {
   const [items, setItems] = useState<WatchlistItem[]>(() => loadWatchlist())
 
   useEffect(() => {
-    const refresh = () => setItems(loadWatchlist())
+    const refresh = () => {
+      setItems(loadWatchlist())
+      checkDueVisitReminders()
+    }
     refresh()
     window.addEventListener('focus', refresh)
-    return () => window.removeEventListener('focus', refresh)
+    const timer = window.setInterval(() => checkDueVisitReminders(), 60_000)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.clearInterval(timer)
+    }
   }, [])
 
   const plannedCount = items.filter((item) => visitPlanStatus(item) === 'planned').length
@@ -410,7 +530,7 @@ export function WatchlistScreen() {
     <AppShell scene="watchlist" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <PageHeader
         title="Saved properties"
-        description="Plan visits, mark visited, and keep private notes."
+        description="Plan visits, set reminders, and share community insights after you visit."
         testId="watchlist-top-bar"
       />
 
@@ -463,6 +583,9 @@ export function WatchlistScreen() {
                   onChange={setItems}
                   onRemove={(id) => setItems(removeFromWatchlist(id))}
                   onOpen={(row) => navigate(propertyPath(row))}
+                  onContribute={(row) =>
+                    navigate(propertyPath(row, { catchup: 'buyer-insights' }))
+                  }
                 />
               ))}
             </ul>

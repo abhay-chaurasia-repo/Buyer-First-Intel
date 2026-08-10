@@ -17,6 +17,8 @@ export type WatchlistItem = {
   visitedAt?: string | null
   /** Planned on-site visit date/time (local ISO-ish from datetime-local) */
   plannedVisitAt?: string | null
+  /** Buyer opted into a local reminder for the planned visit */
+  reminderEnabled?: boolean
 }
 
 export type VisitPlanStatus = 'visited' | 'planned' | 'unplanned'
@@ -32,6 +34,7 @@ function normalizeItem(raw: WatchlistItem): WatchlistItem {
     ...raw,
     visitedAt: raw.visitedAt || null,
     plannedVisitAt: raw.plannedVisitAt || null,
+    reminderEnabled: Boolean(raw.reminderEnabled),
   }
 }
 
@@ -96,6 +99,7 @@ export function addToWatchlist(property: MockProperty): WatchlistItem[] {
       starredAt: new Date().toISOString(),
       visitedAt,
       plannedVisitAt: null,
+      reminderEnabled: false,
     },
     ...current,
   ])
@@ -111,7 +115,7 @@ export function removeFromWatchlist(propertyId: string): WatchlistItem[] {
 
 export function updateWatchlistItem(
   propertyId: string,
-  patch: Partial<Pick<WatchlistItem, 'visitedAt' | 'plannedVisitAt'>>,
+  patch: Partial<Pick<WatchlistItem, 'visitedAt' | 'plannedVisitAt' | 'reminderEnabled'>>,
 ): WatchlistItem[] {
   const next = sortWatchlist(
     loadWatchlist().map((item) => (item.id === propertyId ? { ...item, ...patch } : item)),
@@ -133,7 +137,8 @@ export function setWatchlistPlannedVisit(
 ): WatchlistItem[] {
   return updateWatchlistItem(propertyId, {
     plannedVisitAt,
-    // Keep visitedAt so both planned and visited dates can show together
+    // Clearing a plan also clears the reminder opt-in
+    ...(plannedVisitAt ? {} : { reminderEnabled: false }),
   })
 }
 
@@ -144,9 +149,14 @@ export function toggleWatchlist(property: MockProperty): { starred: boolean; ite
   return { starred: true, items: addToWatchlist(property) }
 }
 
-export function propertyPath(item: Pick<WatchlistItem, 'address' | 'city' | 'state'>) {
+export function propertyPath(
+  item: Pick<WatchlistItem, 'address' | 'city' | 'state'>,
+  options?: { catchup?: string },
+) {
   const full = `${item.address}, ${item.city}, ${item.state}`
-  return `/property/${encodeURIComponent(full)}`
+  const base = `/property/${encodeURIComponent(full)}`
+  if (options?.catchup) return `${base}?catchup=${encodeURIComponent(options.catchup)}`
+  return base
 }
 
 /** datetime-local value ↔ ISO helpers */

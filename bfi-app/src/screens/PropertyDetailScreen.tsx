@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   ChevronDown,
   Crosshair,
@@ -116,6 +116,7 @@ export function PropertyDetailScreen() {
   })
   const [historyOpen, setHistoryOpen] = useState(true)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
     setStarred(isOnWatchlist(property.id) || property.starred)
@@ -125,6 +126,25 @@ export function PropertyDetailScreen() {
       setVerified(false)
     }
   }, [propertyKey, property.id, property.starred])
+
+  useEffect(() => {
+    const catchup = searchParams.get('catchup')
+    if (!catchup) return
+    const allowed: CatchUpSurface[] = [
+      'county-facts',
+      'sales-history',
+      'tax-history',
+      'verified-visits',
+      'buyer-insights',
+      'schools',
+    ]
+    if (allowed.includes(catchup as CatchUpSurface)) {
+      setActiveSurface(catchup as CatchUpSurface)
+    }
+    const next = new URLSearchParams(searchParams)
+    next.delete('catchup')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const metrics = useMemo(() => getMetricCards(property), [property])
   const truncated = truncateAddress(property.address)
