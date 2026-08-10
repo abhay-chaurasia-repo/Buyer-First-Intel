@@ -52,7 +52,7 @@ export function AppIcon({
 
       {/* Left wall + floor only; stops short of the loupe */}
       <path
-        d="M136 252 V380 H198"
+        d="M136 252 V410 H198"
         fill="none"
         stroke="#FFFFFF"
         strokeWidth="26"
