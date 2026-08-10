@@ -60,9 +60,9 @@ export function AppIcon({
         strokeLinejoin="round"
       />
 
-      {/* Solid chimney — bottom follows roof slope; right side seats on the roof */}
+      {/* Solid chimney — right side extends down to meet the roof slope */}
       <path
-        d="M328 128 L370 128 L370 222 L328 186 Z"
+        d="M328 126 L372 126 L372 230 L328 190 Z"
         fill="#FFFFFF"
       />
 
