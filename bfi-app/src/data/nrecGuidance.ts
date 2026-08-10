@@ -1,11 +1,7 @@
 /**
- * Buyer-facing guidance grounded in the residential real estate broker
- * commissions antitrust settlements (NAR / related defendants).
- * Official source: https://www.realestatecommissionlitigation.com/nar
+ * Buyer-facing guidance grounded in public residential broker-commission
+ * settlement practice changes. Educational only — not legal advice.
  */
-
-export const NAR_SETTLEMENT_URL =
-  'https://www.realestatecommissionlitigation.com/nar'
 
 export type GuidanceDoc = {
   id: string
@@ -15,9 +11,6 @@ export type GuidanceDoc = {
   summary: string
   updatedLabel: string
   sections: Array<{ heading: string; paragraphs: string[] }>
-  /** Optional official URL opened inside the in-app browser */
-  sourceUrl?: string
-  sourceLabel?: string
 }
 
 export const BUYER_COMMISSION_BRIEF: GuidanceDoc = {
@@ -27,22 +20,20 @@ export const BUYER_COMMISSION_BRIEF: GuidanceDoc = {
   title: 'What the commission settlements mean for you',
   summary:
     'Residential broker-commission antitrust settlements changed how buyer representation and compensation are disclosed. Use this before you tour, make an offer, or sign with an agent.',
-  updatedLabel: 'Buyer brief · based on public settlement materials',
-  sourceUrl: NAR_SETTLEMENT_URL,
-  sourceLabel: 'Official NAR / HomeServices settlement site',
+  updatedLabel: 'Buyer brief · general education',
   sections: [
     {
       heading: 'What the lawsuits were about',
       paragraphs: [
         'Several lawsuits alleged an anticompetitive agreement that resulted in home sellers paying inflated commissions to real estate brokers or agents, in violation of antitrust law.',
-        'Settlements include The National Association of REALTORS® (NAR) and HomeServices (also known as Berkshire Hathaway HomeServices), among other defendants. Public materials state the combined settlement value with NAR, HomeServices, and other defendants is over $1 billion.',
-        'The court granted final approval to the NAR and HomeServices settlements on November 27, 2024. Appeals can delay when settlements become final and when benefits are distributed — check the official site for the latest status.',
+        'Settlements included major industry defendants. Public materials described combined settlement value in the billions range across defendants.',
+        'Court approvals and appeals can affect timing. Treat settlement status as changing — confirm current details with your agent or attorney, not this app alone.',
       ],
     },
     {
       heading: 'Who the settlement class focuses on',
       paragraphs: [
-        'Eligibility to claim settlement benefits is primarily described for people who sold a home, listed it on an MLS, and paid a commission during eligible date ranges. That is seller-side claim language on the official site.',
+        'Eligibility to claim settlement benefits is primarily described for people who sold a home, listed it on an MLS, and paid a commission during eligible date ranges. That is seller-side claim language in public materials.',
         'As a buyer, you may not be filing that claim — but the practice changes that came with the settlement still affect how you hire an agent, what you sign before touring, and how compensation is negotiated.',
       ],
     },
@@ -73,8 +64,6 @@ export const BUYER_BEFORE_AGENT_BRIEF: GuidanceDoc = {
   summary:
     'A short sequence so you keep leverage: know the property, know the commission rules, then decide what help you want to pay for.',
   updatedLabel: 'Buyer playbook · Due Diligence',
-  sourceUrl: NAR_SETTLEMENT_URL,
-  sourceLabel: 'Official settlement website',
   sections: [
     {
       heading: '1. Diligence the address yourself',
@@ -114,8 +103,4 @@ export function getGuidanceDoc(id: string) {
     return BUYER_COMMISSION_BRIEF
   }
   return GUIDANCE_DOCS.find((doc) => doc.id === id)
-}
-
-export function inAppBrowsePath(url: string) {
-  return `/browse?url=${encodeURIComponent(url)}`
 }

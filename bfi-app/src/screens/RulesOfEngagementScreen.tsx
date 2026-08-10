@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Scale } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { inAppBrowsePath, NAR_SETTLEMENT_URL } from '@/data/nrecGuidance'
 import {
   RULES_INTRO,
   RULES_SECTIONS,
@@ -11,7 +10,7 @@ import {
 
 /**
  * Rules of engagement — touring, visit cost, commissions, negotiability.
- * Draft content; intended to be edited after review.
+ * Draft education only; no external settlement-site embeds.
  */
 export function RulesOfEngagementScreen() {
   return (
@@ -31,6 +30,18 @@ export function RulesOfEngagementScreen() {
             {RULES_UPDATED_LABEL}
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-night-ink">{RULES_INTRO}</p>
+        </div>
+
+        <div
+          className="mt-3 rounded-2xl border border-white/25 bg-transparent p-3"
+          data-testid="rules-disclaimer-note"
+        >
+          <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Note</p>
+          <p className="mt-1.5 text-[12px] leading-relaxed text-night-muted">
+            This is general buyer education inside Due Diligence — not legal advice and not an
+            official REALTOR® / settlement channel. Practice varies by state, MLS, and brokerage.
+            Confirm details with your agent or attorney before you sign anything.
+          </p>
         </div>
 
         <div className="mt-4 space-y-3">
@@ -54,7 +65,7 @@ export function RulesOfEngagementScreen() {
           ))}
         </div>
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-4">
           <Link
             to="/guidance/buyer-commission-brief"
             className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-saffron/40 bg-saffron/15 px-3 py-2.5 text-left touch-manipulation"
@@ -69,23 +80,6 @@ export function RulesOfEngagementScreen() {
               </span>
             </span>
             <ArrowRight className="h-4 w-4 shrink-0 text-saffron-glow" />
-          </Link>
-
-          <Link
-            to={inAppBrowsePath(NAR_SETTLEMENT_URL)}
-            className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-white/25 bg-transparent px-3 py-2.5 text-left touch-manipulation"
-            data-testid="link-rules-official-settlement"
-          >
-            <span className="min-w-0">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
-                <Scale className="h-3.5 w-3.5 text-saffron-glow" strokeWidth={2.25} />
-                Official source
-              </span>
-              <span className="mt-0.5 block text-[13px] font-semibold text-night-muted">
-                NAR / HomeServices settlement site
-              </span>
-            </span>
-            <ArrowRight className="h-4 w-4 shrink-0 text-night-faint" />
           </Link>
         </div>
       </div>

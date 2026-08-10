@@ -19,7 +19,7 @@ export const RULES_SECTIONS: RulesSection[] = [
     id: 'touring',
     title: 'Visits & touring',
     paragraphs: [
-      'In many MLS markets, if your agent uses the MLS you generally need a written buyer-broker agreement before touring a home. That is a practice change tied to the NAR / related settlements — not a single nationwide “NAR visit fee.”',
+      'In many MLS markets, if your agent uses the MLS you generally need a written buyer-broker agreement before touring a home. That is a practice change tied to the residential broker-commission settlements — not a single nationwide visit fee.',
       'The agreement should spell out what the agent will do, how they are paid (flat fee, percent, hourly, or another clear amount), that commissions are negotiable and not set by law, and that they should not collect more than you agreed.',
       'Rules still vary by state, MLS, and brokerage. Ask before the first showing: “Do I need a signed buyer agreement to tour, and what does it commit me to?”',
     ],
@@ -28,7 +28,7 @@ export const RULES_SECTIONS: RulesSection[] = [
     id: 'visit-cost',
     title: 'What a visit may cost',
     paragraphs: [
-      'There is no standard NAR price “per visit.” Cost lives in your buyer agreement with the brokerage or agent.',
+      'There is no standard industry price “per visit.” Cost lives in your buyer agreement with the brokerage or agent.',
       'Common structures include a percentage of the purchase price, a flat fee, an hourly rate, or a retainer. Some agreements only become payable if you buy; others have different triggers — read the document.',
       'Before you tour: ask what you owe if you visit and do not buy, whether seller concessions can offset your agent’s fee, and when payment is due.',
     ],

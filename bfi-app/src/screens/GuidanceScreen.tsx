@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Scale } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
-import { getGuidanceDoc, inAppBrowsePath } from '@/data/nrecGuidance'
+import { getGuidanceDoc } from '@/data/nrecGuidance'
 
 /**
  * In-app guidance reader — links open here instead of leaving the app shell.
@@ -89,16 +89,16 @@ export function GuidanceScreen() {
             </h1>
             <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-night-muted">{doc.summary}</p>
 
-            {doc.sourceUrl ? (
-              <Link
-                to={inAppBrowsePath(doc.sourceUrl)}
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-saffron/40 bg-saffron/20 px-4 text-sm font-semibold text-saffron-glow touch-manipulation"
-                data-testid="link-open-official-source"
-              >
-                Open official source in app
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-            ) : null}
+            <div
+              className="mt-4 rounded-2xl border border-white/25 bg-transparent p-3 text-left"
+              data-testid="guidance-disclaimer-note"
+            >
+              <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">Note</p>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-night-muted">
+                General buyer education only — not legal advice and not an official settlement or
+                REALTOR® channel. Confirm current rules with your agent or attorney before you sign.
+              </p>
+            </div>
 
             <div className="mt-6 space-y-4">
               {doc.sections.map((section) => (
