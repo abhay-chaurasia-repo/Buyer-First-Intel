@@ -292,7 +292,7 @@ function WatchlistRow({
           )}
         />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-saffron-glow">
+          <span className="block truncate text-sm font-semibold text-night-muted">
             {item.address}
           </span>
           {!open ? (
@@ -315,7 +315,7 @@ function WatchlistRow({
               onClick={() => onOpen(item)}
               className="min-w-0 flex-1 text-left touch-manipulation"
             >
-              <p className="truncate text-sm font-semibold text-saffron-glow">{item.address}</p>
+              <p className="truncate text-sm font-semibold text-night-muted">{item.address}</p>
               <div className="mt-1.5 flex justify-end">
                 <WatchlistMetaRail
                   plannedVisitAt={item.plannedVisitAt}
