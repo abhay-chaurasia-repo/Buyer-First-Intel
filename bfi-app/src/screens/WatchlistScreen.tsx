@@ -23,8 +23,7 @@ import {
 } from '@/data/propertyNotesStorage'
 import {
   checkDueVisitReminders,
-  enableReminderForPlan,
-  setVisitReminder,
+  ensureNotificationPermission,
 } from '@/data/visitReminders'
 import {
   loadWatchlist,
@@ -285,7 +284,6 @@ function WatchlistRow({
 }) {
   const [open, setOpen] = useState(false)
   const [planning, setPlanning] = useState(false)
-  const [reminderMessage, setReminderMessage] = useState<string | null>(null)
   const [showContributePrompt, setShowContributePrompt] = useState(false)
   const status = visitPlanStatus(item)
   const [noteCount, setNoteCount] = useState(() => loadNotes(item.id).length)
@@ -300,23 +298,6 @@ function WatchlistRow({
     if (status !== 'visited') setShowContributePrompt(false)
   }, [status])
 
-  async function handleToggleReminder() {
-    if (item.reminderEnabled) {
-      onChange(setVisitReminder(item.id, false))
-      setReminderMessage('Reminder off')
-      return
-    }
-    const result = await enableReminderForPlan(item.id)
-    onChange(loadWatchlist())
-    if (result.ok) {
-      setReminderMessage('Reminder on — we will nudge you before this visit')
-    } else if (result.reason === 'denied') {
-      setReminderMessage('Notifications blocked in browser settings')
-    } else {
-      setReminderMessage('Reminders need browser notification support')
-    }
-  }
-
   function handleMarkVisited() {
     const markingVisited = status !== 'visited'
     onChange(markWatchlistVisited(item.id, markingVisited))
@@ -330,11 +311,13 @@ function WatchlistRow({
 
   function handleSavePlan(iso: string | null) {
     onChange(setWatchlistPlannedVisit(item.id, iso))
+    setShowContributePrompt(false)
     if (iso) {
-      setReminderMessage('Plan saved — turn on a reminder if you want a nudge')
-      setShowContributePrompt(false)
-    } else {
-      setReminderMessage(null)
+      // Default reminder: request permission on Save (user gesture) with no extra UI
+      void ensureNotificationPermission().then(() => {
+        checkDueVisitReminders()
+        onChange(loadWatchlist())
+      })
     }
   }
 
@@ -425,10 +408,7 @@ function WatchlistRow({
                 {item.plannedVisitAt ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      onChange(setWatchlistPlannedVisit(item.id, null))
-                      setReminderMessage(null)
-                    }}
+                    onClick={() => onChange(setWatchlistPlannedVisit(item.id, null))}
                     className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-white/25 bg-transparent px-3 text-xs font-semibold text-night-muted touch-manipulation"
                     data-testid={`button-clear-plan-${item.id}`}
                   >
@@ -437,35 +417,6 @@ function WatchlistRow({
                 ) : null}
               </div>
 
-              {item.plannedVisitAt && status !== 'visited' ? (
-                <div
-                  className="rounded-xl border border-saffron/30 bg-saffron/10 px-2.5 py-2"
-                  data-testid={`reminder-prompt-${item.id}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-3.5 w-3.5 shrink-0 text-saffron-glow" aria-hidden />
-                    <p className="min-w-0 flex-1 text-[12px] font-semibold text-saffron-glow">
-                      {item.reminderEnabled ? 'Visit reminder on' : 'Get a reminder before this visit'}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => void handleToggleReminder()}
-                      className={cn(
-                        'shrink-0 rounded-lg border px-2.5 py-1 text-[11px] font-bold touch-manipulation',
-                        item.reminderEnabled
-                          ? 'border-white/20 text-night-muted'
-                          : 'border-saffron/45 bg-saffron/20 text-saffron-glow',
-                      )}
-                      data-testid={`button-toggle-reminder-${item.id}`}
-                    >
-                      {item.reminderEnabled ? 'Turn off' : 'Remind me'}
-                    </button>
-                  </div>
-                  {reminderMessage ? (
-                    <p className="mt-1.5 text-[11px] text-night-faint">{reminderMessage}</p>
-                  ) : null}
-                </div>
-              ) : null}
 
               {showContributePrompt || status === 'visited' ? (
                 <button
@@ -530,7 +481,7 @@ export function WatchlistScreen() {
     <AppShell scene="watchlist" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <PageHeader
         title="Saved properties"
-        description="Plan visits, set reminders, and share community insights after you visit."
+        description="Plan visits, mark visited, and share community insights after you visit."
         testId="watchlist-top-bar"
       />
 

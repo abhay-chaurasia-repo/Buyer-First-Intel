@@ -30,11 +30,13 @@ export function visitPlanStatus(item: WatchlistItem): VisitPlanStatus {
 }
 
 function normalizeItem(raw: WatchlistItem): WatchlistItem {
+  const plannedVisitAt = raw.plannedVisitAt || null
   return {
     ...raw,
     visitedAt: raw.visitedAt || null,
-    plannedVisitAt: raw.plannedVisitAt || null,
-    reminderEnabled: Boolean(raw.reminderEnabled),
+    plannedVisitAt,
+    // Plans always have a default reminder unless explicitly disabled
+    reminderEnabled: Boolean(plannedVisitAt) && raw.reminderEnabled !== false,
   }
 }
 
@@ -137,8 +139,8 @@ export function setWatchlistPlannedVisit(
 ): WatchlistItem[] {
   return updateWatchlistItem(propertyId, {
     plannedVisitAt,
-    // Clearing a plan also clears the reminder opt-in
-    ...(plannedVisitAt ? {} : { reminderEnabled: false }),
+    // Planning always carries a default reminder; clearing the plan clears it
+    reminderEnabled: Boolean(plannedVisitAt),
   })
 }
 
