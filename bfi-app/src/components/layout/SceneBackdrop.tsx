@@ -8,23 +8,34 @@ type SceneBackdropProps = {
   className?: string
 }
 
+/** Dark warm washes — matched to Search so champagne text stays forward */
 const overlays: Record<NonNullable<SceneBackdropProps['intensity']>, string> = {
-  soft: 'from-ink/35 via-ink/28 to-ink/72',
-  medium: 'from-ink/42 via-ink/35 to-ink/78',
-  strong: 'from-ink/52 via-ink/45 to-ink/85',
+  soft: 'from-ink/48 via-ink/40 to-ink/80',
+  medium: 'from-ink/55 via-ink/48 to-ink/86',
+  strong: 'from-ink/62 via-ink/55 to-ink/90',
 }
 
-/** Cool ambient for diligence surfaces; soft saffron only on branded entry scenes */
+/** Soft saffron warmth on every diligence surface (same language as Search) */
 const accentWash: Partial<Record<PageSceneId, string>> = {
-  search: 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
-  login: 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.1),transparent_55%)]',
-  property: 'bg-[radial-gradient(ellipse_80%_45%_at_50%_-8%,rgb(120_160_210/0.14),transparent_55%)]',
-  watchlist: 'bg-[radial-gradient(ellipse_80%_45%_at_50%_-8%,rgb(120_160_210/0.12),transparent_55%)]',
-  journey: 'bg-[radial-gradient(ellipse_80%_45%_at_50%_-8%,rgb(100_140_190/0.12),transparent_55%)]',
+  search:
+    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.14),transparent_55%)]',
+  login:
+    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
+  property:
+    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
+  watchlist:
+    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
+  journey:
+    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.11),transparent_55%)]',
+  guidance:
+    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.11),transparent_55%)]',
+  browse:
+    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.11),transparent_55%)]',
 }
 
 /**
  * Welcome-style house photography behind app screens.
+ * Graded dark + warm so champagne parchment type stays readable.
  */
 export function SceneBackdrop({
   scene,
