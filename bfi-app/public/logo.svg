@@ -2,7 +2,7 @@
   <rect width="512" height="512" rx="114" ry="114" fill="#E98A2F"/>
   <g fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
     <path d="M96 248 L256 136 L416 248"/>
-    <path d="M128 248 V378 H252.0-18.4j"/>
+    <path d="M128 248 V368 H216.2"/>
     <path d="M384 248 V268"/>
   </g>
   <rect x="334" y="128" width="28" height="52" rx="4" fill="#FFFFFF"/>
