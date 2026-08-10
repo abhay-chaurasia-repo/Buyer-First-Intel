@@ -20,7 +20,7 @@ export function BrandLogo({
 }: BrandLogoProps) {
   return (
     <img
-      src="/logo.png?v=loupe-in"
+      src="/logo.png?v=exact"
       alt={alt}
       width={size}
       height={size}
