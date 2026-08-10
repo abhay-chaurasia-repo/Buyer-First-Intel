@@ -123,8 +123,7 @@ export function updateWatchlistItem(
 export function markWatchlistVisited(propertyId: string, visited = true): WatchlistItem[] {
   return updateWatchlistItem(propertyId, {
     visitedAt: visited ? new Date().toISOString() : null,
-    // Keep planned date as history unless clearing visit — clear plan when marking visited
-    ...(visited ? { plannedVisitAt: null } : {}),
+    // Keep plannedVisitAt so the planned date stays visible after a visit
   })
 }
 
@@ -134,8 +133,7 @@ export function setWatchlistPlannedVisit(
 ): WatchlistItem[] {
   return updateWatchlistItem(propertyId, {
     plannedVisitAt,
-    // Planning a future visit implies not yet completed
-    ...(plannedVisitAt ? { visitedAt: null } : {}),
+    // Keep visitedAt so both planned and visited dates can show together
   })
 }
 

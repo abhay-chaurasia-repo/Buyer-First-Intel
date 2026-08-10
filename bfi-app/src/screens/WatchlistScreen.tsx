@@ -57,6 +57,83 @@ function formatVisitWhen(iso: string) {
   }
 }
 
+function formatVisitDateCompact(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    })
+  } catch {
+    return ''
+  }
+}
+
+function VisitDateChip({
+  kind,
+  iso,
+  compact = false,
+}: {
+  kind: 'planned' | 'visited'
+  iso: string
+  compact?: boolean
+}) {
+  const isVisited = kind === 'visited'
+  const label = isVisited ? 'Visited' : 'Planned'
+  const when = compact ? formatVisitDateCompact(iso) : formatVisitWhen(iso)
+
+  return (
+    <span
+      className={cn(
+        'inline-flex max-w-full items-center gap-1.5 rounded-lg border',
+        compact ? 'px-1.5 py-0.5' : 'px-2.5 py-1.5',
+        isVisited
+          ? 'border-saffron/45 bg-saffron/18 text-saffron-glow'
+          : 'border-saffron/30 bg-saffron/10 text-saffron-glow',
+      )}
+      title={`${label} ${formatVisitWhen(iso)}`}
+      data-testid={`visit-date-${kind}`}
+    >
+      {isVisited ? (
+        <Check className={cn('shrink-0', compact ? 'h-3 w-3' : 'h-3.5 w-3.5')} strokeWidth={2.5} aria-hidden />
+      ) : (
+        <CalendarClock className={cn('shrink-0', compact ? 'h-3 w-3' : 'h-3.5 w-3.5')} aria-hidden />
+      )}
+      <span className="min-w-0 leading-tight">
+        <span
+          className={cn(
+            'block font-bold tracking-wide uppercase',
+            compact ? 'text-[8px] opacity-80' : 'text-[9px] opacity-85',
+          )}
+        >
+          {label}
+        </span>
+        <span className={cn('block truncate font-semibold', compact ? 'text-[10px]' : 'text-[12px]')}>
+          {when}
+        </span>
+      </span>
+    </span>
+  )
+}
+
+function VisitDatesRow({
+  plannedVisitAt,
+  visitedAt,
+  compact = false,
+}: {
+  plannedVisitAt?: string | null
+  visitedAt?: string | null
+  compact?: boolean
+}) {
+  if (!plannedVisitAt && !visitedAt) return null
+
+  return (
+    <div className={cn('flex flex-wrap', compact ? 'gap-1.5' : 'gap-2')}>
+      {plannedVisitAt ? <VisitDateChip kind="planned" iso={plannedVisitAt} compact={compact} /> : null}
+      {visitedAt ? <VisitDateChip kind="visited" iso={visitedAt} compact={compact} /> : null}
+    </div>
+  )
+}
+
 function PropertyNotes({
   propertyId,
   onNotesChange,
@@ -205,33 +282,32 @@ function WatchlistRow({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full min-h-12 items-center gap-2 px-3 py-2.5 text-left touch-manipulation"
+        className="flex w-full min-h-12 items-start gap-2 px-3 py-2.5 text-left touch-manipulation"
         aria-expanded={open}
         data-testid={`button-toggle-watchlist-${item.id}`}
       >
         <ChevronDown
           className={cn(
-            'h-4 w-4 shrink-0 text-saffron-glow transition-transform',
+            'mt-0.5 h-4 w-4 shrink-0 text-saffron-glow transition-transform',
             !open && '-rotate-90',
           )}
         />
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-night-ink">
-          {item.address}
+        <span className="min-w-0 flex-1 space-y-1.5">
+          <span className="block truncate text-sm font-semibold text-saffron-glow">
+            {item.address}
+          </span>
+          {!open ? (
+            <VisitDatesRow
+              plannedVisitAt={item.plannedVisitAt}
+              visitedAt={item.visitedAt}
+              compact
+            />
+          ) : null}
         </span>
         {!open && noteCount > 0 ? (
-          <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-saffron/15 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+          <span className="mt-0.5 inline-flex shrink-0 items-center gap-0.5 rounded-md bg-saffron/15 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
             <StickyNote className="h-3 w-3" aria-hidden />
             {noteCount}
-          </span>
-        ) : null}
-        {!open && status === 'planned' ? (
-          <span className="shrink-0 rounded-md bg-night-ink/12 px-1.5 py-0.5 text-[10px] font-bold text-night-muted uppercase tracking-wide">
-            Planned
-          </span>
-        ) : null}
-        {!open && status === 'visited' ? (
-          <span className="shrink-0 rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow uppercase tracking-wide">
-            Visited
           </span>
         ) : null}
       </button>
@@ -250,7 +326,7 @@ function WatchlistRow({
                     Visited
                   </span>
                 ) : status === 'planned' ? (
-                  <span className="rounded-md bg-night-ink/12 px-1.5 py-0.5 text-[10px] font-bold text-night-muted uppercase tracking-wide">
+                  <span className="rounded-md bg-saffron/15 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow uppercase tracking-wide">
                     Planned
                   </span>
                 ) : (
@@ -265,7 +341,8 @@ function WatchlistRow({
                   </span>
                 ) : null}
               </div>
-              <p className="mt-1 truncate text-[12px] text-night-muted">
+              <p className="mt-1 truncate text-sm font-semibold text-saffron-glow">{item.address}</p>
+              <p className="mt-0.5 truncate text-[12px] text-night-muted">
                 {item.city}, {item.state} {item.zipCode}
               </p>
               <p className="mt-1 text-[11px] text-night-faint">
@@ -286,16 +363,8 @@ function WatchlistRow({
           </div>
 
           <div className="space-y-2 border-t border-white/15 pt-3">
-            {status === 'visited' && item.visitedAt ? (
-              <p className="flex items-center gap-1.5 text-[12px] text-saffron-glow">
-                <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
-                Visited {formatVisitWhen(item.visitedAt)}
-              </p>
-            ) : status === 'planned' && item.plannedVisitAt ? (
-              <p className="flex items-center gap-1.5 text-[12px] text-night-muted">
-                <CalendarClock className="h-3.5 w-3.5 text-saffron-glow" aria-hidden />
-                Plan: {formatVisitWhen(item.plannedVisitAt)}
-              </p>
+            {item.plannedVisitAt || item.visitedAt ? (
+              <VisitDatesRow plannedVisitAt={item.plannedVisitAt} visitedAt={item.visitedAt} />
             ) : (
               <p className="flex items-center gap-1.5 text-[12px] text-night-faint">
                 <MapPin className="h-3.5 w-3.5" aria-hidden />
