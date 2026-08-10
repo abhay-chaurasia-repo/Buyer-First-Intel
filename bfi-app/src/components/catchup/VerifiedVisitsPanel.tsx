@@ -43,7 +43,7 @@ function VisitRow({ visit }: { visit: VerifiedVisit }) {
           </p>
           <p className="mt-0.5 text-[13px] text-night-muted">
             {formatVisitTime(visit.visitedAt)}
-            <span className="text-night-faint"> · {visit.visitorLabel}</span>
+            {isYou ? <span className="text-night-faint"> · You</span> : null}
           </p>
         </div>
         {labels.length > 0 ? (
