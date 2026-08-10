@@ -457,23 +457,6 @@ function WatchlistRow({
                   {status === 'visited' ? 'Visited' : 'Mark visited'}
                 </button>
 
-                {status === 'visited' ? (
-                  <button
-                    type="button"
-                    onClick={() => onContribute(item)}
-                    className={cn(
-                      'inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold touch-manipulation',
-                      hasShared
-                        ? 'border-[#e85d5d]/40 bg-[#e85d5d]/14 text-[#ffc2c2]'
-                        : 'animate-bfi-share-blow border-[#e85d5d]/60 bg-[#e85d5d]/22 text-[#ffb0b0] hover:bg-[#e85d5d]/32',
-                    )}
-                    data-testid={`button-contribute-community-${item.id}`}
-                  >
-                    <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
-                    {hasShared ? 'Shared with Buyer Community' : 'Share with Buyer Community'}
-                  </button>
-                ) : null}
-
                 {item.plannedVisitAt ? (
                   <button
                     type="button"
