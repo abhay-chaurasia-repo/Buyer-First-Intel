@@ -20,7 +20,7 @@ export function BrandLogo({
 }: BrandLogoProps) {
   return (
     <img
-      src="/logo.png?v=diff1"
+      src="/logo.png?v=match-attach"
       alt={alt}
       width={size}
       height={size}

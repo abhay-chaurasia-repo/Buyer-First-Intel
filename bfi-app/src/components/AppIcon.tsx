@@ -1,8 +1,8 @@
 import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/data/brand'
 
-/** Warm orange from the attached app-icon reference */
-export const APP_ICON_SAFFRON = '#E98A2F'
+/** Terracotta / warm brown from the attached logo reference */
+export const APP_ICON_SAFFRON = '#C88A58'
 
 type AppIconProps = {
   className?: string
@@ -12,8 +12,9 @@ type AppIconProps = {
 }
 
 /**
- * Due Diligence app icon — house + magnifier with 4-pane window on saffron squircle.
- * Diffs vs prior mark: loupe sits further inside the house; handle is thicker.
+ * Due Diligence app icon — matches the attached reference:
+ * terracotta squircle, white house, nested loupe (~½ house width),
+ * 4-pane window, uniform stroke weight.
  */
 export function AppIcon({
   className,
@@ -23,28 +24,28 @@ export function AppIcon({
 }: AppIconProps) {
   const titleId = `${testId}-title`
 
-  const stroke = 30
-  // Attached reference: handle is noticeably thicker than house/circle strokes
-  const handleStroke = 42
-  // Pull loupe a bit further inside the house (left + slightly up)
-  const loupeCx = 258
-  const loupeCy = 296
-  const loupeR = 82
+  // Uniform stroke — house, circle, and handle match the reference
+  const stroke = 28
+  // Loupe nested inside the house; diameter ~ half house width
+  const loupeCx = 268
+  const loupeCy = 300
+  const loupeR = 78
   const loupeOuter = loupeR + stroke / 2
-  const floorY = 380
+  const floorY = 378
   const floorDy = floorY - loupeCy
   const floorEndX =
     loupeCx - Math.sqrt(Math.max(loupeOuter * loupeOuter - floorDy * floorDy, 1))
 
-  const handleStart = loupeR + stroke * 0.18
-  const handleLen = 70
+  const handleStart = loupeR + stroke * 0.2
+  const handleLen = 76
   const h0x = loupeCx + handleStart * Math.SQRT1_2
   const h0y = loupeCy + handleStart * Math.SQRT1_2
   const h1x = h0x + handleLen * Math.SQRT1_2
   const h1y = h0y + handleLen * Math.SQRT1_2
 
-  const pane = 17
-  const gap = 6
+  // Window with clear margin inside the lens
+  const pane = 16
+  const gap = 7
   const grid = pane * 2 + gap
   const gx = loupeCx - grid / 2
   const gy = loupeCy - grid / 2
@@ -71,13 +72,16 @@ export function AppIcon({
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M96 248 L256 136 L416 248" />
-        <path d={`M128 248 V${floorY} H${floorEndX.toFixed(1)}`} />
-        <path d="M384 248 V270" />
+        {/* Pitched roof with eaves — right tip near loupe */}
+        <path d="M100 250 L256 138 L412 250" />
+        {/* Left wall + floor meeting loupe rim */}
+        <path d={`M132 250 V${floorY} H${floorEndX.toFixed(1)}`} />
+        {/* Short right wall under eave, near circle */}
+        <path d="M380 250 V274" />
       </g>
 
-      {/* Solid filled chimney */}
-      <rect x="334" y="128" width="28" height="52" rx="4" fill="#FFFFFF" />
+      {/* Solid rectangular chimney on right roof slope */}
+      <rect x="332" y="130" width="26" height="48" rx="3" fill="#FFFFFF" />
 
       <circle
         cx={loupeCx}
@@ -107,7 +111,7 @@ export function AppIcon({
         x2={h1x}
         y2={h1y}
         stroke="#FFFFFF"
-        strokeWidth={handleStroke}
+        strokeWidth={stroke}
         strokeLinecap="round"
       />
     </svg>
