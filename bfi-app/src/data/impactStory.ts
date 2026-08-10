@@ -45,8 +45,8 @@ export const IMPACT_PAGES: ImpactPage[] = [
   {
     id: 'visits',
     eyebrow: 'Verified visits',
-    title: 'Know who actually showed up — and when.',
-    body: 'Every GPS-verified visit logs date and time. Spot natural diligence patterns, not manufactured urgency, before you commit.',
+    title: 'See how many buyers actually showed up — and when.',
+    body: 'Every GPS-verified visit logs date and time so you can spot natural diligence patterns, not manufactured urgency. Visitor identities stay hidden — buyers can’t contact each other.',
     image: '/impact/impact-visits.png',
     imageAlt: 'Quiet residential street at dusk',
     snippet: 'visits',

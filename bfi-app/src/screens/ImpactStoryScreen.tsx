@@ -79,29 +79,29 @@ function VisitsSnippet() {
           <p className="font-display text-[10px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
             Verified visits
           </p>
-          <p className="text-[11px] text-night-faint">6 visits · 5 with labels</p>
+          <p className="text-[11px] text-night-faint">6 visits · 5 with labels · anonymous</p>
         </div>
       </div>
       <div className="mt-3 space-y-1">
         {[
-          { when: 'Tue, Aug 5 · 9:03 AM', who: 'Visitor E', tag: '2 labels' },
-          { when: 'Sat, Aug 1 · 6:15 PM', who: 'Visitor A', tag: '3 labels' },
-          { when: 'Wed, Jul 22 · 11:48 AM', who: 'Visitor C', tag: '3 labels' },
+          { when: 'Tue, Aug 5 · 9:03 AM', tag: '2 labels' },
+          { when: 'Sat, Aug 1 · 6:15 PM', tag: '3 labels' },
+          { when: 'Wed, Jul 22 · 11:48 AM', tag: '3 labels' },
         ].map((row) => (
           <div
             key={row.when}
             className="flex min-h-11 items-center justify-between gap-2 rounded-xl px-2 py-2"
           >
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold text-night-ink">{row.when}</p>
-              <p className="text-[11px] text-night-faint">{row.who}</p>
-            </div>
+            <p className="min-w-0 truncate text-[13px] font-semibold text-night-ink">{row.when}</p>
             <span className="shrink-0 rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
               {row.tag}
             </span>
           </div>
         ))}
       </div>
+      <p className="mt-2 text-[10px] leading-snug text-night-faint">
+        Counts and timing only — visitor details stay private.
+      </p>
     </div>
   )
 }
