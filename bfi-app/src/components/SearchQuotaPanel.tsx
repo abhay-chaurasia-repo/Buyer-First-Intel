@@ -58,7 +58,7 @@ export function SearchPaywall({ onSubscribe }: SearchPaywallProps) {
         Subscribe · {SEARCH_PLAN.priceLabel}
       </button>
       <p className="mt-2 text-[11px] text-night-faint">
-        Demo subscription on this device — real billing comes next.
+        Demo subscribe flag in your account — Stripe billing comes next.
       </p>
     </div>
   )

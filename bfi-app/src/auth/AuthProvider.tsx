@@ -24,6 +24,7 @@ import {
   signOutSupabase,
   verifyPhoneOtp,
 } from '@/lib/phoneAuth'
+import { ensureRemoteProfile } from '@/lib/searchQuotaApi'
 import { getSupabase } from '@/lib/supabaseClient'
 
 type AuthContextValue = {
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const next = signInWithSupabasePhone({ userId, phone })
     claimGuestDataForUser(next.userId)
     setSession(next)
+    void ensureRemoteProfile()
     return next
   }, [])
 

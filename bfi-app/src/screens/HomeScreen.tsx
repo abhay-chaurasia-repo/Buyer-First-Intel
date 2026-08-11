@@ -15,11 +15,12 @@ import { SearchPaywall, SearchQuotaBar } from '@/components/SearchQuotaPanel'
 import { authMethodLabel } from '@/data/authSession'
 import { APP_NAME } from '@/data/brand'
 import {
-  activateSearchSubscription,
-  getSearchQuotaSnapshot,
-  tryConsumeSearch,
-  type SearchQuotaSnapshot,
-} from '@/data/searchQuota'
+  activateRemoteSearchSubscription,
+  consumeSearch,
+  ensureRemoteProfile,
+  fetchSearchQuotaSnapshot,
+} from '@/lib/searchQuotaApi'
+import type { SearchQuotaSnapshot } from '@/data/searchQuota'
 import { cn } from '@/lib/utils'
 
 export function HomeScreen() {
@@ -28,30 +29,40 @@ export function HomeScreen() {
   const inputId = useId()
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
-  const [snapshot, setSnapshot] = useState<SearchQuotaSnapshot>(() =>
-    getSearchQuotaSnapshot(ownerId),
-  )
+  const [snapshot, setSnapshot] = useState<SearchQuotaSnapshot | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
+  const [quotaBusy, setQuotaBusy] = useState(false)
 
-  useEffect(() => {
-    const next = getSearchQuotaSnapshot(ownerId)
-    setSnapshot(next)
-    setShowPaywall(!next.subscribed && next.remaining === 0)
-  }, [ownerId])
-
-  function refreshQuota() {
-    const next = getSearchQuotaSnapshot(ownerId)
+  async function refreshQuota() {
+    const next = await fetchSearchQuotaSnapshot(ownerId)
     setSnapshot(next)
     setShowPaywall(!next.subscribed && next.remaining === 0)
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      await ensureRemoteProfile()
+      if (cancelled) return
+      const next = await fetchSearchQuotaSnapshot(ownerId)
+      if (cancelled) return
+      setSnapshot(next)
+      setShowPaywall(!next.subscribed && next.remaining === 0)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [ownerId])
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const address = query.trim()
-    if (!address) return
+    if (!address || quotaBusy) return
 
-    const access = tryConsumeSearch(address, ownerId)
-    refreshQuota()
+    setQuotaBusy(true)
+    const access = await consumeSearch(address, ownerId)
+    await refreshQuota()
+    setQuotaBusy(false)
 
     if (!access.ok) {
       setShowPaywall(true)
@@ -61,9 +72,11 @@ export function HomeScreen() {
     navigate(`/property/${encodeURIComponent(address)}`)
   }
 
-  function handleSubscribe() {
-    activateSearchSubscription(ownerId)
-    refreshQuota()
+  async function handleSubscribe() {
+    setQuotaBusy(true)
+    await activateRemoteSearchSubscription(ownerId)
+    await refreshQuota()
+    setQuotaBusy(false)
     setShowPaywall(false)
   }
 
@@ -155,7 +168,7 @@ export function HomeScreen() {
               />
               <button
                 type="submit"
-                disabled={!query.trim()}
+                disabled={!query.trim() || quotaBusy}
                 className={cn(
                   'inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl transition-colors touch-manipulation',
                   query.trim()
@@ -171,8 +184,12 @@ export function HomeScreen() {
           </form>
 
           <div className="animate-bfi-rise mt-3 w-full" style={{ animationDelay: '110ms' }}>
-            <SearchQuotaBar snapshot={snapshot} />
-            {showPaywall ? <SearchPaywall snapshot={snapshot} onSubscribe={handleSubscribe} /> : null}
+            {snapshot ? <SearchQuotaBar snapshot={snapshot} /> : (
+              <p className="text-center text-[12px] text-night-faint">Loading search plan…</p>
+            )}
+            {snapshot && showPaywall ? (
+              <SearchPaywall snapshot={snapshot} onSubscribe={() => void handleSubscribe()} />
+            ) : null}
           </div>
 
           <p
