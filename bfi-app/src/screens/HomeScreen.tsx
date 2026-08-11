@@ -4,16 +4,20 @@ import {
   ArrowRight,
   ClipboardCheck,
   FileSearch,
+  LogOut,
   Search,
   Star,
 } from 'lucide-react'
+import { useAuth } from '@/auth/AuthProvider'
 import { BrandLogo } from '@/components/BrandLogo'
 import { AppShell } from '@/components/layout/AppShell'
-import { APP_NAME, APP_TAGLINE } from '@/data/brand'
+import { authMethodLabel } from '@/data/authSession'
+import { APP_NAME } from '@/data/brand'
 import { cn } from '@/lib/utils'
 
 export function HomeScreen() {
   const navigate = useNavigate()
+  const { session, isSignedIn, signOut } = useAuth()
   const inputId = useId()
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -34,9 +38,39 @@ export function HomeScreen() {
       <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">
         <header className="animate-bfi-fade flex items-center justify-between gap-3">
           <BrandLogo size={36} />
-          <span className="shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow">
-            {APP_TAGLINE}
-          </span>
+          {isSignedIn && session ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="min-w-0 text-right" data-testid="home-auth-session">
+                <p className="truncate text-[11px] font-semibold text-saffron-glow">
+                  {session.displayName}
+                </p>
+                <p className="truncate text-[10px] text-night-faint">
+                  via {authMethodLabel(session.method)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  signOut()
+                  navigate('/login')
+                }}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 text-night-muted transition-colors hover:border-saffron/40 hover:text-saffron-glow touch-manipulation"
+                aria-label="Sign out"
+                data-testid="button-home-sign-out"
+              >
+                <LogOut className="h-4 w-4" strokeWidth={2.25} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow touch-manipulation"
+              data-testid="button-home-log-in"
+            >
+              Log in
+            </button>
+          )}
         </header>
 
         <div className="flex flex-1 flex-col items-center py-5">

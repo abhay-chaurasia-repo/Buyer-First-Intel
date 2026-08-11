@@ -1,8 +1,14 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Phone, UserRoundPlus } from 'lucide-react'
+import { useAuth } from '@/auth/AuthProvider'
 import { BrandLogo } from '@/components/BrandLogo'
 import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
+import {
+  authMethodLabel,
+  loadLastAuthMethod,
+  type AuthMethodId,
+} from '@/data/authSession'
 import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { markImpactSeen } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
@@ -10,7 +16,7 @@ import { cn } from '@/lib/utils'
 type AuthMode = 'signup' | 'login'
 
 type AuthMethod = {
-  id: string
+  id: AuthMethodId
   label: string
   testId: string
   tone: 'primary' | 'dark' | 'facebook'
@@ -45,20 +51,21 @@ type AuthOptionsScreenProps = {
 }
 
 /**
- * Bumble-style auth method chooser — signup for new buyers, login for returning.
- * Auth providers are UI shells for now; choosing one enters the app.
+ * Auth method chooser — signup for new buyers, login for returning.
+ * Step 1: creates a local session. Later each method plugs into a real IdP / OTP.
  */
 export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
   const navigate = useNavigate()
+  const { signIn } = useAuth()
   const isSignup = mode === 'signup'
-  const lastMethod = 'a mobile number'
+  const lastMethod = loadLastAuthMethod()
 
   const methods: AuthMethod[] = [
     ...(isSignup
       ? []
       : [
           {
-            id: 'quick',
+            id: 'quick' as const,
             label: 'Quick sign in',
             testId: 'button-auth-quick',
             tone: 'primary' as const,
@@ -88,12 +95,8 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
     },
   ]
 
-  function enterApp(methodId: string) {
-    try {
-      localStorage.setItem('bfi.lastAuthMethod', methodId)
-    } catch {
-      /* ignore */
-    }
+  function enterApp(methodId: AuthMethodId) {
+    signIn(methodId)
     markImpactSeen()
     navigate('/')
   }
@@ -149,7 +152,9 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               className="mt-8 text-center text-[13px] font-medium text-night-ink/90"
               data-testid="auth-last-method"
             >
-              You last signed in with {lastMethod}.
+              {lastMethod
+                ? `You last signed in with ${authMethodLabel(lastMethod)}.`
+                : 'Choose how you want to sign in.'}
             </p>
           ) : (
             <div className="mt-10" />
@@ -189,7 +194,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               .
             </p>
             <p className="mt-2 text-center text-[11px] text-night-faint">
-              Auth providers are preview shells — no account is created yet.
+              Step 1 · local session on this device. Apple, Facebook, and phone OTP come next.
             </p>
           </div>
         </div>

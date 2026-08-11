@@ -49,9 +49,6 @@ function buildSignals(visits: VerifiedVisit[]): VisitPatternSignal[] {
   const daySpan = uniqueDays(visits)
   const visitors = uniqueVisitors(visits)
   const withLabels = visits.filter((v) => v.communityLabelIds.length > 0).length
-  const labelVisitors = new Set(
-    visits.filter((v) => v.communityLabelIds.length > 0).map((v) => v.visitorLabel),
-  ).size
 
   const sorted = [...visits].sort(
     (a, b) => new Date(a.visitedAt).getTime() - new Date(b.visitedAt).getTime(),
