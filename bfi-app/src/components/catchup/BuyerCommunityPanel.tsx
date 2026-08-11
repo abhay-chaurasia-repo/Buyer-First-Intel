@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ShieldCheck, ThumbsUp } from 'lucide-react'
+import { useAuth } from '@/auth/AuthProvider'
 import {
   BUYER_LABEL_CATEGORIES,
   BUYER_COMMUNITY_LABELS,
@@ -151,13 +152,14 @@ type BuyerCommunityPanelProps = {
  * Buyer Community: fixed labels only. Verified visitors upvote what they observe.
  */
 export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
+  const { ownerId } = useAuth()
   const [voteState, setVoteState] = useState<BuyerVoteState>(() => loadBuyerVoteState(propertyId))
   const [verified, setVerified] = useState(() => loadBuyerVerified(propertyId))
 
   useEffect(() => {
     setVoteState(loadBuyerVoteState(propertyId))
     setVerified(loadBuyerVerified(propertyId))
-  }, [propertyId])
+  }, [propertyId, ownerId])
 
   const totalVotes = useMemo(
     () => BUYER_COMMUNITY_LABELS.reduce((sum, label) => sum + voteCount(label, voteState), 0),

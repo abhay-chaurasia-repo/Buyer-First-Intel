@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { CatchUpFlow, type CatchUpSurface } from '@/components/catchup/CatchUpFlow'
+import { useAuth } from '@/auth/AuthProvider'
 import { fetchSurfaceApi } from '@/data/catchUpApi'
 import {
   DEMO_PROPERTY,
@@ -24,6 +25,7 @@ import {
   type HistoryAddress,
   type MetricCard,
 } from '@/data/mockProperty'
+import { loadGpsVerified, persistGpsVerified } from '@/data/ownerScope'
 import { isOnWatchlist, toggleWatchlist } from '@/data/watchlistStorage'
 import { cn } from '@/lib/utils'
 
@@ -98,6 +100,7 @@ function HistoryRow({
 
 export function PropertyDetailScreen() {
   const navigate = useNavigate()
+  const { ownerId } = useAuth()
   const { address = '' } = useParams<{ address: string }>()
   const decoded = decodeURIComponent(address)
   const property = useMemo(
@@ -107,25 +110,15 @@ export function PropertyDetailScreen() {
   const propertyKey = property.id
 
   const [starred, setStarred] = useState(() => isOnWatchlist(property.id) || property.starred)
-  const [verified, setVerified] = useState(() => {
-    try {
-      return localStorage.getItem(`bfi.gpsVerified.${property.id}`) === '1'
-    } catch {
-      return false
-    }
-  })
+  const [verified, setVerified] = useState(() => loadGpsVerified(property.id))
   const [historyOpen, setHistoryOpen] = useState(true)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
     setStarred(isOnWatchlist(property.id) || property.starred)
-    try {
-      setVerified(localStorage.getItem(`bfi.gpsVerified.${property.id}`) === '1')
-    } catch {
-      setVerified(false)
-    }
-  }, [propertyKey, property.id, property.starred])
+    setVerified(loadGpsVerified(property.id))
+  }, [propertyKey, property.id, property.starred, ownerId])
 
   useEffect(() => {
     const catchup = searchParams.get('catchup')
@@ -157,11 +150,7 @@ export function PropertyDetailScreen() {
   function handleToggleVerify() {
     setVerified((prev) => {
       const next = !prev
-      try {
-        localStorage.setItem(`bfi.gpsVerified.${property.id}`, next ? '1' : '0')
-      } catch {
-        /* ignore */
-      }
+      persistGpsVerified(property.id, next)
       return next
     })
   }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ThumbsUp } from 'lucide-react'
+import { useAuth } from '@/auth/AuthProvider'
 import { PlusWatchLegend } from '@/components/PlusWatchLegend'
 import {
   labelById,
@@ -30,6 +31,7 @@ type RemoteInsightVoteProps = {
  * Within this group, choosing one clears the others (Plus vs Watch).
  */
 export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVoteProps) {
+  const { ownerId } = useAuth()
   const labels = labelIds
     .map((id) => labelById(id))
     .filter((label): label is BuyerCommunityLabel => Boolean(label))
@@ -40,7 +42,7 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
   useEffect(() => {
     setVoteState(loadBuyerVoteState(propertyId))
     setVerified(loadBuyerVerified(propertyId))
-  }, [propertyId])
+  }, [propertyId, ownerId])
 
   if (labels.length === 0) return null
 

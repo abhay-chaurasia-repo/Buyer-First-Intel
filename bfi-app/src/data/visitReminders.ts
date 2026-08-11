@@ -1,5 +1,6 @@
 /** Local visit reminders for planned watchlist visits (browser Notification API). */
 
+import { readScopedItem, writeScopedItem } from './ownerScope'
 import { loadWatchlist, updateWatchlistItem, type WatchlistItem } from './watchlistStorage'
 
 export const REMINDER_FIRED_KEY = 'bfi.visit-reminders-fired'
@@ -9,7 +10,7 @@ const LATE_MS = 30 * 60 * 1000 // until 30m after planned time
 
 function loadFiredMap(): Record<string, string> {
   try {
-    const raw = localStorage.getItem(REMINDER_FIRED_KEY)
+    const raw = readScopedItem(REMINDER_FIRED_KEY)
     if (!raw) return {}
     const parsed = JSON.parse(raw) as Record<string, string>
     return parsed && typeof parsed === 'object' ? parsed : {}
@@ -19,11 +20,7 @@ function loadFiredMap(): Record<string, string> {
 }
 
 function persistFiredMap(map: Record<string, string>) {
-  try {
-    localStorage.setItem(REMINDER_FIRED_KEY, JSON.stringify(map))
-  } catch {
-    // ignore
-  }
+  writeScopedItem(REMINDER_FIRED_KEY, JSON.stringify(map))
 }
 
 function firedKey(item: WatchlistItem) {

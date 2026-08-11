@@ -194,7 +194,8 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               .
             </p>
             <p className="mt-2 text-center text-[11px] text-night-faint">
-              Step 1 · local session on this device. Apple, Facebook, and phone OTP come next.
+              Step 2 · session contract: local owner id, soft gate on diligence screens. Real
+              Apple / Facebook / phone OTP comes next.
             </p>
           </div>
         </div>

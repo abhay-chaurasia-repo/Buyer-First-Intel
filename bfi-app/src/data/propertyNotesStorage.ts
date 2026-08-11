@@ -1,5 +1,7 @@
 /** Private property notes — shared by Watchlist (primary) and any other surfaces. */
 
+import { readScopedItem, writeScopedItem } from './ownerScope'
+
 export const NOTES_STORAGE_KEY = 'bfi.property-notes'
 
 export type SavedNote = {
@@ -10,7 +12,7 @@ export type SavedNote = {
 
 export function loadNotes(propertyKey: string): SavedNote[] {
   try {
-    const raw = localStorage.getItem(NOTES_STORAGE_KEY)
+    const raw = readScopedItem(NOTES_STORAGE_KEY)
     if (!raw) return []
     const all = JSON.parse(raw) as Record<string, SavedNote[]>
     return Array.isArray(all[propertyKey]) ? all[propertyKey]! : []
@@ -21,10 +23,10 @@ export function loadNotes(propertyKey: string): SavedNote[] {
 
 export function persistNotes(propertyKey: string, notes: SavedNote[]) {
   try {
-    const raw = localStorage.getItem(NOTES_STORAGE_KEY)
+    const raw = readScopedItem(NOTES_STORAGE_KEY)
     const all = raw ? (JSON.parse(raw) as Record<string, SavedNote[]>) : {}
     all[propertyKey] = notes
-    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(all))
+    writeScopedItem(NOTES_STORAGE_KEY, JSON.stringify(all))
   } catch {
     // Ignore storage failures in demo shell
   }

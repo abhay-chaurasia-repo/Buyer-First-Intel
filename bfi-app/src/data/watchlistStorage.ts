@@ -1,5 +1,6 @@
 import type { MockProperty } from './mockProperty'
 import { loadBuyerVerified } from './buyerCommunityStorage'
+import { readScopedItem, writeScopedItem } from './ownerScope'
 
 export const WATCHLIST_STORAGE_KEY = 'bfi.watchlist'
 
@@ -42,7 +43,7 @@ function normalizeItem(raw: WatchlistItem): WatchlistItem {
 
 export function loadWatchlist(): WatchlistItem[] {
   try {
-    const raw = localStorage.getItem(WATCHLIST_STORAGE_KEY)
+    const raw = readScopedItem(WATCHLIST_STORAGE_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as WatchlistItem[]
     if (!Array.isArray(parsed)) return []
@@ -53,11 +54,7 @@ export function loadWatchlist(): WatchlistItem[] {
 }
 
 function persistWatchlist(items: WatchlistItem[]) {
-  try {
-    localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(items))
-  } catch {
-    // Ignore storage failures in demo shell
-  }
+  writeScopedItem(WATCHLIST_STORAGE_KEY, JSON.stringify(items))
 }
 
 /** Planned soonest first, then unplanned, then already visited. */

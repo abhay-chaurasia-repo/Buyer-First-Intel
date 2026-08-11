@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
+import { AccountGateBanner } from '@/components/AccountGateBanner'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useAuth } from '@/auth/AuthProvider'
 import {
   JOURNEY_CHECKLIST,
   JOURNEY_PHASES,
@@ -98,9 +100,14 @@ function PhaseSection({
 }
 
 export function JourneyScreen() {
+  const { ownerId } = useAuth()
   const [progress, setProgress] = useState<JourneyProgress>(() => loadJourneyProgress())
   const stats = useMemo(() => journeyStats(progress), [progress])
   const percent = stats.total === 0 ? 0 : Math.round((stats.done / stats.total) * 100)
+
+  useEffect(() => {
+    setProgress(loadJourneyProgress())
+  }, [ownerId])
 
   function handleToggle(id: string) {
     setProgress((prev) => {
@@ -117,6 +124,8 @@ export function JourneyScreen() {
         description="Prepare → Diligence → Offer → Close. Tap to check off."
         testId="journey-top-bar"
       />
+
+      <AccountGateBanner surface="journey" />
 
       <div className="flex-1 overflow-y-auto px-3 py-4 pb-4">
         <div className="rounded-2xl border border-white/25 bg-transparent p-3">

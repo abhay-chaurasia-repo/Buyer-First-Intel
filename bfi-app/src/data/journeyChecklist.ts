@@ -1,8 +1,8 @@
 /** Home-buying journey checklist for the Journey tab. */
 
+import { readScopedItem, writeScopedItem } from './ownerScope'
+
 export const JOURNEY_STORAGE_KEY = 'bfi.journey-checklist'
-/** Legacy key — read once so existing progress is not lost after rename */
-const LEGACY_AUDIT_STORAGE_KEY = 'bfi.audit-checklist'
 
 export type JourneyPhaseId =
   | 'prepare'
@@ -182,9 +182,7 @@ export type JourneyProgress = Record<string, boolean>
 
 export function loadJourneyProgress(): JourneyProgress {
   try {
-    const raw =
-      localStorage.getItem(JOURNEY_STORAGE_KEY) ??
-      localStorage.getItem(LEGACY_AUDIT_STORAGE_KEY)
+    const raw = readScopedItem(JOURNEY_STORAGE_KEY)
     if (!raw) return {}
     const parsed = JSON.parse(raw) as JourneyProgress
     return parsed && typeof parsed === 'object' ? parsed : {}
@@ -194,11 +192,7 @@ export function loadJourneyProgress(): JourneyProgress {
 }
 
 export function persistJourneyProgress(progress: JourneyProgress) {
-  try {
-    localStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify(progress))
-  } catch {
-    // Ignore storage failures in demo shell
-  }
+  writeScopedItem(JOURNEY_STORAGE_KEY, JSON.stringify(progress))
 }
 
 export function journeyStats(progress: JourneyProgress) {

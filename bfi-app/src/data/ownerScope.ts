@@ -1,0 +1,185 @@
+/**
+ * Owner-scoped localStorage for diligence data.
+ * Keys: `${baseKey}.${ownerId}` with one-time legacy → owner migration.
+ */
+
+import { GUEST_OWNER_ID } from './authPolicy'
+import { loadAuthSession } from './authSession'
+
+export { GUEST_OWNER_ID }
+
+/** Diligence bases owned by a buyer (or guest). */
+export const OWNED_STORAGE_BASES = [
+  'bfi.watchlist',
+  'bfi.property-notes',
+  'bfi.journey-checklist',
+  'bfi.buyer-community-votes',
+  'bfi.buyer-community-verified',
+  'bfi.visit-reminders-fired',
+] as const
+
+const LEGACY_ALIASES: Record<string, string[]> = {
+  'bfi.journey-checklist': ['bfi.audit-checklist'],
+}
+
+export function currentOwnerId(): string {
+  return loadAuthSession()?.userId ?? GUEST_OWNER_ID
+}
+
+export function scopedStorageKey(baseKey: string, ownerId = currentOwnerId()) {
+  return `${baseKey}.${ownerId}`
+}
+
+function readRaw(key: string): string | null {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function writeRaw(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // Ignore storage failures in demo shell
+  }
+}
+
+function removeRaw(key: string) {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // Ignore storage failures in demo shell
+  }
+}
+
+function isEmptyPayload(raw: string | null) {
+  if (raw == null || raw === '') return true
+  return raw === '{}' || raw === '[]'
+}
+
+/**
+ * Read a scoped item. If missing, claim unscoped/legacy keys into this owner once.
+ */
+export function readScopedItem(baseKey: string, ownerId = currentOwnerId()): string | null {
+  const scoped = scopedStorageKey(baseKey, ownerId)
+  const existing = readRaw(scoped)
+  if (existing != null) return existing
+
+  const candidates = [baseKey, ...(LEGACY_ALIASES[baseKey] ?? [])]
+  for (const candidate of candidates) {
+    const legacy = readRaw(candidate)
+    if (legacy == null) continue
+    writeRaw(scoped, legacy)
+    removeRaw(candidate)
+    return legacy
+  }
+  return null
+}
+
+export function writeScopedItem(baseKey: string, value: string, ownerId = currentOwnerId()) {
+  writeRaw(scopedStorageKey(baseKey, ownerId), value)
+}
+
+function ownerHasDiligenceData(ownerId: string) {
+  return OWNED_STORAGE_BASES.some((base) => !isEmptyPayload(readRaw(scopedStorageKey(base, ownerId))))
+}
+
+function moveOwnerBucket(fromOwner: string, toOwner: string) {
+  for (const base of OWNED_STORAGE_BASES) {
+    const fromKey = scopedStorageKey(base, fromOwner)
+    const toKey = scopedStorageKey(base, toOwner)
+    const raw = readRaw(fromKey)
+    if (isEmptyPayload(raw)) continue
+    if (!isEmptyPayload(readRaw(toKey))) continue
+    writeRaw(toKey, raw!)
+    removeRaw(fromKey)
+  }
+
+  // Move GPS verification flags: bfi.gpsVerified.{owner}.{propertyId}
+  try {
+    const prefix = `bfi.gpsVerified.${fromOwner}.`
+    const keys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith(prefix)) keys.push(key)
+    }
+    for (const key of keys) {
+      const propertyId = key.slice(prefix.length)
+      const dest = `bfi.gpsVerified.${toOwner}.${propertyId}`
+      if (readRaw(dest) != null) continue
+      const value = readRaw(key)
+      if (value == null) continue
+      writeRaw(dest, value)
+      removeRaw(key)
+    }
+  } catch {
+    // Ignore storage failures
+  }
+}
+
+/**
+ * On first sign-in into an empty account, fold device guest (and any remaining
+ * legacy unscoped keys) into that account so diligence isn’t lost.
+ */
+export function claimGuestDataForUser(userId: string): { claimed: boolean } {
+  for (const base of OWNED_STORAGE_BASES) {
+    readScopedItem(base, GUEST_OWNER_ID)
+  }
+
+  // Legacy GPS flags → guest
+  try {
+    const legacyGps: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (!key?.startsWith('bfi.gpsVerified.')) continue
+      const rest = key.slice('bfi.gpsVerified.'.length)
+      if (!rest.includes('.')) legacyGps.push(key)
+    }
+    for (const key of legacyGps) {
+      const propertyId = key.slice('bfi.gpsVerified.'.length)
+      const dest = `bfi.gpsVerified.${GUEST_OWNER_ID}.${propertyId}`
+      if (readRaw(dest) == null) {
+        const value = readRaw(key)
+        if (value != null) writeRaw(dest, value)
+      }
+      removeRaw(key)
+    }
+  } catch {
+    // Ignore
+  }
+
+  if (ownerHasDiligenceData(userId)) return { claimed: false }
+  if (!ownerHasDiligenceData(GUEST_OWNER_ID)) return { claimed: false }
+  moveOwnerBucket(GUEST_OWNER_ID, userId)
+  return { claimed: true }
+}
+
+export function gpsVerifiedKey(propertyId: string, ownerId = currentOwnerId()) {
+  return `bfi.gpsVerified.${ownerId}.${propertyId}`
+}
+
+export function loadGpsVerified(propertyId: string, ownerId = currentOwnerId()): boolean {
+  try {
+    const scoped = gpsVerifiedKey(propertyId, ownerId)
+    const existing = readRaw(scoped)
+    if (existing != null) return existing === '1'
+
+    const legacy = readRaw(`bfi.gpsVerified.${propertyId}`)
+    if (legacy == null) return false
+    writeRaw(scoped, legacy)
+    removeRaw(`bfi.gpsVerified.${propertyId}`)
+    return legacy === '1'
+  } catch {
+    return false
+  }
+}
+
+export function persistGpsVerified(
+  propertyId: string,
+  verified: boolean,
+  ownerId = currentOwnerId(),
+) {
+  writeRaw(gpsVerifiedKey(propertyId, ownerId), verified ? '1' : '0')
+}

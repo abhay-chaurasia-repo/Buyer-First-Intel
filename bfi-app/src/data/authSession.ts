@@ -24,8 +24,12 @@ export function authMethodLabel(method: AuthMethodId | string) {
   return METHOD_LABELS[method as AuthMethodId] ?? method
 }
 
-function newUserId(method: AuthMethodId) {
-  return `buyer_${method}_${Date.now().toString(36)}`
+/**
+ * Stable local owner ids per method so sign-out → same-method sign-in restores
+ * diligence data. Real IdP subjects replace these later.
+ */
+function localUserId(method: AuthMethodId) {
+  return `buyer_local_${method}`
 }
 
 function displayNameFor(method: AuthMethodId) {
@@ -79,18 +83,21 @@ export function loadLastAuthMethod(): AuthMethodId | null {
 /**
  * Creates a local signed-in session for the chosen method.
  * Later this becomes the handoff point to Apple / Facebook / phone OTP / IdP.
+ * Sign-out clears session only — owned diligence stays under this userId.
  */
 export function signInWithMethod(method: AuthMethodId): AuthSession {
+  const existing = loadAuthSession()
   const session: AuthSession = {
-    userId: newUserId(method),
+    userId: localUserId(method),
     displayName: displayNameFor(method),
     method,
-    signedInAt: new Date().toISOString(),
+    signedInAt: existing?.method === method ? existing.signedInAt : new Date().toISOString(),
   }
   persistAuthSession(session)
   return session
 }
 
+/** Clears session only. Does not wipe diligence or lastAuthMethod. */
 export function signOut() {
   clearAuthSession()
 }
