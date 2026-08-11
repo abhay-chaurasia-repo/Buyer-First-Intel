@@ -89,8 +89,7 @@ export function HomeScreen() {
               <button
                 type="button"
                 onClick={() => {
-                  signOut()
-                  navigate('/login')
+                  void signOut().then(() => navigate('/login'))
                 }}
                 className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 text-night-muted transition-colors hover:border-saffron/40 hover:text-saffron-glow touch-manipulation"
                 aria-label="Sign out"

@@ -82,7 +82,7 @@ export function loadLastAuthMethod(): AuthMethodId | null {
 
 /**
  * Creates a local signed-in session for the chosen method.
- * Later this becomes the handoff point to Apple / Facebook / phone OTP / IdP.
+ * Apple / Facebook / quick stay local until those IdPs are wired.
  * Sign-out clears session only — owned diligence stays under this userId.
  */
 export function signInWithMethod(method: AuthMethodId): AuthSession {
@@ -92,6 +92,29 @@ export function signInWithMethod(method: AuthMethodId): AuthSession {
     displayName: displayNameFor(method),
     method,
     signedInAt: existing?.method === method ? existing.signedInAt : new Date().toISOString(),
+  }
+  persistAuthSession(session)
+  return session
+}
+
+/**
+ * Maps a verified Supabase phone user into the app session.
+ * userId is the Supabase auth subject — diligence data scopes to it.
+ */
+export function signInWithSupabasePhone(params: {
+  userId: string
+  phone?: string | null
+}): AuthSession {
+  const existing = loadAuthSession()
+  const phone = params.phone?.trim()
+  const session: AuthSession = {
+    userId: params.userId,
+    displayName: phone ? `Buyer · ${phone.replace(/^\+/, '')}` : 'Buyer',
+    method: 'mobile',
+    signedInAt:
+      existing?.userId === params.userId && existing.method === 'mobile'
+        ? existing.signedInAt
+        : new Date().toISOString(),
   }
   persistAuthSession(session)
   return session

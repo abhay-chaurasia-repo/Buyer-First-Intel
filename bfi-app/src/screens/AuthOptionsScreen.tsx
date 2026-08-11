@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Phone, UserRoundPlus } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
@@ -53,12 +53,12 @@ type AuthOptionsScreenProps = {
 
 /**
  * Auth method chooser — signup for new buyers, login for returning.
- * Creates a local session. Core product requires sign-in (no guest mode).
+ * Mobile uses Supabase phone OTP when configured; other methods stay local for now.
  */
 export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { signIn } = useAuth()
+  const { signIn, supabaseReady, requestPhoneOtp, confirmPhoneOtp } = useAuth()
   const isSignup = mode === 'signup'
   const lastMethod = loadLastAuthMethod()
   const from =
@@ -68,6 +68,12 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
     typeof (location.state as { from?: unknown }).from === 'string'
       ? (location.state as { from: string }).from
       : '/'
+
+  const [phoneStep, setPhoneStep] = useState<'idle' | 'phone' | 'code'>('idle')
+  const [phone, setPhone] = useState('')
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const methods: AuthMethod[] = [
     ...(isSignup
@@ -104,8 +110,45 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
     },
   ]
 
-  function enterApp(methodId: AuthMethodId) {
+  function finishLocal(methodId: AuthMethodId) {
     signIn(methodId)
+    markImpactSeen()
+    navigate(from.startsWith('/') ? from : '/', { replace: true })
+  }
+
+  function handleMethod(methodId: AuthMethodId) {
+    setError(null)
+    if (methodId === 'mobile') {
+      setPhoneStep('phone')
+      return
+    }
+    finishLocal(methodId)
+  }
+
+  async function handleSendCode(event: FormEvent) {
+    event.preventDefault()
+    setError(null)
+    setBusy(true)
+    const result = await requestPhoneOtp(phone)
+    setBusy(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    setPhone(result.phone)
+    setPhoneStep('code')
+  }
+
+  async function handleVerifyCode(event: FormEvent) {
+    event.preventDefault()
+    setError(null)
+    setBusy(true)
+    const result = await confirmPhoneOtp(phone, code)
+    setBusy(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
     markImpactSeen()
     navigate(from.startsWith('/') ? from : '/', { replace: true })
   }
@@ -122,9 +165,17 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
         <header className="flex items-center">
           <button
             type="button"
-            onClick={() => navigate('/welcome')}
+            onClick={() => {
+              if (phoneStep !== 'idle') {
+                setPhoneStep('idle')
+                setError(null)
+                setCode('')
+                return
+              }
+              navigate('/welcome')
+            }}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-white text-ink shadow-sm touch-manipulation"
-            aria-label="Back to story"
+            aria-label={phoneStep !== 'idle' ? 'Back to sign-in options' : 'Back to story'}
             data-testid="button-auth-back"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={2.35} />
@@ -140,23 +191,36 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
             <p className="mt-1 font-display text-[0.95rem] font-semibold tracking-tight text-saffron-glow">
               {APP_TAGLINE}
             </p>
-            {isSignup ? (
-              <p className="mt-2 max-w-[17rem] text-[0.95rem] leading-relaxed text-night-muted">
-                Create an account to keep Homes in Diligence, Journey progress, and private notes.
-              </p>
+            {phoneStep === 'idle' ? (
+              isSignup ? (
+                <p className="mt-2 max-w-[17rem] text-[0.95rem] leading-relaxed text-night-muted">
+                  Create an account to keep Homes in Diligence, Journey progress, and private notes.
+                </p>
+              ) : (
+                <div className="mt-3 max-w-[18rem]">
+                  <p className="font-display text-[1.2rem] font-semibold tracking-tight text-night-ink">
+                    Welcome back
+                  </p>
+                  <p className="mt-1.5 text-[0.92rem] leading-relaxed text-night-muted">
+                    Pick up where you left off on your property journey.
+                  </p>
+                </div>
+              )
             ) : (
               <div className="mt-3 max-w-[18rem]">
                 <p className="font-display text-[1.2rem] font-semibold tracking-tight text-night-ink">
-                  Welcome back
+                  {phoneStep === 'phone' ? 'Mobile number' : 'Enter code'}
                 </p>
                 <p className="mt-1.5 text-[0.92rem] leading-relaxed text-night-muted">
-                  Pick up where you left off on your property journey.
+                  {phoneStep === 'phone'
+                    ? 'Include country code (example +1 or +61). Trial Twilio only texts verified numbers.'
+                    : `We texted a code to ${phone}.`}
                 </p>
               </div>
             )}
           </div>
 
-          {!isSignup ? (
+          {phoneStep === 'idle' && !isSignup ? (
             <p
               className="mt-8 text-center text-[13px] font-medium text-night-ink/90"
               data-testid="auth-last-method"
@@ -165,30 +229,113 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
                 ? `You last signed in with ${authMethodLabel(lastMethod)}.`
                 : 'Choose how you want to sign in.'}
             </p>
-          ) : (
+          ) : phoneStep === 'idle' ? (
             <div className="mt-10" />
+          ) : null}
+
+          {phoneStep === 'idle' ? (
+            <div
+              className={cn('w-full max-w-[21rem] space-y-3', isSignup ? 'mt-2' : 'mt-4')}
+              data-testid="auth-methods"
+            >
+              {methods.map((method) => (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => handleMethod(method.id)}
+                  className={cn(
+                    'inline-flex min-h-[3.4rem] w-full items-center justify-center gap-2.5 rounded-full px-5 text-[0.98rem] font-semibold transition-colors touch-manipulation',
+                    toneClass[method.tone],
+                  )}
+                  data-testid={method.testId}
+                >
+                  {method.icon}
+                  {method.label}
+                </button>
+              ))}
+              {!supabaseReady ? (
+                <p className="pt-1 text-center text-[11px] text-night-faint" data-testid="supabase-not-ready">
+                  Mobile OTP needs Supabase anon key in `.env.local` (Apple / Quick still work locally).
+                </p>
+              ) : null}
+            </div>
+          ) : phoneStep === 'phone' ? (
+            <form
+              onSubmit={handleSendCode}
+              className="mt-8 w-full max-w-[21rem] space-y-3"
+              data-testid="phone-otp-form"
+            >
+              <label className="sr-only" htmlFor="auth-phone">
+                Mobile number
+              </label>
+              <input
+                id="auth-phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="+1 555 555 0100"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                className="min-h-[3.4rem] w-full rounded-full border border-white/25 bg-transparent px-5 text-[1rem] text-night-ink outline-none placeholder:text-night-faint focus:border-saffron focus:ring-4 focus:ring-saffron/20"
+                data-testid="input-auth-phone"
+              />
+              <button
+                type="submit"
+                disabled={busy || !phone.trim()}
+                className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-white touch-manipulation disabled:opacity-50"
+                data-testid="button-send-otp"
+              >
+                {busy ? 'Sending…' : 'Text me a code'}
+              </button>
+            </form>
+          ) : (
+            <form
+              onSubmit={handleVerifyCode}
+              className="mt-8 w-full max-w-[21rem] space-y-3"
+              data-testid="phone-code-form"
+            >
+              <label className="sr-only" htmlFor="auth-otp">
+                Verification code
+              </label>
+              <input
+                id="auth-otp"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="6-digit code"
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                className="min-h-[3.4rem] w-full rounded-full border border-white/25 bg-transparent px-5 text-center text-[1.15rem] tracking-[0.2em] text-night-ink outline-none placeholder:tracking-normal placeholder:text-night-faint focus:border-saffron focus:ring-4 focus:ring-saffron/20"
+                data-testid="input-auth-otp"
+              />
+              <button
+                type="submit"
+                disabled={busy || !code.trim()}
+                className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-white touch-manipulation disabled:opacity-50"
+                data-testid="button-verify-otp"
+              >
+                {busy ? 'Verifying…' : 'Verify and continue'}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setPhoneStep('phone')
+                  setCode('')
+                  setError(null)
+                }}
+                className="w-full text-center text-[12px] font-medium text-night-muted underline underline-offset-2 touch-manipulation"
+              >
+                Use a different number
+              </button>
+            </form>
           )}
 
-          <div
-            className={cn('w-full max-w-[21rem] space-y-3', isSignup ? 'mt-2' : 'mt-4')}
-            data-testid="auth-methods"
-          >
-            {methods.map((method) => (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => enterApp(method.id)}
-                className={cn(
-                  'inline-flex min-h-[3.4rem] w-full items-center justify-center gap-2.5 rounded-full px-5 text-[0.98rem] font-semibold transition-colors touch-manipulation',
-                  toneClass[method.tone],
-                )}
-                data-testid={method.testId}
-              >
-                {method.icon}
-                {method.label}
-              </button>
-            ))}
-          </div>
+          {error ? (
+            <p className="mt-3 max-w-[21rem] text-center text-[12px] text-red-300" data-testid="auth-error">
+              {error}
+            </p>
+          ) : null}
 
           <div className="mt-auto w-full max-w-[21rem] pt-8">
             <p className="text-center text-[11px] leading-relaxed text-night-faint">
