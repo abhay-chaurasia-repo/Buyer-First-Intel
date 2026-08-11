@@ -1,18 +1,18 @@
 import { SEARCH_PLAN } from '@/data/authPolicy'
-import { monthLabel, type SearchQuotaSnapshot } from '@/data/searchQuota'
+import type { SearchQuotaSnapshot } from '@/data/searchQuota'
 
 type SearchQuotaBarProps = {
   snapshot: SearchQuotaSnapshot
 }
 
 export function SearchQuotaBar({ snapshot }: SearchQuotaBarProps) {
-  if (snapshot.unlimited) {
+  if (snapshot.subscribed) {
     return (
       <p
         className="text-center text-[12px] font-medium text-saffron-glow"
-        data-testid="search-quota-unlimited"
+        data-testid="search-quota-subscribed"
       >
-        Unlimited searches · {snapshot.monthLabel}
+        Unlimited searches · {SEARCH_PLAN.priceLabel} plan
       </p>
     )
   }
@@ -33,10 +33,10 @@ export function SearchQuotaBar({ snapshot }: SearchQuotaBarProps) {
 
 type SearchPaywallProps = {
   snapshot: SearchQuotaSnapshot
-  onUnlock: () => void
+  onSubscribe: () => void
 }
 
-export function SearchPaywall({ snapshot, onUnlock }: SearchPaywallProps) {
+export function SearchPaywall({ onSubscribe }: SearchPaywallProps) {
   return (
     <div
       className="mt-4 rounded-[1.25rem] border border-saffron/40 bg-saffron/15 p-4 text-center"
@@ -46,19 +46,19 @@ export function SearchPaywall({ snapshot, onUnlock }: SearchPaywallProps) {
         You’ve used your {SEARCH_PLAN.freeSearchesPerMonth} free searches
       </p>
       <p className="mt-1.5 text-[13px] leading-relaxed text-night-muted">
-        Unlock unlimited address searches for the rest of {monthLabel(snapshot.monthKey)} for{' '}
-        {SEARCH_PLAN.currencyLabel}.
+        Keep searching homes with unlimited address lookups for {SEARCH_PLAN.priceLabel}. Cancel
+        anytime — built for buyers who stay in diligence until they find the right place.
       </p>
       <button
         type="button"
-        onClick={onUnlock}
+        onClick={onSubscribe}
         className="mt-3.5 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.95rem] font-semibold text-white shadow-[0_10px_28px_rgb(232_145_58/0.35)] touch-manipulation hover:bg-saffron-deep"
-        data-testid="button-unlock-unlimited-searches"
+        data-testid="button-subscribe-unlimited-searches"
       >
-        Unlock unlimited · {SEARCH_PLAN.currencyLabel}
+        Subscribe · {SEARCH_PLAN.priceLabel}
       </button>
       <p className="mt-2 text-[11px] text-night-faint">
-        Demo unlock on this device — real checkout comes with payments.
+        Demo subscription on this device — real billing comes next.
       </p>
     </div>
   )

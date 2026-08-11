@@ -40,9 +40,13 @@ export const SIGN_OUT_POLICY = {
 /** Legacy guest bucket — migrated into account on first sign-in; not a product mode. */
 export const GUEST_OWNER_ID = 'guest'
 
-/** Search plan — 10 free lookups / month, then $4.99 unlimited for that month. */
+/**
+ * Search plan — 10 free unique lookups / calendar month, then a
+ * $4.99/mo subscription for unlimited searches while the buyer stays active.
+ */
 export const SEARCH_PLAN = {
   freeSearchesPerMonth: 10,
-  unlimitedPriceUsd: 4.99,
-  currencyLabel: '$4.99',
+  subscriptionPriceUsd: 4.99,
+  priceLabel: '$4.99/mo',
+  billingInterval: 'month',
 } as const

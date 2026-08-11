@@ -15,7 +15,7 @@ import { SearchPaywall, SearchQuotaBar } from '@/components/SearchQuotaPanel'
 import { authMethodLabel } from '@/data/authSession'
 import { APP_NAME } from '@/data/brand'
 import {
-  activateUnlimitedForCurrentMonth,
+  activateSearchSubscription,
   getSearchQuotaSnapshot,
   tryConsumeSearch,
   type SearchQuotaSnapshot,
@@ -36,13 +36,13 @@ export function HomeScreen() {
   useEffect(() => {
     const next = getSearchQuotaSnapshot(ownerId)
     setSnapshot(next)
-    setShowPaywall(!next.unlimited && next.remaining === 0)
+    setShowPaywall(!next.subscribed && next.remaining === 0)
   }, [ownerId])
 
   function refreshQuota() {
     const next = getSearchQuotaSnapshot(ownerId)
     setSnapshot(next)
-    setShowPaywall(!next.unlimited && next.remaining === 0)
+    setShowPaywall(!next.subscribed && next.remaining === 0)
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -61,8 +61,8 @@ export function HomeScreen() {
     navigate(`/property/${encodeURIComponent(address)}`)
   }
 
-  function handleUnlock() {
-    activateUnlimitedForCurrentMonth(ownerId)
+  function handleSubscribe() {
+    activateSearchSubscription(ownerId)
     refreshQuota()
     setShowPaywall(false)
   }
@@ -173,7 +173,7 @@ export function HomeScreen() {
 
           <div className="animate-bfi-rise mt-3 w-full" style={{ animationDelay: '110ms' }}>
             <SearchQuotaBar snapshot={snapshot} />
-            {showPaywall ? <SearchPaywall snapshot={snapshot} onUnlock={handleUnlock} /> : null}
+            {showPaywall ? <SearchPaywall snapshot={snapshot} onSubscribe={handleSubscribe} /> : null}
           </div>
 
           <p

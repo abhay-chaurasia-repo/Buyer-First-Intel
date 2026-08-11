@@ -10,6 +10,7 @@ import {
   type AuthMethodId,
 } from '@/data/authSession'
 import { APP_NAME, APP_TAGLINE } from '@/data/brand'
+import { SEARCH_PLAN } from '@/data/authPolicy'
 import { markImpactSeen } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
 
@@ -202,8 +203,8 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               .
             </p>
             <p className="mt-2 text-center text-[11px] text-night-faint">
-              Sign in required. 10 free searches / month, then $4.99 unlimited for the rest of the
-              month.
+              Sign in required. 10 free searches each month, then {SEARCH_PLAN.priceLabel} for
+              unlimited while you keep looking.
             </p>
           </div>
         </div>
