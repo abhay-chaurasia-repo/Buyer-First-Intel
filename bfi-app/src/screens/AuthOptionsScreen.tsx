@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Phone, UserRoundPlus } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { BrandLogo } from '@/components/BrandLogo'
@@ -52,13 +52,21 @@ type AuthOptionsScreenProps = {
 
 /**
  * Auth method chooser — signup for new buyers, login for returning.
- * Step 1: creates a local session. Later each method plugs into a real IdP / OTP.
+ * Creates a local session. Core product requires sign-in (no guest mode).
  */
 export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { signIn } = useAuth()
   const isSignup = mode === 'signup'
   const lastMethod = loadLastAuthMethod()
+  const from =
+    typeof location.state === 'object' &&
+    location.state &&
+    'from' in location.state &&
+    typeof (location.state as { from?: unknown }).from === 'string'
+      ? (location.state as { from: string }).from
+      : '/'
 
   const methods: AuthMethod[] = [
     ...(isSignup
@@ -98,7 +106,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
   function enterApp(methodId: AuthMethodId) {
     signIn(methodId)
     markImpactSeen()
-    navigate('/')
+    navigate(from.startsWith('/') ? from : '/', { replace: true })
   }
 
   return (
@@ -194,8 +202,8 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               .
             </p>
             <p className="mt-2 text-center text-[11px] text-night-faint">
-              Step 2 · session contract: local owner id, soft gate on diligence screens. Real
-              Apple / Facebook / phone OTP comes next.
+              Sign in required. 10 free searches / month, then $4.99 unlimited for the rest of the
+              month.
             </p>
           </div>
         </div>

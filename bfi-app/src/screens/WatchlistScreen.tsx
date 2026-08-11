@@ -12,7 +12,6 @@ import {
   Users,
 } from 'lucide-react'
 import { VisitPlanPicker } from '@/components/VisitPlanPicker'
-import { AccountGateBanner } from '@/components/AccountGateBanner'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/auth/AuthProvider'
@@ -531,8 +530,6 @@ export function WatchlistScreen() {
         description="Plan visits, mark visited, and keep private notes."
         testId="watchlist-top-bar"
       />
-
-      <AccountGateBanner surface="watchlist" />
 
       <div className="flex-1 overflow-y-auto px-3 py-4 pb-4">
         {items.length === 0 ? (

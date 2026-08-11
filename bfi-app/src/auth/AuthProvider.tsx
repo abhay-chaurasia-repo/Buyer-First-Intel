@@ -19,7 +19,7 @@ import { claimGuestDataForUser } from '@/data/ownerScope'
 type AuthContextValue = {
   session: AuthSession | null
   isSignedIn: boolean
-  /** Active diligence owner — signed-in userId or guest */
+  /** Active diligence owner — always a signed-in userId in core product flows */
   ownerId: string
   signIn: (method: AuthMethodId) => AuthSession
   signOut: () => void

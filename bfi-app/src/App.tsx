@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { RequireAuth } from '@/auth/RequireAuth'
 import { MobileFrame } from '@/components/layout/MobileFrame'
 import { hasSeenImpact } from '@/data/impactStory'
 import { HomeScreen } from '@/screens/HomeScreen'
@@ -14,7 +15,11 @@ function RootEntry() {
   if (!hasSeenImpact()) {
     return <Navigate to="/welcome" replace />
   }
-  return <HomeScreen />
+  return (
+    <RequireAuth>
+      <HomeScreen />
+    </RequireAuth>
+  )
 }
 
 export default function App() {
@@ -25,9 +30,30 @@ export default function App() {
         <Route path="/welcome" element={<ImpactStoryScreen />} />
         <Route path="/signup" element={<SignupScreen />} />
         <Route path="/login" element={<LoginScreen />} />
-        <Route path="/property/:address" element={<PropertyDetailScreen />} />
-        <Route path="/watchlist" element={<WatchlistScreen />} />
-        <Route path="/journey" element={<JourneyScreen />} />
+        <Route
+          path="/property/:address"
+          element={
+            <RequireAuth>
+              <PropertyDetailScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/watchlist"
+          element={
+            <RequireAuth>
+              <WatchlistScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/journey"
+          element={
+            <RequireAuth>
+              <JourneyScreen />
+            </RequireAuth>
+          }
+        />
         <Route path="/rules" element={<RulesOfEngagementScreen />} />
         <Route path="/guidance/:docId" element={<GuidanceScreen />} />
         <Route path="/browse" element={<Navigate to="/rules" replace />} />

@@ -16,6 +16,7 @@ export const OWNED_STORAGE_BASES = [
   'bfi.buyer-community-votes',
   'bfi.buyer-community-verified',
   'bfi.visit-reminders-fired',
+  'bfi.search-quota',
 ] as const
 
 const LEGACY_ALIASES: Record<string, string[]> = {

@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
@@ -11,22 +11,60 @@ import {
 import { useAuth } from '@/auth/AuthProvider'
 import { BrandLogo } from '@/components/BrandLogo'
 import { AppShell } from '@/components/layout/AppShell'
+import { SearchPaywall, SearchQuotaBar } from '@/components/SearchQuotaPanel'
 import { authMethodLabel } from '@/data/authSession'
 import { APP_NAME } from '@/data/brand'
+import {
+  activateUnlimitedForCurrentMonth,
+  getSearchQuotaSnapshot,
+  tryConsumeSearch,
+  type SearchQuotaSnapshot,
+} from '@/data/searchQuota'
 import { cn } from '@/lib/utils'
 
 export function HomeScreen() {
   const navigate = useNavigate()
-  const { session, isSignedIn, signOut } = useAuth()
+  const { session, isSignedIn, signOut, ownerId } = useAuth()
   const inputId = useId()
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
+  const [snapshot, setSnapshot] = useState<SearchQuotaSnapshot>(() =>
+    getSearchQuotaSnapshot(ownerId),
+  )
+  const [showPaywall, setShowPaywall] = useState(false)
+
+  useEffect(() => {
+    const next = getSearchQuotaSnapshot(ownerId)
+    setSnapshot(next)
+    setShowPaywall(!next.unlimited && next.remaining === 0)
+  }, [ownerId])
+
+  function refreshQuota() {
+    const next = getSearchQuotaSnapshot(ownerId)
+    setSnapshot(next)
+    setShowPaywall(!next.unlimited && next.remaining === 0)
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const address = query.trim()
     if (!address) return
+
+    const access = tryConsumeSearch(address, ownerId)
+    refreshQuota()
+
+    if (!access.ok) {
+      setShowPaywall(true)
+      return
+    }
+
     navigate(`/property/${encodeURIComponent(address)}`)
+  }
+
+  function handleUnlock() {
+    activateUnlimitedForCurrentMonth(ownerId)
+    refreshQuota()
+    setShowPaywall(false)
   }
 
   return (
@@ -132,6 +170,11 @@ export function HomeScreen() {
               </button>
             </div>
           </form>
+
+          <div className="animate-bfi-rise mt-3 w-full" style={{ animationDelay: '110ms' }}>
+            <SearchQuotaBar snapshot={snapshot} />
+            {showPaywall ? <SearchPaywall snapshot={snapshot} onUnlock={handleUnlock} /> : null}
+          </div>
 
           <p
             className="animate-bfi-rise mt-5 text-center text-sm text-night-faint"
