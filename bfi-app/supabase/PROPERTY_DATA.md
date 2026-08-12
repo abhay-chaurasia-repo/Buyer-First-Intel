@@ -6,12 +6,19 @@
 
 ## Step 2 — ATTOM county facts (done in code)
 - Mapper: `src/lib/attomMap.ts`
-- Flow:
-  1. `GET /property/address` → resolve **attomId** from street + city/state
-  2. `GET /property/detail?attomid=` → county facts (living area, beds/baths, year built, lot, APN, zoning)
+- Endpoint (interactive docs): [`GET /property/detail`](https://api.developer.attomdata.com/docs#!/Property32V1/propertyDetails)
+- Query (either form works):
+  - `address1` + `address2` (street + city/state/ZIP) — preferred for search → County’s Fact
+  - `attomid` when we already have an ATTOM id
+- Headers: `apikey`, `Accept: application/json`
+- Fields mapped into County’s Fact: living area, beds/baths, year built, lot, APN, zoning, lat/lng, absentee/owner-occupied
 - Dev proxy: Vite middleware `POST /api/property-lookup` reads **`ATTOM_API_KEY`** from `.env.local` (not `VITE_*`)
 - Production: Supabase Edge Function `property-lookup` + secret `ATTOM_API_KEY`
-- Sale **prices stay hidden** (buyer-first). Detail covers living-area / building facts; tax & deed fields stay illustrative until a sales/assessment endpoint is wired.
+- Sale **prices stay hidden** (buyer-first). Tax / deed / sales history need sibling ATTOM resources (`/assessment`, `/sale`, `/saleshistory`) — not part of `/property/detail`.
+- Related packages on the same docs page (not wired yet):
+  - `/property/detailowner` — owner of record
+  - `/property/detailwithschools` — schools near property
+  - `/property/expandedprofile` — richer profile including assessment/sale snippets
 - Status chip on property page: **Live county facts · ATTOM** when matched
 
 ### Local setup

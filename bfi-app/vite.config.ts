@@ -241,39 +241,23 @@ function mapAttomProperty(attom: Record<string, unknown>) {
 }
 
 async function fetchAttom(match: ResolvedAddress, apiKey: string) {
-  const address2 = [match.city, match.state, match.zipCode].filter(Boolean).join(', ')
-
-  // 1) Resolve ATTOM id from address
-  const addressUrl = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address')
-  addressUrl.searchParams.set('address1', match.street)
-  addressUrl.searchParams.set('address2', address2)
-  const addressRes = await fetch(addressUrl, {
+  // ATTOM docs: /property/detail accepts address1+address2 or attomid
+  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail')
+  url.searchParams.set('address1', match.street)
+  url.searchParams.set(
+    'address2',
+    [match.city, match.state, match.zipCode].filter(Boolean).join(', '),
+  )
+  const res = await fetch(url, {
     headers: { Accept: 'application/json', apikey: apiKey },
   })
-  const addressRaw = (await addressRes.json().catch(() => null)) as {
-    property?: Array<{ identifier?: { attomId?: number; Id?: number } }>
-    status?: { msg?: string }
-  } | null
-  if (!addressRes.ok) return { ok: false as const, error: `ATTOM address HTTP ${addressRes.status}` }
-  const addressHit = Array.isArray(addressRaw?.property) ? addressRaw.property[0] : null
-  const attomId = addressHit?.identifier?.attomId ?? addressHit?.identifier?.Id
-  if (attomId == null) {
-    return { ok: false as const, error: addressRaw?.status?.msg || 'No ATTOM id' }
-  }
-
-  // 2) County facts from Property Detail by attomid
-  const detailUrl = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail')
-  detailUrl.searchParams.set('attomid', String(attomId))
-  const detailRes = await fetch(detailUrl, {
-    headers: { Accept: 'application/json', apikey: apiKey },
-  })
-  const detailRaw = (await detailRes.json().catch(() => null)) as {
+  const raw = (await res.json().catch(() => null)) as {
     property?: Record<string, unknown>[]
     status?: { msg?: string }
   } | null
-  if (!detailRes.ok) return { ok: false as const, error: `ATTOM detail HTTP ${detailRes.status}` }
-  const first = Array.isArray(detailRaw?.property) ? detailRaw.property[0] : null
-  if (!first) return { ok: false as const, error: detailRaw?.status?.msg || 'No ATTOM detail' }
+  if (!res.ok) return { ok: false as const, error: `ATTOM detail HTTP ${res.status}` }
+  const first = Array.isArray(raw?.property) ? raw.property[0] : null
+  if (!first) return { ok: false as const, error: raw?.status?.msg || 'No ATTOM detail' }
   return { ok: true as const, property: mapAttomProperty(first) }
 }
 

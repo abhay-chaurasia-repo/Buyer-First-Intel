@@ -290,13 +290,31 @@ export async function fetchAttomIdByAddress(params: {
   return { ok: true, attomId: Number(attomId), property }
 }
 
-/** County facts via ATTOM Property Detail (`GET /property/detail?attomid=`). */
+/**
+ * County facts via ATTOM Property Detail
+ * Docs: GET /propertyapi/v1.0.0/property/detail
+ * Accepts attomid OR address1+address2 (same endpoint the interactive docs exercise).
+ */
 export async function fetchAttomPropertyDetail(params: {
   apiKey: string
-  attomId: number | string
+  attomId?: number | string
+  street?: string
+  city?: string
+  state?: string
+  zipCode?: string
 }): Promise<{ ok: true; property: AttomProperty } | { ok: false; error: string }> {
   const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail')
-  url.searchParams.set('attomid', String(params.attomId))
+  if (params.attomId != null && String(params.attomId).trim()) {
+    url.searchParams.set('attomid', String(params.attomId))
+  } else if (params.street && params.city && params.state) {
+    url.searchParams.set('address1', params.street)
+    url.searchParams.set(
+      'address2',
+      [params.city, params.state, params.zipCode].filter(Boolean).join(', '),
+    )
+  } else {
+    return { ok: false, error: 'ATTOM detail needs attomid or address1+address2' }
+  }
 
   const res = await fetch(url.toString(), {
     headers: {
@@ -319,7 +337,8 @@ export async function fetchAttomPropertyDetail(params: {
 }
 
 /**
- * Resolve ATTOM id from address, then load county facts from Property Detail.
+ * Load county facts from Property Detail using the searched address.
+ * Prefers a single detail call with address1/address2 (per ATTOM docs).
  */
 export async function fetchAttomCountyFacts(params: {
   apiKey: string
@@ -327,17 +346,24 @@ export async function fetchAttomCountyFacts(params: {
   city: string
   state: string
   zipCode?: string
-}): Promise<{ ok: true; property: AttomProperty; attomId: number } | { ok: false; error: string }> {
-  const idHit = await fetchAttomIdByAddress(params)
-  if (!idHit.ok) return idHit
-
+  attomId?: number | string
+}): Promise<{ ok: true; property: AttomProperty; attomId?: number } | { ok: false; error: string }> {
   const detail = await fetchAttomPropertyDetail({
     apiKey: params.apiKey,
-    attomId: idHit.attomId,
+    attomId: params.attomId,
+    street: params.street,
+    city: params.city,
+    state: params.state,
+    zipCode: params.zipCode,
   })
   if (!detail.ok) return detail
 
-  return { ok: true, property: detail.property, attomId: idHit.attomId }
+  const attomId = detail.property.identifier?.attomId ?? detail.property.identifier?.Id
+  return {
+    ok: true,
+    property: detail.property,
+    attomId: attomId != null ? Number(attomId) : undefined,
+  }
 }
 
 /** @deprecated use fetchAttomCountyFacts — kept for older call sites */
