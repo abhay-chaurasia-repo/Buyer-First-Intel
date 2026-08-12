@@ -1,11 +1,46 @@
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 
-/** Normalize to E.164-ish input; user should include country code. */
+/** Keep at most 10 US national digits (strip leading country 1 if pasted). */
+export function usNationalDigits(raw: string) {
+  let digits = raw.replace(/\D/g, '')
+  if (digits.length === 11 && digits.startsWith('1')) {
+    digits = digits.slice(1)
+  }
+  if (digits.startsWith('1') && digits.length > 10) {
+    digits = digits.slice(1)
+  }
+  return digits.slice(0, 10)
+}
+
+/** Display helper: (555) 123-4567 */
+export function formatUsNationalDisplay(raw: string) {
+  const digits = usNationalDigits(raw)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+}
+
+/**
+ * Normalize a US mobile number to E.164 (+1XXXXXXXXXX).
+ * Accepts national 10-digit, 1XXXXXXXXXX, or +1XXXXXXXXXX paste.
+ */
+export function normalizeUsPhoneInput(raw: string): string | null {
+  const digits = usNationalDigits(raw)
+  if (digits.length !== 10) return null
+  // NANP: area code and exchange cannot start with 0 or 1
+  if (!/^[2-9]\d{2}[2-9]\d{6}$/.test(digits)) return null
+  return `+1${digits}`
+}
+
+/** @deprecated use normalizeUsPhoneInput — kept for callers that need a string */
 export function normalizePhoneInput(raw: string) {
-  const trimmed = raw.trim().replace(/[^\d+]/g, '')
-  if (!trimmed) return ''
-  if (trimmed.startsWith('+')) return trimmed
-  return `+${trimmed}`
+  return normalizeUsPhoneInput(raw) ?? ''
+}
+
+export function formatE164ForDisplay(e164: string) {
+  const digits = usNationalDigits(e164)
+  if (digits.length === 10) return `+1 ${formatUsNationalDisplay(digits)}`
+  return e164
 }
 
 export async function sendPhoneOtp(phone: string) {
@@ -17,9 +52,9 @@ export async function sendPhoneOtp(phone: string) {
     }
   }
 
-  const normalized = normalizePhoneInput(phone)
-  if (normalized.length < 8) {
-    return { ok: false as const, error: 'Enter a valid mobile number with country code.' }
+  const normalized = normalizeUsPhoneInput(phone)
+  if (!normalized) {
+    return { ok: false as const, error: 'Enter a valid 10-digit US mobile number.' }
   }
 
   const { error } = await supabase.auth.signInWithOtp({ phone: normalized })
@@ -38,8 +73,11 @@ export async function verifyPhoneOtp(phone: string, token: string) {
     }
   }
 
-  const normalized = normalizePhoneInput(phone)
+  const normalized = normalizeUsPhoneInput(phone)
   const code = token.trim()
+  if (!normalized) {
+    return { ok: false as const, error: 'Enter a valid 10-digit US mobile number.' }
+  }
   if (!code) {
     return { ok: false as const, error: 'Enter the verification code from your text.' }
   }

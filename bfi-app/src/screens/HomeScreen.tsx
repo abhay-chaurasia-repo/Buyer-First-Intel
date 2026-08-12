@@ -12,10 +12,13 @@ import {
 import { useAuth } from '@/auth/AuthProvider'
 import { BrandLogo } from '@/components/BrandLogo'
 import { AppShell } from '@/components/layout/AppShell'
+import { SearchHistoryPanel } from '@/components/SearchHistoryPanel'
 import { SearchPaywall, SearchQuotaBar } from '@/components/SearchQuotaPanel'
 import type { ResolvedAddress } from '@/data/addressTypes'
 import { authMethodLabel } from '@/data/authSession'
 import { APP_NAME } from '@/data/brand'
+import type { HistoryAddress } from '@/data/mockProperty'
+import { historyFullAddress, loadSearchHistory } from '@/data/searchHistory'
 import { isHouseNumberOnlyQuery } from '@/lib/addressSearch'
 import { suggestAddresses, rememberSelectedAddress } from '@/lib/propertyLookup'
 import {
@@ -43,6 +46,7 @@ export function HomeScreen() {
   const [suggestError, setSuggestError] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [historyItems, setHistoryItems] = useState<HistoryAddress[]>([])
   const paywallRef = useRef<HTMLDivElement>(null)
   const suggestSeq = useRef(0)
   const suggesting = showSuggestions && query.trim().length > 0
@@ -52,6 +56,11 @@ export function HomeScreen() {
     const next = await fetchSearchQuotaSnapshot(ownerId)
     setSnapshot(next)
     setShowPaywall(!next.subscribed && next.remaining === 0)
+  }
+
+  async function refreshHistory() {
+    const items = await loadSearchHistory(ownerId)
+    setHistoryItems(items)
   }
 
   useEffect(() => {
@@ -73,6 +82,9 @@ export function HomeScreen() {
       if (cancelled) return
       setSnapshot(next)
       setShowPaywall(!next.subscribed && next.remaining === 0)
+      const items = await loadSearchHistory(ownerId)
+      if (cancelled) return
+      setHistoryItems(items)
     })()
     return () => {
       cancelled = true
@@ -118,6 +130,7 @@ export function HomeScreen() {
     setSearchError(null)
     const access = await consumeSearch(formatted, ownerId)
     await refreshQuota()
+    await refreshHistory()
     setQuotaBusy(false)
 
     if (!access.ok) {
@@ -127,6 +140,12 @@ export function HomeScreen() {
 
     setShowSuggestions(false)
     navigate(`/property/${encodeURIComponent(formatted)}`)
+  }
+
+  async function handleHistorySelect(item: HistoryAddress) {
+    const full = historyFullAddress(item)
+    setQuery(full)
+    await goToAddress(full)
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -398,9 +417,16 @@ export function HomeScreen() {
 
           {!suggesting ? (
             <>
+              <div
+                className="animate-bfi-rise mt-5 w-full"
+                style={{ animationDelay: '140ms' }}
+              >
+                <SearchHistoryPanel items={historyItems} onSelect={(item) => void handleHistorySelect(item)} />
+              </div>
+
               <p
                 className="animate-bfi-rise mt-5 text-center text-sm text-night-faint"
-                style={{ animationDelay: '140ms' }}
+                style={{ animationDelay: '160ms' }}
               >
                 No MLS. No prices. County records first.
               </p>

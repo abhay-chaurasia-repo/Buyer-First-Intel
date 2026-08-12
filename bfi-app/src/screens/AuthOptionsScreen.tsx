@@ -12,6 +12,12 @@ import {
 import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { SEARCH_PLAN } from '@/data/authPolicy'
 import { markImpactSeen } from '@/data/impactStory'
+import {
+  formatE164ForDisplay,
+  formatUsNationalDisplay,
+  normalizeUsPhoneInput,
+  usNationalDigits,
+} from '@/lib/phoneAuth'
 import { cn } from '@/lib/utils'
 
 type AuthMode = 'signup' | 'login'
@@ -70,10 +76,15 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
       : '/'
 
   const [phoneStep, setPhoneStep] = useState<'idle' | 'phone' | 'code'>('idle')
-  const [phone, setPhone] = useState('')
+  /** National 10-digit US number (no country code). */
+  const [nationalPhone, setNationalPhone] = useState('')
+  /** E.164 used for OTP verify after send. */
+  const [e164Phone, setE164Phone] = useState('')
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const nationalDigits = usNationalDigits(nationalPhone)
+  const canSendCode = Boolean(normalizeUsPhoneInput(nationalDigits))
 
   const methods: AuthMethod[] = [
     ...(isSignup
@@ -128,14 +139,20 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
   async function handleSendCode(event: FormEvent) {
     event.preventDefault()
     setError(null)
+    const normalized = normalizeUsPhoneInput(nationalDigits)
+    if (!normalized) {
+      setError('Enter a valid 10-digit US mobile number.')
+      return
+    }
     setBusy(true)
-    const result = await requestPhoneOtp(phone)
+    const result = await requestPhoneOtp(normalized)
     setBusy(false)
     if (!result.ok) {
       setError(result.error)
       return
     }
-    setPhone(result.phone)
+    setE164Phone(result.phone)
+    setNationalPhone(usNationalDigits(result.phone))
     setPhoneStep('code')
   }
 
@@ -143,7 +160,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
     event.preventDefault()
     setError(null)
     setBusy(true)
-    const result = await confirmPhoneOtp(phone, code)
+    const result = await confirmPhoneOtp(e164Phone || nationalDigits, code)
     setBusy(false)
     if (!result.ok) {
       setError(result.error)
@@ -213,8 +230,8 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
                 </p>
                 <p className="mt-1.5 text-[0.92rem] leading-relaxed text-night-muted">
                   {phoneStep === 'phone'
-                    ? 'Include country code (example +1 or +61). Trial Twilio only texts verified numbers.'
-                    : `We texted a code to ${phone}.`}
+                    ? 'US numbers only. We’ll text a code to +1 — trial Twilio only texts verified numbers.'
+                    : `We texted a code to ${formatE164ForDisplay(e164Phone || nationalDigits)}.`}
                 </p>
               </div>
             )}
@@ -266,22 +283,36 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               data-testid="phone-otp-form"
             >
               <label className="sr-only" htmlFor="auth-phone">
-                Mobile number
+                US mobile number
               </label>
-              <input
-                id="auth-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="+1 555 555 0100"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                className="min-h-[3.4rem] w-full rounded-full border border-white/25 bg-transparent px-5 text-[1rem] text-night-ink outline-none placeholder:text-night-faint focus:border-saffron focus:ring-4 focus:ring-saffron/20"
-                data-testid="input-auth-phone"
-              />
+              <div
+                className="flex min-h-[3.4rem] w-full items-center gap-2 rounded-full border border-white/25 bg-transparent px-4 focus-within:border-saffron focus-within:ring-4 focus-within:ring-saffron/20"
+                data-testid="phone-us-field"
+              >
+                <span
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/8 px-2.5 py-1 text-[0.85rem] font-semibold text-night-ink"
+                  aria-hidden
+                  data-testid="phone-us-prefix"
+                >
+                  <span className="text-[0.7rem] tracking-wide text-night-faint uppercase">US</span>
+                  <span>+1</span>
+                </span>
+                <input
+                  id="auth-phone"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  placeholder="(555) 555-0100"
+                  value={formatUsNationalDisplay(nationalPhone)}
+                  onChange={(event) => setNationalPhone(usNationalDigits(event.target.value))}
+                  className="min-w-0 flex-1 bg-transparent py-3 text-[1rem] text-night-ink outline-none placeholder:text-night-faint"
+                  data-testid="input-auth-phone"
+                  maxLength={14}
+                />
+              </div>
               <button
                 type="submit"
-                disabled={busy || !phone.trim()}
+                disabled={busy || !canSendCode}
                 className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-white touch-manipulation disabled:opacity-50"
                 data-testid="button-send-otp"
               >

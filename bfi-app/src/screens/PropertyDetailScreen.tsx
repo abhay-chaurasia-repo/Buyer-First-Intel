@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import {
-  ChevronDown,
   Crosshair,
   FileText,
   History,
   Receipt,
   School,
   ShieldCheck,
-  StickyNote,
   Star,
   Users,
   type LucideIcon,
@@ -19,10 +17,8 @@ import { useAuth } from '@/auth/AuthProvider'
 import { fetchSurfaceApi } from '@/data/catchUpApi'
 import {
   DEMO_PROPERTY,
-  SEARCH_HISTORY,
   getMetricCards,
   resolvePropertyFromQuery,
-  type HistoryAddress,
   type MetricCard,
   type MockProperty,
 } from '@/data/mockProperty'
@@ -66,45 +62,7 @@ function truncateAddress(address: string, max = 22) {
   return `${address.slice(0, max - 1)}…`
 }
 
-function HistoryRow({
-  item,
-  onSelect,
-}: {
-  item: HistoryAddress
-  onSelect: (item: HistoryAddress) => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(item)}
-      className="flex w-full min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors hover:bg-night-ink/10 touch-manipulation"
-      data-testid={`history-${item.id}`}
-    >
-      <span className="min-w-0 flex-1 truncate text-sm text-night-ink">
-        {item.address}
-        <span className="text-night-faint">
-          {' '}
-          · {item.city}, {item.state}
-        </span>
-      </span>
-      {item.hasPrivateNotes ? (
-        <StickyNote
-          className="h-3.5 w-3.5 shrink-0 text-saffron-glow"
-          aria-label="Has private notes"
-          data-testid={`history-notes-${item.id}`}
-        />
-      ) : null}
-      {item.saved ? (
-        <span className="shrink-0 text-[10px] font-semibold tracking-wide text-saffron-glow uppercase">
-          Saved
-        </span>
-      ) : null}
-    </button>
-  )
-}
-
 export function PropertyDetailScreen() {
-  const navigate = useNavigate()
   const { ownerId } = useAuth()
   const { address = '' } = useParams<{ address: string }>()
   const decoded = decodeURIComponent(address)
@@ -117,7 +75,6 @@ export function PropertyDetailScreen() {
 
   const [starred, setStarred] = useState(() => isOnWatchlist(property.id) || property.starred)
   const [verified, setVerified] = useState(() => loadGpsVerified(property.id))
-  const [historyOpen, setHistoryOpen] = useState(true)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -177,12 +134,6 @@ export function PropertyDetailScreen() {
       persistGpsVerified(property.id, next)
       return next
     })
-  }
-
-  function openHistoryAddress(item: HistoryAddress) {
-    const full = `${item.address}, ${item.city}, ${item.state}`
-    navigate(`/property/${encodeURIComponent(full)}`)
-    setActiveSurface(null)
   }
 
   const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
@@ -314,48 +265,6 @@ export function PropertyDetailScreen() {
                   )
                 })}
               </div>
-            </section>
-
-            <section className="mt-4 px-3" data-testid="history-section">
-              <button
-                type="button"
-                onClick={() => setHistoryOpen((open) => !open)}
-                className="flex w-full min-h-11 items-center gap-2 rounded-xl px-2 py-1.5 text-left touch-manipulation"
-                aria-expanded={historyOpen}
-                data-testid="button-toggle-history"
-              >
-                <ChevronDown
-                  className={cn(
-                    'h-4 w-4 text-saffron-glow transition-transform',
-                    !historyOpen && '-rotate-90',
-                  )}
-                />
-                <span className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-                  Searched History
-                </span>
-                <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-                  {SEARCH_HISTORY.length}
-                </span>
-              </button>
-
-              {historyOpen ? (
-                <div
-                  className="animate-bfi-fade mt-1 rounded-2xl border border-white/25 bg-transparent p-2"
-                  data-testid="history-panel"
-                >
-                  <p className="px-2 pb-1 text-[11px] text-night-faint">
-                    Previously searched addresses — scroll for your full history
-                  </p>
-                  <div
-                    className="max-h-[11.5rem] space-y-0.5 overflow-y-auto overscroll-contain pr-0.5"
-                    data-testid="history-scroll"
-                  >
-                    {SEARCH_HISTORY.map((item) => (
-                      <HistoryRow key={item.id} item={item} onSelect={openHistoryAddress} />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
             </section>
           </div>
         </>

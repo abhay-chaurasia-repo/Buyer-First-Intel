@@ -139,6 +139,11 @@ export function getSearchQuotaSnapshot(ownerId?: string) {
 
 export type SearchQuotaSnapshot = ReturnType<typeof getSearchQuotaSnapshot>
 
+/** Addresses searched this month (oldest → newest). */
+export function getSearchedAddresses(ownerId?: string) {
+  return [...loadState(ownerId).searchedAddresses]
+}
+
 /**
  * Attempt to count a search. Repeating an address already counted this month
  * does not consume another free slot. Subscribers are unlimited.
@@ -154,6 +159,20 @@ export function tryConsumeSearch(address: string, ownerId?: string): SearchAcces
   const freeCap = SEARCH_PLAN.freeSearchesPerMonth
 
   if (state.subscriptionActive) {
+    // Still record history for subscribers so Search History stays complete.
+    if (!state.searchedAddresses.includes(normalized)) {
+      const next: SearchQuotaState = {
+        ...state,
+        searchedAddresses: [...state.searchedAddresses, normalized],
+      }
+      persistState(next, ownerId)
+      return {
+        ok: true,
+        remaining: 'unlimited',
+        reason: 'subscribed',
+        used: next.searchedAddresses.length,
+      }
+    }
     return { ok: true, remaining: 'unlimited', reason: 'subscribed', used }
   }
 
