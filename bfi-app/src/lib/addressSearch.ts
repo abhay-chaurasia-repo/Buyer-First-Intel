@@ -408,7 +408,7 @@ function friendlySearchError(err: unknown) {
 /** Suggest / resolve US addresses for the search box. */
 export async function searchAddresses(query: string): Promise<AddressSearchResult> {
   const trimmed = query.trim()
-  if (trimmed.length < 4) {
+  if (trimmed.length < 3) {
     return { ok: true, matches: [] }
   }
 

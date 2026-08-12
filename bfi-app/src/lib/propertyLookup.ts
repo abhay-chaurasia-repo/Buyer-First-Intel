@@ -238,7 +238,7 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
 
 export async function suggestAddresses(query: string) {
   const trimmed = query.trim()
-  if (trimmed.length < 4) return searchAddresses(trimmed)
+  if (trimmed.length < 3) return searchAddresses(trimmed)
 
   const local = await lookupViaLocalApi(trimmed, 'search')
   if (local?.matches && local.matches.length > 0) {

@@ -79,7 +79,19 @@ export function HomeScreen() {
   useEffect(() => {
     const trimmed = query.trim()
     setSearchError(null)
-    if (trimmed.length < 5) {
+
+    // Show the panel as soon as typing starts
+    if (trimmed.length === 0) {
+      setSuggestions([])
+      setSuggestError(null)
+      setSuggestBusy(false)
+      setShowSuggestions(false)
+      return
+    }
+
+    setShowSuggestions(true)
+
+    if (trimmed.length < 3) {
       setSuggestions([])
       setSuggestError(null)
       setSuggestBusy(false)
@@ -99,9 +111,8 @@ export function HomeScreen() {
         }
         setSuggestError(null)
         setSuggestions(result.matches)
-        setShowSuggestions(true)
       })
-    }, 350)
+    }, 200)
 
     return () => window.clearTimeout(timer)
   }, [query])
@@ -287,8 +298,8 @@ export function HomeScreen() {
                   setIsFocused(false)
                   window.setTimeout(() => setShowSuggestions(false), 150)
                 }}
-                placeholder="Street, city, state"
-                autoComplete="street-address"
+                placeholder="Verify county facts before you offer"
+                autoComplete="off"
                 enterKeyHint="search"
                 className="min-w-0 flex-1 bg-transparent py-3 text-[1.05rem] text-night-ink outline-none placeholder:text-night-faint"
                 data-testid="input-address-search"
@@ -311,18 +322,31 @@ export function HomeScreen() {
               </button>
             </div>
 
-            {showSuggestions && (suggestions.length > 0 || suggestBusy || suggestError) ? (
+            {showSuggestions && query.trim().length > 0 ? (
               <div
                 id="address-suggestions"
                 role="listbox"
                 className="absolute inset-x-0 top-[calc(100%+0.4rem)] z-30 overflow-hidden rounded-2xl border border-white/25 bg-night/95 shadow-[0_16px_40px_rgb(0_0_0/0.45)] backdrop-blur-md"
                 data-testid="address-suggestions"
               >
+                {query.trim().length < 3 ? (
+                  <p className="px-3 py-3 text-[12px] text-night-faint">
+                    Keep typing the street — we’ll suggest matches for diligence.
+                  </p>
+                ) : null}
                 {suggestBusy ? (
-                  <p className="px-3 py-3 text-[12px] text-night-faint">Matching US addresses…</p>
+                  <p className="px-3 py-3 text-[12px] text-night-faint">Matching addresses for diligence…</p>
                 ) : null}
                 {suggestError ? (
                   <p className="px-3 py-3 text-[12px] text-red-300">{suggestError}</p>
+                ) : null}
+                {!suggestBusy &&
+                !suggestError &&
+                query.trim().length >= 3 &&
+                suggestions.length === 0 ? (
+                  <p className="px-3 py-3 text-[12px] text-night-faint">
+                    No match yet — add city and state for a stronger county lookup.
+                  </p>
                 ) : null}
                 {suggestions.map((match) => (
                   <button
