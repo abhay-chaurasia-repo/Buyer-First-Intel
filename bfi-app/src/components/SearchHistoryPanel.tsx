@@ -93,7 +93,7 @@ export function SearchHistoryPanel({
                 Previously searched addresses — scroll for your full history
               </p>
               <div
-                className="max-h-[11.5rem] space-y-0.5 overflow-y-auto overscroll-contain pr-0.5"
+                className="max-h-[9.5rem] space-y-0.5 overflow-y-auto overscroll-contain pr-0.5"
                 data-testid="history-scroll"
               >
                 {items.map((item) => (

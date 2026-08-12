@@ -1,14 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  ArrowRight,
-  ClipboardCheck,
-  FileSearch,
-  LogOut,
-  MapPin,
-  Search,
-  Star,
-} from 'lucide-react'
+import { ArrowRight, LogOut, MapPin, Search } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { BrandLogo } from '@/components/BrandLogo'
 import { AppShell } from '@/components/layout/AppShell'
@@ -264,14 +256,14 @@ export function HomeScreen() {
           )}
         </header>
 
-        <div className="flex flex-1 flex-col items-center py-5">
+        <div className="flex flex-1 flex-col items-center py-3">
           <div className="animate-bfi-rise w-full text-center">
             <h1 className="font-display text-[1.85rem] leading-none font-extrabold tracking-tight">
               <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
                 {APP_NAME}
               </span>
             </h1>
-            <p className="mx-auto mt-10 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
+            <p className="mx-auto mt-3 max-w-[20rem] text-[0.88rem] leading-snug text-night-muted">
               Search a US property address. Match public records before you commit — and before you
               talk to an agent.
             </p>
@@ -279,7 +271,7 @@ export function HomeScreen() {
 
           <form
             onSubmit={handleSubmit}
-            className="animate-bfi-rise mt-6 w-full"
+            className="animate-bfi-rise mt-4 w-full"
             style={{ animationDelay: '80ms' }}
           >
             <label htmlFor={inputId} className="sr-only">
@@ -396,7 +388,7 @@ export function HomeScreen() {
           {!suggesting ? (
             <div
               ref={paywallRef}
-              className="animate-bfi-rise mt-3 w-full scroll-mt-3"
+              className="animate-bfi-rise mt-2 w-full scroll-mt-3"
               style={{ animationDelay: '110ms' }}
             >
               {snapshot ? (
@@ -416,66 +408,38 @@ export function HomeScreen() {
           ) : null}
 
           {!suggesting ? (
-            <>
-              <div
-                className="animate-bfi-rise mt-5 w-full"
-                style={{ animationDelay: '140ms' }}
-              >
-                <SearchHistoryPanel items={historyItems} onSelect={(item) => void handleHistorySelect(item)} />
-              </div>
-
-              <p
-                className="animate-bfi-rise mt-5 text-center text-sm text-night-faint"
-                style={{ animationDelay: '160ms' }}
-              >
-                No MLS. No prices. County records first.
-              </p>
-
+            <div className="mt-3 flex w-full flex-col gap-3">
               <section
-                className="animate-bfi-rise mt-7 w-full"
-                style={{ animationDelay: '200ms' }}
+                className="animate-bfi-rise w-full"
+                style={{ animationDelay: '130ms' }}
                 aria-label="How due diligence works"
                 data-testid="home-diligence-section"
               >
-                <div className="rounded-[1.25rem] border border-white/25 bg-transparent p-4">
-                  <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+                <div className="rounded-2xl border border-white/25 bg-transparent px-3.5 py-2.5">
+                  <p className="font-display text-[10px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
                     Start here
                   </p>
-                  <ul className="mt-3 space-y-3.5">
-                    <li className="flex gap-3">
-                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
-                        <FileSearch className="h-4 w-4 text-saffron-glow" aria-hidden />
-                      </span>
-                      <p className="text-[13px] leading-relaxed text-night-muted">
-                        <span className="font-semibold text-night-ink">Search an address</span> to
-                        compare county living area, tax and sales history, schools, and community
-                        labels.
-                      </p>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
-                        <Star className="h-4 w-4 text-saffron-glow" aria-hidden />
-                      </span>
-                      <p className="text-[13px] leading-relaxed text-night-muted">
-                        <span className="font-semibold text-night-ink">
-                          Star homes into Homes in Diligence
-                        </span>{' '}
-                        for visit planning and private notes.
-                      </p>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
-                        <ClipboardCheck className="h-4 w-4 text-saffron-glow" aria-hidden />
-                      </span>
-                      <p className="text-[13px] leading-relaxed text-night-muted">
-                        <span className="font-semibold text-night-ink">Follow your path</span> from
-                        Prepare → Diligence → Offer → Close.
-                      </p>
-                    </li>
-                  </ul>
+                  <p className="mt-1 text-[12px] leading-snug text-night-muted">
+                    <span className="font-semibold text-night-ink">Search</span>
+                    {' · '}
+                    <span className="font-semibold text-night-ink">star</span> for visits & notes
+                    {' · '}
+                    <span className="font-semibold text-night-ink">follow</span> Prepare → Diligence →
+                    Offer → Close.
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-night-faint">
+                    No MLS. No prices. County records first.
+                  </p>
                 </div>
               </section>
-            </>
+
+              <div className="animate-bfi-rise w-full" style={{ animationDelay: '150ms' }}>
+                <SearchHistoryPanel
+                  items={historyItems}
+                  onSelect={(item) => void handleHistorySelect(item)}
+                />
+              </div>
+            </div>
           ) : null}
         </div>
       </div>
