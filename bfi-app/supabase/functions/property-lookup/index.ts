@@ -1,6 +1,6 @@
-// Supabase Edge Function: address search + ATTOM expanded profile
+// Supabase Edge Function: address search (Google Places + Census) + ATTOM
 // Deploy: supabase functions deploy property-lookup
-// Secrets: supabase secrets set ATTOM_API_KEY=...
+// Secrets: supabase secrets set ATTOM_API_KEY=... GOOGLE_MAPS_API_KEY=...
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const corsHeaders = {
@@ -17,8 +17,9 @@ type ResolvedAddress = {
   zipCode: string
   lat: number
   lng: number
-  source: 'census' | 'edge'
+  source: 'census' | 'edge' | 'google'
   matchedAddress?: string
+  placeId?: string
 }
 
 function titleCaseToken(token: string) {
@@ -116,6 +117,128 @@ async function searchCensus(query: string, limit = 6): Promise<ResolvedAddress[]
   }
 
   return out
+}
+
+type GoogleAddressComponent = {
+  longText?: string
+  shortText?: string
+  types?: string[]
+}
+
+function componentByType(components: GoogleAddressComponent[], type: string) {
+  return components.find((c) => Array.isArray(c.types) && c.types.includes(type))
+}
+
+function googlePlaceToResolved(
+  placeId: string,
+  place: {
+    formattedAddress?: string
+    addressComponents?: GoogleAddressComponent[]
+    location?: { latitude?: number; longitude?: number }
+  },
+): ResolvedAddress | null {
+  const components = place.addressComponents || []
+  const streetNumber = componentByType(components, 'street_number')?.longText || ''
+  const route = componentByType(components, 'route')?.longText || ''
+  const street = titleCaseStreet([streetNumber, route].filter(Boolean).join(' '))
+  if (!street) return null
+
+  const city =
+    componentByType(components, 'locality')?.longText ||
+    componentByType(components, 'sublocality')?.longText ||
+    componentByType(components, 'neighborhood')?.longText ||
+    componentByType(components, 'administrative_area_level_3')?.longText ||
+    ''
+  const state =
+    componentByType(components, 'administrative_area_level_1')?.shortText ||
+    componentByType(components, 'administrative_area_level_1')?.longText ||
+    ''
+  const zipCode = (componentByType(components, 'postal_code')?.longText || '').trim()
+  if (!city || !state) return null
+
+  const lat = num(place.location?.latitude) ?? 0
+  const lng = num(place.location?.longitude) ?? 0
+  const stateAbbr = state.toUpperCase().slice(0, 2)
+  const cityTitle = titleCaseStreet(city)
+  const formatted = zipCode
+    ? `${street}, ${cityTitle}, ${stateAbbr} ${zipCode}`
+    : `${street}, ${cityTitle}, ${stateAbbr}`
+
+  return {
+    id: stableAddressId({ street, city: cityTitle, state: stateAbbr, zipCode }),
+    formatted,
+    street,
+    city: cityTitle,
+    state: stateAbbr,
+    zipCode,
+    lat,
+    lng,
+    source: 'google',
+    matchedAddress: place.formattedAddress || formatted,
+    placeId,
+  }
+}
+
+async function searchGooglePlaces(query: string, apiKey: string): Promise<ResolvedAddress[]> {
+  const autoRes = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+    },
+    body: JSON.stringify({
+      input: query,
+      includedRegionCodes: ['us'],
+      languageCode: 'en',
+    }),
+  })
+  if (!autoRes.ok) return []
+  const autoJson = await autoRes.json().catch(() => null)
+  const placeIds: string[] = []
+  for (const suggestion of autoJson?.suggestions || []) {
+    const id =
+      suggestion.placePrediction?.placeId ||
+      suggestion.placePrediction?.place?.replace(/^places\//, '')
+    if (!id || placeIds.includes(id)) continue
+    placeIds.push(id)
+    if (placeIds.length >= 5) break
+  }
+  if (placeIds.length === 0) return []
+
+  const details = await Promise.all(
+    placeIds.map(async (placeId) => {
+      const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'id,formattedAddress,addressComponents,location',
+          },
+        })
+        if (!res.ok) return null
+        const place = await res.json().catch(() => null)
+        if (!place) return null
+        return googlePlaceToResolved(placeId, place)
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return details.filter(Boolean) as ResolvedAddress[]
+}
+
+async function searchAddressesForQuery(query: string): Promise<ResolvedAddress[]> {
+  const googleKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
+  if (googleKey) {
+    try {
+      const google = await searchGooglePlaces(query, googleKey)
+      if (google.length > 0) return google
+    } catch {
+      // fall through
+    }
+  }
+  return searchCensus(query)
 }
 
 function num(value: unknown): number | undefined {
@@ -444,13 +567,13 @@ Deno.serve(async (req) => {
     const query = (body.query || '').trim()
     const mode = body.mode === 'resolve' ? 'resolve' : 'search'
 
-    if (query.length < 4) {
+    if (query.length < 3) {
       return new Response(JSON.stringify({ matches: [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const matches = await searchCensus(query)
+    const matches = await searchAddressesForQuery(query)
     if (mode === 'search') {
       return new Response(JSON.stringify({ matches }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

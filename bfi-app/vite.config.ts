@@ -13,8 +13,9 @@ type ResolvedAddress = {
   zipCode: string
   lat: number
   lng: number
-  source: 'census' | 'edge'
+  source: 'census' | 'edge' | 'google'
   matchedAddress?: string
+  placeId?: string
 }
 
 function titleCaseToken(token: string) {
@@ -135,6 +136,143 @@ async function searchCensus(query: string): Promise<ResolvedAddress[]> {
     if (matches.length >= 6) break
   }
   return matches
+}
+
+type GoogleAddressComponent = {
+  longText?: string
+  shortText?: string
+  types?: string[]
+}
+
+function componentByType(components: GoogleAddressComponent[], type: string) {
+  return components.find((c) => Array.isArray(c.types) && c.types.includes(type))
+}
+
+function googlePlaceToResolved(
+  placeId: string,
+  place: {
+    formattedAddress?: string
+    addressComponents?: GoogleAddressComponent[]
+    location?: { latitude?: number; longitude?: number }
+  },
+): ResolvedAddress | null {
+  const components = place.addressComponents || []
+  const streetNumber = componentByType(components, 'street_number')?.longText || ''
+  const route = componentByType(components, 'route')?.longText || ''
+  const street = titleCaseStreet([streetNumber, route].filter(Boolean).join(' '))
+  if (!street) return null
+
+  const city =
+    componentByType(components, 'locality')?.longText ||
+    componentByType(components, 'sublocality')?.longText ||
+    componentByType(components, 'neighborhood')?.longText ||
+    componentByType(components, 'administrative_area_level_3')?.longText ||
+    ''
+  const state =
+    componentByType(components, 'administrative_area_level_1')?.shortText ||
+    componentByType(components, 'administrative_area_level_1')?.longText ||
+    ''
+  const zipCode = (componentByType(components, 'postal_code')?.longText || '').trim()
+  if (!city || !state) return null
+
+  const lat = num(place.location?.latitude) ?? 0
+  const lng = num(place.location?.longitude) ?? 0
+  const stateAbbr = state.toUpperCase().slice(0, 2)
+  const cityTitle = titleCaseStreet(city)
+  const formatted = zipCode
+    ? `${street}, ${cityTitle}, ${stateAbbr} ${zipCode}`
+    : `${street}, ${cityTitle}, ${stateAbbr}`
+
+  return {
+    id: stableAddressId({ street, city: cityTitle, state: stateAbbr, zipCode }),
+    formatted,
+    street,
+    city: cityTitle,
+    state: stateAbbr,
+    zipCode,
+    lat,
+    lng,
+    source: 'google',
+    matchedAddress: place.formattedAddress || formatted,
+    placeId,
+  }
+}
+
+/** Places API (New): Autocomplete + Place Details for US address suggestions. */
+async function searchGooglePlaces(query: string, apiKey: string): Promise<ResolvedAddress[]> {
+  const autoRes = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+    },
+    body: JSON.stringify({
+      input: query,
+      includedRegionCodes: ['us'],
+      languageCode: 'en',
+    }),
+  })
+  if (!autoRes.ok) return []
+  const autoJson = (await autoRes.json().catch(() => null)) as {
+    suggestions?: Array<{
+      placePrediction?: {
+        placeId?: string
+        place?: string
+      }
+    }>
+  } | null
+
+  const placeIds: string[] = []
+  for (const suggestion of autoJson?.suggestions || []) {
+    const id =
+      suggestion.placePrediction?.placeId ||
+      suggestion.placePrediction?.place?.replace(/^places\//, '')
+    if (!id || placeIds.includes(id)) continue
+    placeIds.push(id)
+    if (placeIds.length >= 5) break
+  }
+  if (placeIds.length === 0) return []
+
+  const details = await Promise.all(
+    placeIds.map(async (placeId) => {
+      const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'id,formattedAddress,addressComponents,location',
+          },
+        })
+        if (!res.ok) return null
+        const place = (await res.json().catch(() => null)) as {
+          formattedAddress?: string
+          addressComponents?: GoogleAddressComponent[]
+          location?: { latitude?: number; longitude?: number }
+        } | null
+        if (!place) return null
+        return googlePlaceToResolved(placeId, place)
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return details.filter(Boolean) as ResolvedAddress[]
+}
+
+async function searchAddressesForQuery(
+  query: string,
+  googleApiKey: string | undefined,
+): Promise<ResolvedAddress[]> {
+  if (googleApiKey) {
+    try {
+      const google = await searchGooglePlaces(query, googleApiKey)
+      if (google.length > 0) return google
+    } catch {
+      // fall through to Census
+    }
+  }
+  return searchCensus(query)
 }
 
 function mapAttomProperty(attom: Record<string, unknown>) {
@@ -405,10 +543,13 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
 }
 
 /**
- * Dev/preview proxy for property lookup + ATTOM.
- * Keeps ATTOM_API_KEY on the server (never VITE_* / never in the browser bundle).
+ * Dev/preview proxy for property lookup + Google Places + ATTOM.
+ * Keeps API keys on the server (never VITE_* / never in the browser bundle).
  */
-function propertyLookupApiPlugin(attomApiKey: string | undefined): Plugin {
+function propertyLookupApiPlugin(
+  attomApiKey: string | undefined,
+  googleMapsApiKey: string | undefined,
+): Plugin {
   async function handle(req: IncomingMessage, res: ServerResponse) {
     if (req.method === 'OPTIONS') {
       res.statusCode = 204
@@ -435,14 +576,15 @@ function propertyLookupApiPlugin(attomApiKey: string | undefined): Plugin {
 
     const query = (body.query || '').trim()
     const mode = body.mode === 'resolve' ? 'resolve' : 'search'
-    if (query.length < 4) {
+    // Google handles shorter partials better than Census (min 3).
+    if (query.length < 3) {
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify({ matches: [] }))
       return
     }
 
-    const matches = await searchCensus(query)
+    const matches = await searchAddressesForQuery(query, googleMapsApiKey)
     if (mode === 'search') {
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json')
@@ -497,7 +639,10 @@ function propertyLookupApiPlugin(attomApiKey: string | undefined): Plugin {
     res.setHeader('Content-Type', 'application/json')
     res.end(
       JSON.stringify({
-        match: { ...match, source: 'edge' },
+        match: {
+          ...match,
+          source: match.source === 'google' ? 'google' : 'edge',
+        },
         matches,
         factsStatus,
         property,
@@ -534,9 +679,14 @@ function propertyLookupApiPlugin(attomApiKey: string | undefined): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(import.meta.dirname), '')
   const attomApiKey = env.ATTOM_API_KEY || process.env.ATTOM_API_KEY
+  const googleMapsApiKey = env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY
 
   return {
-    plugins: [react(), tailwindcss(), propertyLookupApiPlugin(attomApiKey)],
+    plugins: [
+      react(),
+      tailwindcss(),
+      propertyLookupApiPlugin(attomApiKey, googleMapsApiKey),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, './src'),

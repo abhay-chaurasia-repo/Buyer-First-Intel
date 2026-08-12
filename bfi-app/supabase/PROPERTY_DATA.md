@@ -1,8 +1,13 @@
 # Property data plan (address → ATTOM → schools → GPS)
 
-## Step 1 — Address search (done)
+## Step 1 — Address search (Google Places + fallbacks)
 - Client: `src/lib/addressSearch.ts`, `src/lib/propertyLookup.ts`
-- Providers: Census Geocoder + Nominatim fallback + `/api/property-lookup` (dev) / Edge Function
+- **Primary:** Google Places API (New) Autocomplete + Place Details via Vite `/api/property-lookup` or Edge Function
+  - Env: `GOOGLE_MAPS_API_KEY` (server-only, never `VITE_*`)
+  - Key must allow server calls: Application restriction **None** (or IP), API restriction **Places API (New)**
+  - Billing required on the Google Cloud project
+- Fallbacks: Census Geocoder, then browser Photon/Nominatim
+- After an address is chosen, Step 2 (ATTOM) still loads County’s Fact / tax / sales
 
 ## Step 2 — ATTOM county facts + tax + sales (done in code)
 - Mapper: `src/lib/attomMap.ts`
@@ -21,12 +26,14 @@
 ```bash
 # in bfi-app/.env.local (gitignored)
 ATTOM_API_KEY=your_attom_key
+GOOGLE_MAPS_API_KEY=your_maps_platform_key
 ```
 
 ### Deploy Edge Function
 ```bash
 supabase functions deploy property-lookup
 supabase secrets set ATTOM_API_KEY=your_attom_key
+supabase secrets set GOOGLE_MAPS_API_KEY=your_maps_platform_key
 ```
 
 ### Try these sample addresses (known to return ATTOM data on Free Trial)

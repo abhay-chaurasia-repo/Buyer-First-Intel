@@ -2,8 +2,8 @@
  * US address search / normalize.
  *
  * Browser-safe order:
- * 1) Edge Function `property-lookup` (when deployed)
- * 2) Nominatim / Photon (CORS-friendly)
+ * 1) Edge Function / Vite `/api/property-lookup` (Google Places when keyed, else Census)
+ * 2) Nominatim / Photon (CORS-friendly fallback)
  * 3) Census Geocoder (no CORS in browsers — only succeeds via same-origin proxy)
  */
 
