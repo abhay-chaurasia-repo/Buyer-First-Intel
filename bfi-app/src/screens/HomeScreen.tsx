@@ -20,7 +20,7 @@ import {
   ensureRemoteProfile,
   fetchSearchQuotaSnapshot,
 } from '@/lib/searchQuotaApi'
-import { isStripeCheckoutEnabled, startStripeCheckout } from '@/lib/stripeCheckout'
+import { confirmStripeCheckout, isStripeCheckoutEnabled, startStripeCheckout } from '@/lib/stripeCheckout'
 import type { SearchQuotaSnapshot } from '@/data/searchQuota'
 import { cn } from '@/lib/utils'
 
@@ -45,6 +45,8 @@ export function HomeScreen() {
     let cancelled = false
     void (async () => {
       await ensureRemoteProfile()
+      // If user already paid but webhook missed, sync from Stripe customer
+      await confirmStripeCheckout(null)
       if (cancelled) return
       const next = await fetchSearchQuotaSnapshot(ownerId)
       if (cancelled) return
@@ -84,6 +86,12 @@ export function HomeScreen() {
       if (!result.ok) {
         setBillingError(result.error)
         return
+      }
+      try {
+        // Stash that checkout started; success page also stores session_id from Stripe return URL
+        sessionStorage.setItem('bfi.checkoutStartedAt', String(Date.now()))
+      } catch {
+        // ignore
       }
       window.location.assign(result.url)
       return

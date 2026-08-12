@@ -1,36 +1,66 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { AppShell } from '@/components/layout/AppShell'
-import { fetchSearchQuotaSnapshot } from '@/lib/searchQuotaApi'
 import { SEARCH_PLAN } from '@/data/authPolicy'
+import { fetchSearchQuotaSnapshot } from '@/lib/searchQuotaApi'
+import { confirmStripeCheckout, PENDING_CHECKOUT_SESSION_KEY } from '@/lib/stripeCheckout'
 
 export function BillingSuccessScreen() {
-  const { ownerId } = useAuth()
+  const { ownerId, authReady, isSignedIn } = useAuth()
+  const [params] = useSearchParams()
   const [subscribed, setSubscribed] = useState<boolean | null>(null)
+  const [status, setStatus] = useState('Confirming your subscription…')
 
   useEffect(() => {
+    const sessionId = params.get('session_id')
+    if (sessionId) {
+      try {
+        sessionStorage.setItem(PENDING_CHECKOUT_SESSION_KEY, sessionId)
+      } catch {
+        // ignore
+      }
+    }
+  }, [params])
+
+  useEffect(() => {
+    if (!authReady || !isSignedIn) return
+
     let cancelled = false
     let tries = 0
 
-    const poll = async () => {
+    const run = async () => {
+      const sessionId = params.get('session_id')
+      setStatus('Activating unlimited searches…')
+      const confirmed = await confirmStripeCheckout(sessionId)
+      if (cancelled) return
+
+      if (!confirmed.ok) {
+        setStatus(confirmed.error)
+      }
+
       const snap = await fetchSearchQuotaSnapshot(ownerId)
       if (cancelled) return
       setSubscribed(snap.subscribed)
-      if (!snap.subscribed && tries < 8) {
+
+      if (!snap.subscribed && tries < 6) {
         tries += 1
         window.setTimeout(() => {
-          void poll()
-        }, 1500)
+          void run()
+        }, 1600)
+      } else if (snap.subscribed) {
+        setStatus('You’re subscribed')
+      } else {
+        setStatus('Payment received — subscription still syncing. Open Search again in a moment.')
       }
     }
 
-    void poll()
+    void run()
     return () => {
       cancelled = true
     }
-  }, [ownerId])
+  }, [authReady, isSignedIn, ownerId, params])
 
   return (
     <AppShell scene="search" sceneIntensity="soft" contentClassName="min-h-0 text-night-ink">
@@ -44,7 +74,7 @@ export function BillingSuccessScreen() {
         <p className="mt-2 max-w-[18rem] text-[0.95rem] leading-relaxed text-night-muted">
           {subscribed
             ? `Unlimited searches are on for ${SEARCH_PLAN.priceLabel}. Keep digging until you find the right home.`
-            : 'Confirming your subscription with Stripe — this usually takes a few seconds.'}
+            : status}
         </p>
         <Link
           to="/"

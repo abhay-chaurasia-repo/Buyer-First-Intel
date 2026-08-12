@@ -18,7 +18,6 @@ import {
 } from '@/data/authSession'
 import { claimGuestDataForUser } from '@/data/ownerScope'
 import {
-  getSupabasePhoneUser,
   isSupabaseConfigured,
   sendPhoneOtp,
   signOutSupabase,
@@ -30,13 +29,12 @@ import { getSupabase } from '@/lib/supabaseClient'
 type AuthContextValue = {
   session: AuthSession | null
   isSignedIn: boolean
-  /** Active diligence owner — always a signed-in userId in core product flows */
+  /** False until local + Supabase session restore has finished once */
+  authReady: boolean
   ownerId: string
   supabaseReady: boolean
   signIn: (method: AuthMethodId) => AuthSession
-  /** Send SMS OTP via Supabase + Twilio */
   requestPhoneOtp: (phone: string) => Promise<{ ok: true; phone: string } | { ok: false; error: string }>
-  /** Verify SMS OTP and establish app session */
   confirmPhoneOtp: (
     phone: string,
     token: string,
@@ -49,6 +47,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => loadAuthSession())
+  const [authReady, setAuthReady] = useState(() => !isSupabaseConfigured())
 
   const applySupabaseUser = useCallback((userId: string, phone?: string | null) => {
     const next = signInWithSupabasePhone({ userId, phone })
@@ -59,22 +58,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) return
+    if (!isSupabaseConfigured()) {
+      setAuthReady(true)
+      return
+    }
 
     let cancelled = false
+    const supabase = getSupabase()
+    if (!supabase) {
+      setAuthReady(true)
+      return
+    }
 
     void (async () => {
-      const user = await getSupabasePhoneUser()
-      if (cancelled || !user) return
-      applySupabaseUser(user.userId, user.phone)
+      try {
+        const { data } = await supabase.auth.getSession()
+        if (cancelled) return
+        if (data.session?.user) {
+          applySupabaseUser(data.session.user.id, data.session.user.phone)
+        } else {
+          // Keep any local demo session; only clear if we had a mobile supabase session
+          // that is no longer valid.
+          const local = loadAuthSession()
+          if (local?.method === 'mobile' && !local.userId.startsWith('buyer_local_')) {
+            // Supabase session missing after return — keep local shell so RequireAuth
+            // doesn't bounce to login before the user can recover via phone OTP.
+            setSession(local)
+          }
+        }
+      } finally {
+        if (!cancelled) setAuthReady(true)
+      }
     })()
 
-    const supabase = getSupabase()
-    if (!supabase) return
-
-    const { data } = supabase.auth.onAuthStateChange((_event, supabaseSession) => {
-      if (!supabaseSession?.user) return
-      applySupabaseUser(supabaseSession.user.id, supabaseSession.user.phone)
+    const { data } = supabase.auth.onAuthStateChange((event, supabaseSession) => {
+      if (supabaseSession?.user) {
+        applySupabaseUser(supabaseSession.user.id, supabaseSession.user.phone)
+        return
+      }
+      if (event === 'SIGNED_OUT') {
+        const local = loadAuthSession()
+        if (local?.method === 'mobile' && !local.userId.startsWith('buyer_local_')) {
+          clearSession()
+          setSession(null)
+        }
+      }
     })
 
     return () => {
@@ -120,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       session,
       isSignedIn: Boolean(session),
+      authReady,
       ownerId: session?.userId ?? GUEST_OWNER_ID,
       supabaseReady: isSupabaseConfigured(),
       signIn,
@@ -128,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       refresh,
     }),
-    [session, signIn, requestPhoneOtp, confirmPhoneOtp, signOut, refresh],
+    [session, authReady, signIn, requestPhoneOtp, confirmPhoneOtp, signOut, refresh],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

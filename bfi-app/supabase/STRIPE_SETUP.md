@@ -57,6 +57,11 @@ npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
 5. Land on `/billing/success`
 6. `profiles.subscription_active` becomes `true`
 
-## Notes
-- Keep **Quick sign in** on local demo subscribe until you remove it for production.
-- Switch Stripe to **Live mode** + live keys only when ready for real charges.
+## Branding Stripe Checkout (optional)
+Stripe Hosted Checkout is Stripe’s page (not your React UI).
+To make it closer to Due Diligence:
+1. Stripe Dashboard → **Settings → Branding**
+2. Upload logo, set brand color closer to saffron/orange
+3. Set public business name to **Due Diligence**
+
+Embedded/in-app checkout can come later; Hosted Checkout is the reliable first path.
