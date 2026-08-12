@@ -4,9 +4,15 @@
 1. SQL Editor → run `migrations/001_profiles_search_quota.sql`
 2. Confirm tables: `profiles`, `search_usage`
 
+## Diligence cloud sync
+1. SQL Editor → run `migrations/004_diligence_homes_notes.sql`
+2. Phone login → star homes / add notes → rows appear in `diligence_homes` and `property_notes`
+3. Sign out / in on another browser → Homes in Diligence should restore
+
 ## Stripe subscription
 1. SQL Editor → run `migrations/002_stripe_subscription_fields.sql`
 2. Follow **`STRIPE_SETUP.md`** (Stripe product, Edge Functions, webhook secrets)
+3. Branding: Stripe → **Settings → Branding** (logo, saffron color, name Due Diligence)
 
 ## App behavior
 - Phone login → quota/subscription in Supabase

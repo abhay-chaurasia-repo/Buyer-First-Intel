@@ -54,6 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     claimGuestDataForUser(next.userId)
     setSession(next)
     void ensureRemoteProfile()
+    void import('@/lib/diligenceSync')
+      .then((mod) => mod.pullDiligenceFromCloud())
+      .catch(() => {
+        // ignore
+      })
     return next
   }, [])
 

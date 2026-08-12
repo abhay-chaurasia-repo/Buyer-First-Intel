@@ -27,6 +27,11 @@ export function persistNotes(propertyKey: string, notes: SavedNote[]) {
     const all = raw ? (JSON.parse(raw) as Record<string, SavedNote[]>) : {}
     all[propertyKey] = notes
     writeScopedItem(NOTES_STORAGE_KEY, JSON.stringify(all))
+    void import('@/lib/diligenceSync')
+      .then((mod) => mod.syncNotesAfterLocalChange(propertyKey, notes))
+      .catch(() => {
+        // ignore sync failures
+      })
   } catch {
     // Ignore storage failures in demo shell
   }

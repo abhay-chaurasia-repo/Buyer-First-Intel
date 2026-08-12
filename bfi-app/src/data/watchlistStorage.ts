@@ -55,6 +55,11 @@ export function loadWatchlist(): WatchlistItem[] {
 
 function persistWatchlist(items: WatchlistItem[]) {
   writeScopedItem(WATCHLIST_STORAGE_KEY, JSON.stringify(items))
+  void import('@/lib/diligenceSync')
+    .then((mod) => mod.syncWatchlistAfterLocalChange(items))
+    .catch(() => {
+      // ignore sync failures in demo / offline
+    })
 }
 
 /** Planned soonest first, then unplanned, then already visited. */

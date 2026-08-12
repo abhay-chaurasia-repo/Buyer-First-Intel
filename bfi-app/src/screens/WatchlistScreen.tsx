@@ -495,15 +495,27 @@ export function WatchlistScreen() {
   const [filter, setFilter] = useState<'all' | 'planned' | 'visited'>('all')
 
   useEffect(() => {
-    const refresh = () => {
+    let cancelled = false
+    const refreshLocal = () => {
       setItems(loadWatchlist())
       checkDueVisitReminders()
     }
-    refresh()
-    window.addEventListener('focus', refresh)
+
+    void import('@/lib/diligenceSync')
+      .then(async (mod) => {
+        const remote = await mod.pullDiligenceFromCloud()
+        if (!cancelled) setItems(remote)
+      })
+      .catch(() => {
+        if (!cancelled) refreshLocal()
+      })
+
+    refreshLocal()
+    window.addEventListener('focus', refreshLocal)
     const timer = window.setInterval(() => checkDueVisitReminders(), 60_000)
     return () => {
-      window.removeEventListener('focus', refresh)
+      cancelled = true
+      window.removeEventListener('focus', refreshLocal)
       window.clearInterval(timer)
     }
   }, [ownerId])
