@@ -150,6 +150,8 @@ async function lookupViaLocalApi(query: string, mode: 'search' | 'resolve') {
       body: JSON.stringify({ query, mode }),
     })
     if (!res.ok) return null
+    const contentType = res.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) return null
     return (await res.json()) as LookupPayload
   } catch {
     return null

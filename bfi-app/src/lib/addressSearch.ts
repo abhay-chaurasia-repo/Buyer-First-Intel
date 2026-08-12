@@ -1,8 +1,10 @@
 /**
  * US address search / normalize.
- * Primary: Census Bureau Geocoder (no key).
- * Suggestions: Nominatim for partial queries when Census returns nothing.
- * Optional: Supabase Edge Function `property-lookup` when deployed.
+ *
+ * Browser-safe order:
+ * 1) Edge Function `property-lookup` (when deployed)
+ * 2) Nominatim / Photon (CORS-friendly)
+ * 3) Census Geocoder (no CORS in browsers — only succeeds via same-origin proxy)
  */
 
 import type { AddressSearchResult, ResolvedAddress } from '@/data/addressTypes'
@@ -10,6 +12,7 @@ import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 
 const CENSUS_BASE = 'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress'
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org/search'
+const PHOTON_BASE = 'https://photon.komoot.io/api/'
 const USER_AGENT = 'DueDiligenceBuyerApp/1.0 (home-buyer due diligence)'
 
 function titleCaseToken(token: string) {
@@ -34,12 +37,7 @@ function stableAddressId(parts: {
   state: string
   zipCode: string
 }) {
-  const key = [
-    parts.street,
-    parts.city,
-    parts.state,
-    parts.zipCode,
-  ]
+  const key = [parts.street, parts.city, parts.state, parts.zipCode]
     .map((p) => p.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'))
     .filter(Boolean)
     .join('--')
@@ -134,6 +132,15 @@ async function searchCensus(query: string, limit = 6): Promise<ResolvedAddress[]
   return resolved
 }
 
+/** Census has no browser CORS — ignore network failures and fall through. */
+async function searchCensusSafe(query: string, limit = 6): Promise<ResolvedAddress[]> {
+  try {
+    return await searchCensus(query, limit)
+  } catch {
+    return []
+  }
+}
+
 type NominatimHit = {
   lat?: string
   lon?: string
@@ -145,6 +152,8 @@ type NominatimHit = {
     town?: string
     village?: string
     hamlet?: string
+    municipality?: string
+    county?: string
     state?: string
     postcode?: string
   }
@@ -220,7 +229,7 @@ function nominatimToResolved(hit: NominatimHit): ResolvedAddress | null {
   if (!road || !a.house_number) return null
 
   const street = titleCaseStreet(`${a.house_number} ${road}`)
-  const cityName = a.city || a.town || a.village || a.hamlet
+  const cityName = a.city || a.town || a.village || a.hamlet || a.municipality
   if (!cityName || !a.state) return null
 
   const city = titleCaseStreet(cityName)
@@ -270,6 +279,91 @@ async function searchNominatim(query: string, limit = 5): Promise<ResolvedAddres
   return resolved
 }
 
+async function searchNominatimSafe(query: string, limit = 5): Promise<ResolvedAddress[]> {
+  try {
+    return await searchNominatim(query, limit)
+  } catch {
+    return []
+  }
+}
+
+type PhotonFeature = {
+  geometry?: { coordinates?: [number, number] }
+  properties?: {
+    housenumber?: string
+    street?: string
+    name?: string
+    city?: string
+    town?: string
+    village?: string
+    locality?: string
+    district?: string
+    county?: string
+    state?: string
+    postcode?: string
+    countrycode?: string
+    type?: string
+  }
+}
+
+function photonToResolved(feature: PhotonFeature): ResolvedAddress | null {
+  const p = feature.properties
+  const coords = feature.geometry?.coordinates
+  if (!p || !coords || p.countrycode?.toLowerCase() !== 'us') return null
+
+  const house = p.housenumber
+  const road = p.street || (p.type === 'house' ? p.name : undefined)
+  if (!house || !road) return null
+
+  const cityName = p.city || p.town || p.village || p.locality || p.district || p.county
+  if (!cityName || !p.state) return null
+
+  const street = titleCaseStreet(`${house} ${road}`)
+  const city = titleCaseStreet(cityName)
+  const state = stateToAbbr(p.state)
+  const zipCode = (p.postcode || '').split('-')[0]!.trim()
+  const lat = coords[1]
+  const lng = coords[0]
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+
+  const formatted = zipCode
+    ? `${street}, ${city}, ${state} ${zipCode}`
+    : `${street}, ${city}, ${state}`
+
+  return {
+    id: stableAddressId({ street, city, state, zipCode }),
+    formatted,
+    street,
+    city,
+    state,
+    zipCode,
+    lat,
+    lng,
+    source: 'nominatim',
+    matchedAddress: formatted,
+  }
+}
+
+async function searchPhotonSafe(query: string, limit = 5): Promise<ResolvedAddress[]> {
+  try {
+    const url = new URL(PHOTON_BASE)
+    url.searchParams.set('q', query)
+    url.searchParams.set('limit', String(limit))
+    url.searchParams.set('lang', 'en')
+    const res = await fetch(url.toString())
+    if (!res.ok) return []
+    const data = (await res.json()) as { features?: PhotonFeature[] }
+    const resolved: ResolvedAddress[] = []
+    for (const feature of data.features ?? []) {
+      const item = photonToResolved(feature)
+      if (item) resolved.push(item)
+    }
+    return resolved
+  } catch {
+    return []
+  }
+}
+
 async function searchViaEdge(query: string): Promise<ResolvedAddress[] | null> {
   if (!isSupabaseConfigured()) return null
   const supabase = getSupabase()
@@ -303,6 +397,14 @@ function dedupeMatches(matches: ResolvedAddress[]) {
   return out
 }
 
+function friendlySearchError(err: unknown) {
+  const message = err instanceof Error ? err.message : 'Address search failed'
+  if (/failed to fetch|networkerror|load failed/i.test(message)) {
+    return 'Could not reach the address service. Check your connection and try again with city and state.'
+  }
+  return message
+}
+
 /** Suggest / resolve US addresses for the search box. */
 export async function searchAddresses(query: string): Promise<AddressSearchResult> {
   const trimmed = query.trim()
@@ -316,15 +418,20 @@ export async function searchAddresses(query: string): Promise<AddressSearchResul
       return { ok: true, matches: dedupeMatches(edge).slice(0, 6) }
     }
 
-    let matches = await searchCensus(trimmed)
+    // Browser-safe providers first (Census has no CORS headers).
+    let matches = await searchNominatimSafe(trimmed)
     if (matches.length === 0) {
-      matches = await searchNominatim(trimmed)
+      matches = await searchPhotonSafe(trimmed)
     }
+    if (matches.length === 0) {
+      matches = await searchCensusSafe(trimmed)
+    }
+
     return { ok: true, matches: dedupeMatches(matches).slice(0, 6) }
   } catch (err) {
     return {
       ok: false,
-      error: err instanceof Error ? err.message : 'Address search failed',
+      error: friendlySearchError(err),
       matches: [],
     }
   }
