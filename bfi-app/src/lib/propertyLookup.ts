@@ -1,6 +1,8 @@
 /**
  * Load a property shell from a searched address.
- * Address components come from live geocoding; county facts stay demo until ATTOM.
+ * 1) Local Vite /api/property-lookup (dev — ATTOM_API_KEY server-side)
+ * 2) Supabase Edge Function property-lookup
+ * 3) Client Census/Nominatim address match (facts pending)
  */
 
 import type { ResolvedAddress } from '@/data/addressTypes'
@@ -27,6 +29,15 @@ type CacheEntry = {
   query: string
   result: PropertyLookupResult
   savedAt: number
+}
+
+type LookupPayload = {
+  match?: ResolvedAddress | null
+  matches?: ResolvedAddress[]
+  property?: Partial<MockProperty> | null
+  factsStatus?: 'demo' | 'live' | 'pending'
+  attomError?: string | null
+  error?: string
 }
 
 function readCache(query: string): PropertyLookupResult | null {
@@ -67,11 +78,13 @@ export function propertyFromResolvedAddress(
     city: resolved.city,
     state: resolved.state,
     zipCode: resolved.zipCode,
-    lat: resolved.lat,
-    lng: resolved.lng,
-    addressSource: resolved.source,
+    lat: extras?.lat ?? resolved.lat,
+    lng: extras?.lng ?? resolved.lng,
+    addressSource: extras?.addressSource ?? resolved.source,
     factsStatus: extras?.factsStatus ?? 'pending',
     starred: false,
+    // Clear demo listing discrepancy unless explicitly provided
+    claimedSqft: extras?.claimedSqft,
   }
 }
 
@@ -88,6 +101,74 @@ export function propertyFromUnresolvedQuery(query: string): MockProperty {
     addressSource: 'unresolved',
     factsStatus: 'pending',
     starred: false,
+  }
+}
+
+function statusFor(property: MockProperty, warning?: string): PropertyLookupStatus {
+  if (property.factsStatus === 'live') {
+    return {
+      addressMatched: true,
+      factsStatus: 'live',
+      sourceLabel: 'Live county facts · ATTOM',
+      warning,
+    }
+  }
+  return {
+    addressMatched: true,
+    factsStatus: property.factsStatus ?? 'pending',
+    sourceLabel: warning
+      ? 'Address matched · county facts unavailable'
+      : 'Address matched · county facts pending ATTOM',
+    warning,
+  }
+}
+
+function resultFromPayload(payload: LookupPayload): PropertyLookupResult | null {
+  if (!payload.match) return null
+  const factsStatus = payload.factsStatus ?? (payload.property ? 'live' : 'pending')
+  const property = propertyFromResolvedAddress(payload.match, {
+    ...payload.property,
+    factsStatus,
+  })
+  return {
+    property,
+    resolved: payload.match,
+    status: statusFor(
+      property,
+      payload.attomError
+        ? `ATTOM: ${payload.attomError}. Showing matched address; county facts stay illustrative.`
+        : undefined,
+    ),
+  }
+}
+
+async function lookupViaLocalApi(query: string, mode: 'search' | 'resolve') {
+  try {
+    const res = await fetch('/api/property-lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, mode }),
+    })
+    if (!res.ok) return null
+    return (await res.json()) as LookupPayload
+  } catch {
+    return null
+  }
+}
+
+async function lookupViaEdge(query: string, mode: 'search' | 'resolve') {
+  if (!isSupabaseConfigured()) return null
+  const supabase = getSupabase()
+  if (!supabase) return null
+  try {
+    const { data, error } = await supabase.functions.invoke('property-lookup', {
+      method: 'POST',
+      body: { query, mode },
+    })
+    if (error) return null
+    return data as LookupPayload
+  } catch {
+    return null
   }
 }
 
@@ -108,44 +189,22 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
   const cached = readCache(trimmed)
   if (cached) return cached
 
-  // Prefer Edge Function resolve (ATTOM-ready) when it returns a property shell.
-  try {
-    if (isSupabaseConfigured()) {
-      const supabase = getSupabase()
-      if (supabase) {
-        const { data } = await supabase.functions.invoke('property-lookup', {
-          method: 'POST',
-          body: { query: trimmed, mode: 'resolve' },
-        })
-        const payload = data as {
-          match?: ResolvedAddress
-          property?: Partial<MockProperty>
-          factsStatus?: 'demo' | 'live' | 'pending'
-        } | null
-        if (payload?.match) {
-          const property = propertyFromResolvedAddress(payload.match, {
-            ...payload.property,
-            factsStatus: payload.factsStatus ?? 'pending',
-          })
-          const result: PropertyLookupResult = {
-            property,
-            resolved: payload.match,
-            status: {
-              addressMatched: true,
-              factsStatus: property.factsStatus ?? 'pending',
-              sourceLabel:
-                property.factsStatus === 'live'
-                  ? 'Live county facts'
-                  : 'Address matched · county facts pending ATTOM',
-            },
-          }
-          writeCache(trimmed, result)
-          return result
-        }
-      }
+  const local = await lookupViaLocalApi(trimmed, 'resolve')
+  if (local && !local.error) {
+    const fromLocal = resultFromPayload(local)
+    if (fromLocal) {
+      writeCache(trimmed, fromLocal)
+      return fromLocal
     }
-  } catch {
-    // fall through to client geocode
+  }
+
+  const edge = await lookupViaEdge(trimmed, 'resolve')
+  if (edge && !edge.error) {
+    const fromEdge = resultFromPayload(edge)
+    if (fromEdge) {
+      writeCache(trimmed, fromEdge)
+      return fromEdge
+    }
   }
 
   const resolved = await resolveAddress(trimmed)
@@ -169,16 +228,25 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
   const result: PropertyLookupResult = {
     property,
     resolved,
-    status: {
-      addressMatched: true,
-      factsStatus: 'pending',
-      sourceLabel: 'Address matched · county facts pending ATTOM',
-    },
+    status: statusFor(property),
   }
   writeCache(trimmed, result)
   return result
 }
 
 export async function suggestAddresses(query: string) {
-  return searchAddresses(query)
+  const trimmed = query.trim()
+  if (trimmed.length < 4) return searchAddresses(trimmed)
+
+  const local = await lookupViaLocalApi(trimmed, 'search')
+  if (local?.matches && local.matches.length > 0) {
+    return { ok: true as const, matches: local.matches }
+  }
+
+  const edge = await lookupViaEdge(trimmed, 'search')
+  if (edge?.matches && edge.matches.length > 0) {
+    return { ok: true as const, matches: edge.matches }
+  }
+
+  return searchAddresses(trimmed)
 }

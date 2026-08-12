@@ -20,5 +20,6 @@
 - Quick / Apple / Facebook still local until those IdPs are wired
 
 ## Property data (address → ATTOM → schools → GPS)
-1. Address search is live now (Census Geocoder + optional `property-lookup` Edge Function)
-2. Follow **`PROPERTY_DATA.md`** for ATTOM, GreatSchools, and real GPS Verify
+1. Address search is live (Census + optional `/api/property-lookup` / Edge Function)
+2. ATTOM county facts: set `ATTOM_API_KEY` in `.env.local` (dev) or Supabase secrets (prod) — see **`PROPERTY_DATA.md`**
+3. GreatSchools and real GPS Verify are next

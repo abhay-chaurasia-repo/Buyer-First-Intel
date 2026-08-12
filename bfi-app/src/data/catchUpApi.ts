@@ -69,6 +69,8 @@ function wrapResponse(
 
 /** GET /api/properties/:id/county-facts */
 export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse {
+  const live = property.factsStatus === 'live'
+  const source = live ? 'ATTOM county / assessor facts' : 'County assessor living area'
   const items: CatchUpCard[] = [
     {
       id: 'cf-living-area',
@@ -78,7 +80,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       headline: 'County living-area fact',
       preview: `County records show ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote whether it matches or looks overstated.`,
       timestamp: isoMinutesAgo(18),
-      source: 'County assessor living area',
+      source,
       fields: [{ label: 'County sqft', value: property.sqft.toLocaleString() }],
       insightLabelIds: [
         'published-listing-size-matches-county',
@@ -93,7 +95,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       headline: 'Beds, baths, year built',
       preview: `${property.bedrooms} bed · ${property.bathrooms} bath · built ${property.yearBuilt} · lot ${property.lotSizeSqft.toLocaleString()} sqft.`,
       timestamp: isoMinutesAgo(40),
-      source: 'GET /api/properties/:id',
+      source: live ? 'ATTOM building / lot' : 'GET /api/properties/:id',
       fields: [
         { label: 'Beds / baths', value: `${property.bedrooms} / ${property.bathrooms}` },
         { label: 'Year built', value: String(property.yearBuilt) },
@@ -110,7 +112,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       headline: 'Owner of record',
       preview: `${property.ownerName} · owner-occupied: ${property.ownerOccupied ? 'Yes' : 'No'}. Public-record only.`,
       timestamp: isoMinutesAgo(90),
-      source: 'GET /api/properties/:id',
+      source: live ? 'ATTOM assessment owner' : 'GET /api/properties/:id',
       fields: [
         { label: 'Owner', value: property.ownerName },
         { label: 'Occupied', value: property.ownerOccupied ? 'Yes' : 'No' },
@@ -123,6 +125,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
 
 /** GET /api/properties/:id/sales-history */
 export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse {
+  const live = property.factsStatus === 'live'
   const items: CatchUpCard[] = [
     {
       id: 'sh-last-sale',
@@ -132,27 +135,34 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
       headline: 'Most recent transfer',
       preview: `${property.deedType} recorded ${property.lastSaleDate}. Sale amount intentionally de-emphasized.`,
       timestamp: isoMinutesAgo(12),
-      source: 'GET /api/properties/:id · sales',
+      source: live ? 'ATTOM sale detail' : 'GET /api/properties/:id · sales',
       fields: [
         { label: 'Sale date', value: property.lastSaleDate },
         { label: 'Deed type', value: property.deedType },
         { label: 'Amount', value: property.lastSalePriceLabel },
-        { label: 'Document #', value: '2019-084221 (stub)' },
+        {
+          label: 'Document #',
+          value: property.saleDocumentNumber || (live ? 'Not on file' : '2019-084221 (stub)'),
+        },
       ],
     },
     {
       id: 'sh-prior',
       type: 'legal',
       channel: 'prior-transfers',
-      unreadCount: 1,
-      headline: 'Prior deed chain (stub)',
-      preview: 'Earlier warranty / special warranty instruments available for diligence cross-check when API is bound.',
+      unreadCount: live ? 0 : 1,
+      headline: live ? 'Earlier transfers' : 'Prior deed chain (stub)',
+      preview: live
+        ? 'Full deed chain can be expanded later from ATTOM sale history endpoints.'
+        : 'Earlier warranty / special warranty instruments available for diligence cross-check when API is bound.',
       timestamp: isoMinutesAgo(180),
-      source: 'County recorder stub',
-      fields: [
-        { label: 'Prior sale', value: '2011-03-22 (stub)' },
-        { label: 'Instrument', value: 'Special Warranty (stub)' },
-      ],
+      source: live ? 'ATTOM' : 'County recorder stub',
+      fields: live
+        ? [{ label: 'Status', value: 'Latest transfer shown above' }]
+        : [
+            { label: 'Prior sale', value: '2011-03-22 (stub)' },
+            { label: 'Instrument', value: 'Special Warranty (stub)' },
+          ],
     },
   ]
 
@@ -161,6 +171,7 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
 
 /** GET /api/properties/:id/tax-history */
 export function fetchTaxHistoryApi(property: MockProperty): CatchUpApiResponse {
+  const live = property.factsStatus === 'live'
   const items: CatchUpCard[] = [
     {
       id: 'th-assessment',
@@ -168,29 +179,43 @@ export function fetchTaxHistoryApi(property: MockProperty): CatchUpApiResponse {
       channel: 'tax-assessment',
       unreadCount: 1,
       headline: `${property.taxYear} assessed value`,
-      preview: `${property.taxAssessedValueLabel}. Homestead exemption flagged in stub data.`,
+      preview: live
+        ? `${property.taxAssessedValueLabel}. Land and improvement values from county / ATTOM.`
+        : `${property.taxAssessedValueLabel}. Homestead exemption flagged in stub data.`,
       timestamp: isoMinutesAgo(25),
-      source: 'GET /api/properties/:id · tax',
+      source: live ? 'ATTOM assessment' : 'GET /api/properties/:id · tax',
       fields: [
         { label: 'Tax year', value: String(property.taxYear) },
         { label: 'Assessed', value: property.taxAssessedValueLabel },
-        { label: 'Land', value: 'Stub — bind ATTOM land value' },
-        { label: 'Improvement', value: 'Stub — bind ATTOM improvement value' },
+        {
+          label: 'Land',
+          value: property.taxLandLabel || (live ? '—' : 'Stub — bind ATTOM land value'),
+        },
+        {
+          label: 'Improvement',
+          value:
+            property.taxImprovementLabel ||
+            (live ? '—' : 'Stub — bind ATTOM improvement value'),
+        },
       ],
     },
     {
       id: 'th-prior-year',
       type: 'tax',
       channel: 'prior-tax-year',
-      unreadCount: 1,
-      headline: 'Prior-year roll (stub)',
-      preview: `${property.taxYear - 1} assessment retained for year-over-year diligence comparison.`,
+      unreadCount: live ? 0 : 1,
+      headline: live ? 'Assessment note' : 'Prior-year roll (stub)',
+      preview: live
+        ? 'Year-over-year assessor rolls can be added from ATTOM tax history next.'
+        : `${property.taxYear - 1} assessment retained for year-over-year diligence comparison.`,
       timestamp: isoMinutesAgo(200),
-      source: 'Assessor stub',
-      fields: [
-        { label: 'Prior year', value: String(property.taxYear - 1) },
-        { label: 'Exemptions', value: 'Homestead (stub)' },
-      ],
+      source: live ? 'ATTOM' : 'Assessor stub',
+      fields: live
+        ? [{ label: 'Source', value: 'Current roll only' }]
+        : [
+            { label: 'Prior year', value: String(property.taxYear - 1) },
+            { label: 'Exemptions', value: 'Homestead (stub)' },
+          ],
     },
   ]
 

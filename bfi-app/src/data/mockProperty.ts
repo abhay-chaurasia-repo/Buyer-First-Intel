@@ -81,6 +81,11 @@ export type MockProperty = {
   addressSource?: 'census' | 'nominatim' | 'edge' | 'demo' | 'unresolved'
   /** County/ATTOM facts: demo shell, pending live bind, or live */
   factsStatus?: 'demo' | 'live' | 'pending'
+  /** ATTOM identifier when facts are live */
+  attomId?: number
+  saleDocumentNumber?: string
+  taxLandLabel?: string
+  taxImprovementLabel?: string
   sqft: number
   bedrooms: number
   bathrooms: number

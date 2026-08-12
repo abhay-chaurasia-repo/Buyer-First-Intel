@@ -1,30 +1,38 @@
 # Property data plan (address → ATTOM → schools → GPS)
 
-## Step 1 — Address search (implemented)
+## Step 1 — Address search (done)
 - Client: `src/lib/addressSearch.ts`, `src/lib/propertyLookup.ts`
-- Providers:
-  - **Census Bureau Geocoder** (primary, no key) — normalize US street + city + state + ZIP + lat/lng
-  - **Nominatim** — suggestions when Census returns nothing on partial queries
-  - Optional Edge Function **`property-lookup`** when deployed (auth required)
-- Home search suggests matches; submit navigates with the matched formatted address
-- Property detail loads the resolved shell; county facts stay **pending** until ATTOM
+- Providers: Census Geocoder + Nominatim fallback + `/api/property-lookup` (dev) / Edge Function
 
-### Deploy Edge Function (optional but recommended)
+## Step 2 — ATTOM county facts (done in code)
+- Mapper: `src/lib/attomMap.ts`
+- Dev proxy: Vite middleware `POST /api/property-lookup` reads **`ATTOM_API_KEY`** from `.env.local` (not `VITE_*`)
+- Production: Supabase Edge Function `property-lookup` + secret `ATTOM_API_KEY`
+- Sale **prices stay hidden** (buyer-first). Dates, deed type, assessed/tax, owner, sqft, beds/baths, APN are shown.
+- Status chip on property page: **Live county facts · ATTOM** when matched
+
+### Local setup
+```bash
+# in bfi-app/.env.local (gitignored)
+ATTOM_API_KEY=your_attom_key
+```
+
+### Deploy Edge Function
 ```bash
 supabase functions deploy property-lookup
+supabase secrets set ATTOM_API_KEY=your_attom_key
 ```
-Phone-authenticated users hit this first; others fall back to browser Census/Nominatim.
 
-## Step 2 — ATTOM (next)
-1. Get an ATTOM API key (Property Detail / Expanded Profile)
-2. Set secret: `supabase secrets set ATTOM_API_KEY=...`
-3. Implement `fetchAttomFacts` in `supabase/functions/property-lookup/index.ts`
-4. Map into `MockProperty` fields already shown: sqft, beds, baths, yearBuilt, lot, APN, zoning, owner, sale, tax
-5. Set `factsStatus: 'live'` when mapping succeeds
+### Try these sample addresses (known to return ATTOM data on Free Trial)
+- `4529 Winona Court, Denver, CO`
+- `901 W Mary St, Austin, TX`
+- `100 Congress Ave, Austin, TX`
+- `1600 Pennsylvania Ave NW, Washington, DC`
 
-## Step 3 — GreatSchools
-- Bind `fetchSchoolsApi` / schools CatchUp surface to GreatSchools using lat/lng from the resolved address
+Some residential streets may return `SuccessWithoutResult` on the trial plan — address match still works; facts stay pending with a note.
+
+## Step 3 — GreatSchools (next)
+- Bind schools CatchUp surface using lat/lng from the resolved address
 
 ## Step 4 — Real GPS Verify
 - Compare device geolocation to `property.lat` / `property.lng` within ~100m
-- Replace the property-header Verify toggle with a real presence check
