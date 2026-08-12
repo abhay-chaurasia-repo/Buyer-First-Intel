@@ -67,6 +67,7 @@ function WatchlistMetaRail({
   reminderEnabled = false,
   hasShared = false,
   onContribute,
+  onOpenNotes,
 }: {
   plannedVisitAt?: string | null
   visitedAt?: string | null
@@ -74,6 +75,7 @@ function WatchlistMetaRail({
   reminderEnabled?: boolean
   hasShared?: boolean
   onContribute?: () => void
+  onOpenNotes?: () => void
 }) {
   const hasPlanned = Boolean(plannedVisitAt)
   const hasVisited = Boolean(visitedAt)
@@ -153,14 +155,20 @@ function WatchlistMetaRail({
       ) : null}
 
       {hasNotes ? (
-        <span
-          className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-saffron/30 bg-saffron/12 px-1.5 py-1 text-[10px] font-bold leading-none text-saffron-glow"
-          title={`${noteCount} note${noteCount === 1 ? '' : 's'}`}
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onOpenNotes?.()
+          }}
+          className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-saffron/30 bg-saffron/12 px-1.5 py-1 text-[10px] font-bold leading-none text-saffron-glow touch-manipulation"
+          title="Private note saved — tap to edit"
+          aria-label="Open private note"
           data-testid="watchlist-notes-badge"
         >
           <StickyNote className="h-3 w-3" aria-hidden />
           {noteCount}
-        </span>
+        </button>
       ) : null}
     </div>
   )
@@ -169,23 +177,42 @@ function WatchlistMetaRail({
 function PropertyNotes({
   propertyId,
   onNotesChange,
+  forceOpen = false,
+  onOpenConsumed,
 }: {
   propertyId: string
   onNotesChange?: (count: number) => void
+  /** Open the editor (e.g. when the sticky-note chip is tapped). */
+  forceOpen?: boolean
+  onOpenConsumed?: () => void
 }) {
   const [draft, setDraft] = useState(() => loadNotePad(propertyId))
   const [savedPad, setSavedPad] = useState(() => loadNotePad(propertyId))
-  const [justSaved, setJustSaved] = useState(false)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     const pad = loadNotePad(propertyId)
     setDraft(pad)
     setSavedPad(pad)
-    setJustSaved(false)
+    setEditorOpen(false)
     onNotesChange?.(pad.trim() ? 1 : 0)
   }, [propertyId, onNotesChange])
 
+  useEffect(() => {
+    if (!forceOpen) return
+    setEditorOpen(true)
+    onOpenConsumed?.()
+  }, [forceOpen, onOpenConsumed])
+
+  useEffect(() => {
+    if (!editorOpen) return
+    const id = window.requestAnimationFrame(() => textareaRef.current?.focus())
+    return () => window.cancelAnimationFrame(id)
+  }, [editorOpen])
+
   const dirty = draft.trim() !== savedPad.trim()
+  const hasSaved = Boolean(savedPad.trim())
 
   function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -193,71 +220,93 @@ function PropertyNotes({
     const pad = saved?.text ?? ''
     setDraft(pad)
     setSavedPad(pad)
-    setJustSaved(Boolean(pad))
     onNotesChange?.(pad.trim() ? 1 : 0)
+    setEditorOpen(false)
   }
 
   function handleClear() {
     saveNotePad(propertyId, '')
     setDraft('')
     setSavedPad('')
-    setJustSaved(false)
     onNotesChange?.(0)
   }
 
   return (
     <div className="border-t border-white/15 pt-2" data-testid={`notes-section-${propertyId}`}>
-      <form
-        onSubmit={handleSave}
-        className="space-y-2"
-        data-testid={`notes-form-${propertyId}`}
+      <button
+        type="button"
+        onClick={() => setEditorOpen((open) => !open)}
+        className={cn(
+          'flex w-full min-h-9 items-center gap-2 rounded-xl border px-2.5 py-2 text-left touch-manipulation',
+          hasSaved
+            ? 'border-saffron/35 bg-saffron/12 text-saffron-glow'
+            : 'border-white/20 bg-transparent text-night-muted hover:border-saffron/35 hover:text-saffron-glow',
+        )}
+        aria-expanded={editorOpen}
+        data-testid={`button-toggle-note-${propertyId}`}
       >
-        <label className="flex items-center gap-1.5 text-[11px] font-semibold text-saffron-glow">
-          <StickyNote className="h-3.5 w-3.5" aria-hidden />
-          Private note
-        </label>
-        <textarea
-          value={draft}
-          onChange={(event) => {
-            setDraft(event.target.value)
-            setJustSaved(false)
-          }}
-          rows={3}
-          placeholder="Jot private thoughts — edit and save anytime…"
-          className="min-h-[4.5rem] w-full resize-y rounded-xl border border-white/20 bg-night/30 px-3 py-2.5 text-[13px] leading-relaxed text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/55"
-          data-testid={`input-property-note-${propertyId}`}
+        <StickyNote className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        <span className="min-w-0 flex-1 text-[12px] font-semibold">
+          {hasSaved ? 'Private note saved' : 'Add private note'}
+        </span>
+        <span className="text-[10px] font-medium text-night-faint">
+          {editorOpen ? 'Close' : 'Edit'}
+        </span>
+        <ChevronDown
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 text-night-faint transition-transform',
+            editorOpen && 'rotate-180',
+          )}
+          aria-hidden
         />
-        <div className="flex items-center gap-2">
-          <button
-            type="submit"
-            disabled={!dirty}
-            className={cn(
-              'inline-flex min-h-9 flex-1 items-center justify-center rounded-xl px-3 text-[12px] font-semibold transition-colors touch-manipulation',
-              dirty
-                ? 'bg-saffron text-white shadow-[0_4px_12px_rgb(232_145_58/0.3)]'
-                : 'border border-white/15 text-night-faint',
-            )}
-            data-testid={`button-save-note-${propertyId}`}
-          >
-            {savedPad.trim() && !dirty ? 'Saved' : 'Save note'}
-          </button>
-          {savedPad.trim() ? (
+      </button>
+
+      {editorOpen ? (
+        <form
+          onSubmit={handleSave}
+          className="mt-2 space-y-2"
+          data-testid={`notes-form-${propertyId}`}
+        >
+          <label className="sr-only" htmlFor={`property-note-${propertyId}`}>
+            Private note
+          </label>
+          <textarea
+            ref={textareaRef}
+            id={`property-note-${propertyId}`}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            rows={3}
+            placeholder="Jot private thoughts — edit and save anytime…"
+            className="min-h-[4.5rem] w-full resize-y rounded-xl border border-white/20 bg-night/30 px-3 py-2.5 text-[13px] leading-relaxed text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/55"
+            data-testid={`input-property-note-${propertyId}`}
+          />
+          <div className="flex items-center gap-2">
             <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 px-3 text-[12px] font-semibold text-night-muted touch-manipulation hover:border-watch/40 hover:text-watch-glow"
-              data-testid={`button-clear-note-${propertyId}`}
+              type="submit"
+              disabled={!dirty}
+              className={cn(
+                'inline-flex min-h-9 flex-1 items-center justify-center rounded-xl px-3 text-[12px] font-semibold transition-colors touch-manipulation',
+                dirty
+                  ? 'bg-saffron text-white shadow-[0_4px_12px_rgb(232_145_58/0.3)]'
+                  : 'border border-white/15 text-night-faint',
+              )}
+              data-testid={`button-save-note-${propertyId}`}
             >
-              Clear
+              {hasSaved && !dirty ? 'Saved' : 'Save note'}
             </button>
-          ) : null}
-        </div>
-        {justSaved ? (
-          <p className="text-[10px] font-medium text-plus-glow" data-testid={`notes-saved-${propertyId}`}>
-            Note saved — you can edit it anytime.
-          </p>
-        ) : null}
-      </form>
+            {hasSaved ? (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 px-3 text-[12px] font-semibold text-night-muted touch-manipulation hover:border-watch/40 hover:text-watch-glow"
+                data-testid={`button-clear-note-${propertyId}`}
+              >
+                Clear
+              </button>
+            ) : null}
+          </div>
+        </form>
+      ) : null}
     </div>
   )
 }
@@ -277,6 +326,7 @@ function WatchlistRow({
 }) {
   const [open, setOpen] = useState(false)
   const [planning, setPlanning] = useState(false)
+  const [openNotesEditor, setOpenNotesEditor] = useState(false)
   const status = visitPlanStatus(item)
   const [noteCount, setNoteCount] = useState(() => notesCount(item.id))
   const [hasShared, setHasShared] = useState(
@@ -376,6 +426,11 @@ function WatchlistRow({
             onContribute={
               item.visitedAt ? () => onContribute(item) : undefined
             }
+            onOpenNotes={() => {
+              setOpen(true)
+              setPlanning(false)
+              setOpenNotesEditor(true)
+            }}
           />
         </div>
       </div>
@@ -436,7 +491,12 @@ function WatchlistRow({
           />
 
           {!planning ? (
-            <PropertyNotes propertyId={item.id} onNotesChange={setNoteCount} />
+            <PropertyNotes
+              propertyId={item.id}
+              onNotesChange={setNoteCount}
+              forceOpen={openNotesEditor}
+              onOpenConsumed={() => setOpenNotesEditor(false)}
+            />
           ) : null}
         </div>
       ) : null}
