@@ -95,8 +95,12 @@ async function searchCensus(query: string): Promise<ResolvedAddress[]> {
     const lat = match.coordinates?.y
     const lng = match.coordinates?.x
     if (!c?.city || !c.state || lat == null || lng == null) continue
+    // fromAddress/toAddress are TIGER range ends — parse house from matchedAddress
+    const house =
+      (match.matchedAddress || '').split(',')[0]?.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1] ||
+      c.fromAddress
     const streetBits = [
-      c.fromAddress,
+      house,
       c.preDirection,
       c.preType,
       c.streetName,

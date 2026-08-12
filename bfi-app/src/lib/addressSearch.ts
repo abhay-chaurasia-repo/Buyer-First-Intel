@@ -44,22 +44,27 @@ function stableAddressId(parts: {
   return `addr-${key}`.slice(0, 96)
 }
 
-function buildStreetFromCensusComponents(c: {
-  fromAddress?: string
-  preDirection?: string
-  preType?: string
-  streetName?: string
-  suffixType?: string
-  suffixDirection?: string
-}) {
-  const bits = [
-    c.fromAddress,
-    c.preDirection,
-    c.preType,
-    c.streetName,
-    c.suffixType,
-    c.suffixDirection,
-  ]
+function houseNumberFromMatchedAddress(matchedAddress?: string) {
+  if (!matchedAddress) return undefined
+  const streetLine = matchedAddress.split(',')[0]?.trim() ?? ''
+  const match = streetLine.match(/^(\d+[A-Za-z]?)\b/)
+  return match?.[1]
+}
+
+function buildStreetFromCensusComponents(
+  c: {
+    fromAddress?: string
+    preDirection?: string
+    preType?: string
+    streetName?: string
+    suffixType?: string
+    suffixDirection?: string
+  },
+  matchedAddress?: string,
+) {
+  // Census fromAddress/toAddress are the TIGER range ends — NOT the matched house number.
+  const house = houseNumberFromMatchedAddress(matchedAddress) || c.fromAddress
+  const bits = [house, c.preDirection, c.preType, c.streetName, c.suffixType, c.suffixDirection]
     .map((v) => (v || '').trim())
     .filter(Boolean)
   return titleCaseStreet(bits.join(' '))
@@ -87,7 +92,7 @@ function censusMatchToResolved(match: CensusMatch): ResolvedAddress | null {
   const lng = match.coordinates?.x
   if (!c?.city || !c.state || lat == null || lng == null) return null
 
-  const street = buildStreetFromCensusComponents(c)
+  const street = buildStreetFromCensusComponents(c, match.matchedAddress)
   const city = titleCaseStreet(c.city)
   const state = c.state.toUpperCase()
   const zipCode = (c.zip || '').trim()

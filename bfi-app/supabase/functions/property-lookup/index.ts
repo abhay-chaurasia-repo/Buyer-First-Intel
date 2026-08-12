@@ -37,6 +37,13 @@ function titleCaseStreet(raw: string) {
     .join(' ')
 }
 
+function houseNumberFromMatchedAddress(matchedAddress?: string) {
+  if (!matchedAddress) return undefined
+  const streetLine = matchedAddress.split(',')[0]?.trim() ?? ''
+  const match = streetLine.match(/^(\d+[A-Za-z]?)\b/)
+  return match?.[1]
+}
+
 function stableAddressId(parts: {
   street: string
   city: string
@@ -68,8 +75,10 @@ async function searchCensus(query: string, limit = 6): Promise<ResolvedAddress[]
     const lng = match.coordinates?.x
     if (!c?.city || !c?.state || lat == null || lng == null) continue
 
+    // fromAddress/toAddress are TIGER range ends — parse house from matchedAddress
+    const house = houseNumberFromMatchedAddress(match.matchedAddress) || c.fromAddress
     const streetBits = [
-      c.fromAddress,
+      house,
       c.preDirection,
       c.preType,
       c.streetName,
