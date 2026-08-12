@@ -68,6 +68,19 @@ export type ChannelCanvasData = {
   }
 }
 
+export type PropertySaleEvent = {
+  id: string
+  /** Transaction / transfer date */
+  date: string
+  recordedDate?: string
+  deedType: string
+  documentNumber?: string
+  buyerName?: string
+  sellerName?: string
+  /** Buyer-first: never show raw sale amount */
+  amountLabel: string
+}
+
 export type MockProperty = {
   id: string
   address: string
@@ -86,6 +99,12 @@ export type MockProperty = {
   saleDocumentNumber?: string
   taxLandLabel?: string
   taxImprovementLabel?: string
+  /** Annual tax amount label from ATTOM assessment */
+  taxAmountLabel?: string
+  /** Market value label when assessor publishes it */
+  marketValueLabel?: string
+  /** Recorded transfers for Sales History (prices hidden) */
+  salesHistory?: PropertySaleEvent[]
   sqft: number
   bedrooms: number
   bathrooms: number

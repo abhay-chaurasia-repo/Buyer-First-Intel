@@ -9,7 +9,7 @@ import { DEMO_PROPERTY, type MockProperty } from '@/data/mockProperty'
 import { isHouseNumberOnlyQuery, resolveAddress, searchAddresses } from '@/lib/addressSearch'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 
-const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v4'
+const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v5'
 const SELECTED_ADDRESS_KEY = 'bfi.selectedAddress.v1'
 const RECENT_ADDRESSES_KEY = 'bfi.recentAddressSuggestions.v1'
 
@@ -17,6 +17,7 @@ try {
   sessionStorage.removeItem('bfi.propertyLookupCache')
   sessionStorage.removeItem('bfi.propertyLookupCache.v2')
   sessionStorage.removeItem('bfi.propertyLookupCache.v3')
+  sessionStorage.removeItem('bfi.propertyLookupCache.v4')
 } catch {
   // ignore
 }

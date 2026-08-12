@@ -4,22 +4,18 @@
 - Client: `src/lib/addressSearch.ts`, `src/lib/propertyLookup.ts`
 - Providers: Census Geocoder + Nominatim fallback + `/api/property-lookup` (dev) / Edge Function
 
-## Step 2 — ATTOM county facts (done in code)
+## Step 2 — ATTOM county facts + tax + sales (done in code)
 - Mapper: `src/lib/attomMap.ts`
-- Endpoint (interactive docs): [`GET /property/detail`](https://api.developer.attomdata.com/docs#!/Property32V1/propertyDetails)
-- Query (either form works):
-  - `address1` + `address2` (street + city/state/ZIP) — preferred for search → County’s Fact
-  - `attomid` when we already have an ATTOM id
+- Parallel packages on resolve:
+  - [`GET /property/detail`](https://api.developer.attomdata.com/docs#!/Property32V1/propertyDetails) — County’s Fact (living area, beds/baths, year, lot, APN)
+  - `GET /assessment/detail` — Tax History (tax year, assessed, land, improvement, annual tax, market value)
+  - `GET /sale/detail` — latest transfer (date, deed type, document #; **sale amount hidden**)
+  - `GET /saleshistory/expandedhistory` — Sales History deed chain (buyer/seller/doc; **amounts hidden**)
+- Query: `address1` + `address2` (or `attomid`)
 - Headers: `apikey`, `Accept: application/json`
-- Fields mapped into County’s Fact: living area, beds/baths, year built, lot, APN, zoning, lat/lng, absentee/owner-occupied
-- Dev proxy: Vite middleware `POST /api/property-lookup` reads **`ATTOM_API_KEY`** from `.env.local` (not `VITE_*`)
-- Production: Supabase Edge Function `property-lookup` + secret `ATTOM_API_KEY`
-- Sale **prices stay hidden** (buyer-first). Tax / deed / sales history need sibling ATTOM resources (`/assessment`, `/sale`, `/saleshistory`) — not part of `/property/detail`.
-- Related packages on the same docs page (not wired yet):
-  - `/property/detailowner` — owner of record
-  - `/property/detailwithschools` — schools near property
-  - `/property/expandedprofile` — richer profile including assessment/sale snippets
-- Status chip on property page: **Live county facts · ATTOM** when matched
+- Dev proxy: Vite `POST /api/property-lookup` + `.env.local` `ATTOM_API_KEY`
+- Production: Edge Function `property-lookup` + secret `ATTOM_API_KEY`
+- Status chip: **Live county facts · ATTOM** when any package matches
 
 ### Local setup
 ```bash

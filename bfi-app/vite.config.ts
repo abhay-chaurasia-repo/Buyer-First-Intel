@@ -172,14 +172,20 @@ function mapAttomProperty(attom: Record<string, unknown>) {
     if (acres) lotSqft = Math.round(acres * 43560)
   }
 
-  const names = [owner1.fullName, owner2.fullName]
+  const names = [owner1.fullName || owner1.fullname, owner2.fullName || owner2.fullname]
     .filter(Boolean)
     .map((n) => titleCaseStreet(String(n)))
   const absentee = String(summary.absenteeInd || '').toUpperCase()
-  const taxYear = num(tax.taxYear)
-  const assessedTotal = num(assessed.assdTtlValue)
-  const land = num(market.mktLandValue) ?? num(assessed.assdLandValue)
-  const improvement = num(market.mktImprValue)
+  const taxYear = num(tax.taxYear) ?? num(tax.taxyear)
+  const assessedTotal = num(assessed.assdTtlValue) ?? num(assessed.assdttlvalue)
+  const land =
+    num(market.mktLandValue) ??
+    num(market.mktlandvalue) ??
+    num(assessed.assdLandValue) ??
+    num(assessed.assdlandvalue)
+  const improvement = num(market.mktImprValue) ?? num(market.mktimprvalue)
+  const taxAmt = num(tax.taxAmt) ?? num(tax.taxamt)
+  const marketTotal = num(market.mktTtlValue) ?? num(market.mktttlvalue)
 
   const address = (attom.address || {}) as Record<string, unknown>
   const fields: Record<string, unknown> = {
@@ -225,40 +231,135 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const imprLabel = moneyLabel(improvement)
   if (landLabel) fields.taxLandLabel = landLabel
   if (imprLabel) fields.taxImprovementLabel = imprLabel
+  if (taxAmt != null) fields.taxAmountLabel = moneyLabel(taxAmt)
+  if (marketTotal != null) fields.marketValueLabel = moneyLabel(marketTotal)
   if (names.length) fields.ownerName = names.join(' & ')
-  const saleDate = sale.saleTransDate || saleAmount.saleRecDate || sale.saleSearchDate
+  const saleDate =
+    sale.saleTransDate ||
+    saleAmount.saleRecDate ||
+    saleAmount.salerecdate ||
+    sale.saleSearchDate ||
+    sale.salesearchdate
   if (saleDate) fields.lastSaleDate = String(saleDate).slice(0, 10)
-  if (saleAmount.saleTransType) fields.deedType = String(saleAmount.saleTransType)
-  else if (Object.keys(sale).length) fields.deedType = 'Recorded transfer'
-  if (saleAmount.saleDocNum) fields.saleDocumentNumber = String(saleAmount.saleDocNum)
+  if (saleAmount.saleTransType || saleAmount.saletranstype) {
+    fields.deedType = String(saleAmount.saleTransType || saleAmount.saletranstype)
+  } else if (Object.keys(sale).length) fields.deedType = 'Recorded transfer'
+  if (saleAmount.saleDocNum || saleAmount.saledocnum) {
+    fields.saleDocumentNumber = String(saleAmount.saleDocNum || saleAmount.saledocnum)
+  }
   const lat = num(location.latitude)
   const lng = num(location.longitude)
   if (lat != null) fields.lat = lat
   if (lng != null) fields.lng = lng
   const attomId = identifier.attomId ?? identifier.Id
   if (attomId != null) fields.attomId = attomId
+
+  const historyRaw = attom.saleHistory ?? attom.salehistory
+  if (Array.isArray(historyRaw) && historyRaw.length > 0) {
+    fields.salesHistory = historyRaw
+      .map((row, index) => {
+        if (!row || typeof row !== 'object') return null
+        const item = row as Record<string, unknown>
+        const amount = (item.amount || {}) as Record<string, unknown>
+        const date =
+          item.saleTransDate ||
+          amount.saleRecDate ||
+          amount.salerecdate ||
+          item.saleSearchDate
+        if (!date) return null
+        return {
+          id: `sale-${item.sequence ?? index}-${String(date).slice(0, 10)}`,
+          date: String(date).slice(0, 10),
+          recordedDate: amount.saleRecDate || amount.salerecdate
+            ? String(amount.saleRecDate || amount.salerecdate).slice(0, 10)
+            : undefined,
+          deedType: String(
+            amount.saleTransType ||
+              amount.saletranstype ||
+              amount.deedType ||
+              'Recorded transfer',
+          ),
+          documentNumber:
+            amount.saleDocNum || amount.saledocnum
+              ? String(amount.saleDocNum || amount.saledocnum)
+              : undefined,
+          buyerName:
+            typeof item.buyerName === 'string'
+              ? item.buyerName.replace(/,/g, ', ').replace(/\s+/g, ' ').trim()
+              : undefined,
+          sellerName:
+            typeof item.sellerName === 'string'
+              ? item.sellerName.replace(/,/g, ', ').replace(/\s+/g, ' ').trim()
+              : undefined,
+          amountLabel: 'Not shown (buyer-first)',
+        }
+      })
+      .filter(Boolean)
+  }
+
   return fields
 }
 
 async function fetchAttom(match: ResolvedAddress, apiKey: string) {
-  // ATTOM docs: /property/detail accepts address1+address2 or attomid
-  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail')
-  url.searchParams.set('address1', match.street)
-  url.searchParams.set(
-    'address2',
-    [match.city, match.state, match.zipCode].filter(Boolean).join(', '),
-  )
-  const res = await fetch(url, {
-    headers: { Accept: 'application/json', apikey: apiKey },
-  })
-  const raw = (await res.json().catch(() => null)) as {
-    property?: Record<string, unknown>[]
-    status?: { msg?: string }
-  } | null
-  if (!res.ok) return { ok: false as const, error: `ATTOM detail HTTP ${res.status}` }
-  const first = Array.isArray(raw?.property) ? raw.property[0] : null
-  if (!first) return { ok: false as const, error: raw?.status?.msg || 'No ATTOM detail' }
-  return { ok: true as const, property: mapAttomProperty(first) }
+  const address2 = [match.city, match.state, match.zipCode].filter(Boolean).join(', ')
+
+  async function load(packagePath: string) {
+    const url = new URL(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/${packagePath}`)
+    url.searchParams.set('address1', match.street)
+    url.searchParams.set('address2', address2)
+    try {
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json', apikey: apiKey },
+      })
+      const raw = (await res.json().catch(() => null)) as {
+        property?: Record<string, unknown>[]
+        status?: { msg?: string }
+      } | null
+      if (!res.ok) return null
+      return Array.isArray(raw?.property) ? raw.property[0] ?? null : null
+    } catch {
+      return null
+    }
+  }
+
+  const [detail, assessment, sale, history] = await Promise.all([
+    load('property/detail'),
+    load('assessment/detail'),
+    load('sale/detail'),
+    load('saleshistory/expandedhistory'),
+  ])
+
+  if (!detail && !assessment && !sale && !history) {
+    return { ok: false as const, error: 'No ATTOM match for detail, assessment, or sales' }
+  }
+
+  const merged: Record<string, unknown> = {
+    ...(detail || {}),
+  }
+  if (assessment?.assessment) merged.assessment = assessment.assessment
+  if (sale?.sale) merged.sale = sale.sale
+  if (history?.saleHistory || history?.salehistory) {
+    merged.saleHistory = history.saleHistory ?? history.salehistory
+  }
+  if (history?.owner && !(merged.assessment as { owner?: unknown } | undefined)?.owner) {
+    merged.assessment = {
+      ...((merged.assessment as Record<string, unknown> | undefined) || {}),
+      owner: history.owner,
+    }
+  }
+  if (!merged.identifier) {
+    merged.identifier =
+      detail?.identifier || assessment?.identifier || sale?.identifier || history?.identifier
+  }
+  if (!merged.address) {
+    merged.address = detail?.address || assessment?.address || sale?.address || history?.address
+  }
+  if (!merged.location) {
+    merged.location =
+      detail?.location || assessment?.location || sale?.location || history?.location
+  }
+
+  return { ok: true as const, property: mapAttomProperty(merged) }
 }
 
 /**

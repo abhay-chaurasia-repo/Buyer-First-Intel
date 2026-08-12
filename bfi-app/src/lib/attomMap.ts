@@ -3,11 +3,12 @@
  * Shared by the Vite /api proxy (dev) — Edge Function keeps a Deno copy in sync.
  */
 
-import type { MockProperty } from '@/data/mockProperty'
+import type { MockProperty, PropertySaleEvent } from '@/data/mockProperty'
 import { titleCaseStreet } from '@/lib/addressSearch'
 
 type AttomOwner = {
   fullName?: string
+  fullname?: string
   lastName?: string
   firstNameAndMi?: string
 }
@@ -70,30 +71,19 @@ type AttomProperty = {
       owner2?: AttomOwner
       absenteeOwnerStatus?: string
     }
-    assessed?: {
-      assdTtlValue?: number
-      assdLandValue?: number
-    }
-    market?: {
-      mktTtlValue?: number
-      mktLandValue?: number
-      mktImprValue?: number
-    }
-    tax?: {
-      taxAmt?: number
-      taxYear?: number
-    }
+    assessed?: Record<string, unknown>
+    market?: Record<string, unknown>
+    tax?: Record<string, unknown>
   }
   sale?: {
     saleTransDate?: string
     saleSearchDate?: string
-    amount?: {
-      saleRecDate?: string
-      saleDocNum?: string
-      saleTransType?: string
-    }
+    salesearchdate?: string
+    amount?: Record<string, unknown>
     calculation?: Record<string, unknown>
   }
+  salehistory?: unknown
+  saleHistory?: unknown
 }
 
 function num(value: unknown): number | undefined {
@@ -117,9 +107,11 @@ function titleCaseName(raw: string) {
 }
 
 function ownerDisplay(assessment?: AttomProperty['assessment']) {
-  const o1 = assessment?.owner?.owner1
-  const o2 = assessment?.owner?.owner2
-  const names = [o1?.fullName, o2?.fullName].filter(Boolean).map((n) => titleCaseName(String(n)))
+  const o1 = assessment?.owner?.owner1 as AttomOwner & { fullname?: string } | undefined
+  const o2 = assessment?.owner?.owner2 as AttomOwner & { fullname?: string } | undefined
+  const names = [o1?.fullName || o1?.fullname, o2?.fullName || o2?.fullname]
+    .filter(Boolean)
+    .map((n) => titleCaseName(String(n)))
   if (names.length === 0) return undefined
   return names.join(' & ')
 }
@@ -168,6 +160,27 @@ export function pickAttomProperty(payload: unknown): AttomProperty | null {
   return first ?? null
 }
 
+function fromRecord(block: Record<string, unknown> | undefined, ...keys: string[]) {
+  if (!block) return undefined
+  for (const key of keys) {
+    if (key in block) {
+      const value = num(block[key])
+      if (value != null) return value
+    }
+  }
+  return undefined
+}
+
+function stringFromRecord(block: Record<string, unknown> | undefined, ...keys: string[]) {
+  if (!block) return undefined
+  for (const key of keys) {
+    const value = block[key]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+    if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  }
+  return undefined
+}
+
 export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProperty> {
   const sqft = livingSqft(attom.building)
   const beds = num(attom.building?.rooms?.beds)
@@ -182,15 +195,24 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
     attom.summary?.propclass ||
     attom.summary?.propertyType
 
-  const taxYear = num(attom.assessment?.tax?.taxYear)
-  const assessed = num(attom.assessment?.assessed?.assdTtlValue)
-  const land = num(attom.assessment?.market?.mktLandValue) ?? num(attom.assessment?.assessed?.assdLandValue)
-  const improvement = num(attom.assessment?.market?.mktImprValue)
+  const assessed = attom.assessment?.assessed
+  const market = attom.assessment?.market
+  const tax = attom.assessment?.tax
+  const taxYear = fromRecord(tax, 'taxYear', 'taxyear')
+  const assessedTotal = fromRecord(assessed, 'assdTtlValue', 'assdttlvalue')
+  const land =
+    fromRecord(market, 'mktLandValue', 'mktlandvalue') ??
+    fromRecord(assessed, 'assdLandValue', 'assdlandvalue')
+  const improvement = fromRecord(market, 'mktImprValue', 'mktimprvalue')
+  const taxAmt = fromRecord(tax, 'taxAmt', 'taxamt')
+  const marketTotal = fromRecord(market, 'mktTtlValue', 'mktttlvalue')
 
+  const saleAmount = attom.sale?.amount
   const saleDate =
     attom.sale?.saleTransDate ||
-    attom.sale?.amount?.saleRecDate ||
-    attom.sale?.saleSearchDate
+    stringFromRecord(saleAmount, 'saleRecDate', 'salerecdate') ||
+    attom.sale?.saleSearchDate ||
+    attom.sale?.salesearchdate
 
   const absentee = (attom.summary?.absenteeInd || '').toUpperCase()
   const ownerOccupied =
@@ -223,27 +245,26 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   if (apn) fields.apn = apn
   if (zoning) fields.zoning = String(zoning)
   if (taxYear != null) fields.taxYear = Math.round(taxYear)
-  if (assessed != null) {
-    fields.taxAssessedValueLabel = `Assessed ${moneyLabel(assessed, '')} · ${fields.taxYear ?? 'county'}`.trim()
+  if (assessedTotal != null) {
+    fields.taxAssessedValueLabel = `Assessed ${moneyLabel(assessedTotal, '')} · ${fields.taxYear ?? 'county'}`.trim()
   } else if (taxYear != null) {
     fields.taxAssessedValueLabel = `County assessed · ${Math.round(taxYear)}`
   }
   if (land != null) fields.taxLandLabel = moneyLabel(land, '—')
   if (improvement != null) fields.taxImprovementLabel = moneyLabel(improvement, '—')
+  if (taxAmt != null) fields.taxAmountLabel = moneyLabel(taxAmt, '—')
+  if (marketTotal != null) fields.marketValueLabel = moneyLabel(marketTotal, '—')
 
   const owner = ownerDisplay(attom.assessment)
   if (owner) fields.ownerName = owner
   fields.ownerOccupied = Boolean(ownerOccupied)
 
   if (saleDate) fields.lastSaleDate = String(saleDate).slice(0, 10)
-  if (attom.sale?.amount?.saleTransType) {
-    fields.deedType = String(attom.sale.amount.saleTransType)
-  } else if (attom.sale) {
-    fields.deedType = 'Recorded transfer'
-  }
-  if (attom.sale?.amount?.saleDocNum) {
-    fields.saleDocumentNumber = String(attom.sale.amount.saleDocNum)
-  }
+  const deedType = stringFromRecord(saleAmount, 'saleTransType', 'saletranstype')
+  if (deedType) fields.deedType = deedType
+  else if (attom.sale) fields.deedType = 'Recorded transfer'
+  const docNum = stringFromRecord(saleAmount, 'saleDocNum', 'saledocnum')
+  if (docNum) fields.saleDocumentNumber = docNum
 
   if (lat != null) fields.lat = lat
   if (lng != null) fields.lng = lng
@@ -254,7 +275,87 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   // Listing "claimed" size is not an ATTOM field — clear demo discrepancy
   fields.claimedSqft = undefined
 
+  const history = mapAttomSalesHistory(attom)
+  if (history.length > 0) fields.salesHistory = history
+
   return fields
+}
+
+type AttomSaleHistoryRow = {
+  sequence?: number
+  saleTransDate?: string
+  saleSearchDate?: string
+  buyerName?: string
+  sellerName?: string
+  amount?: Record<string, unknown>
+}
+
+export function mapAttomSalesHistory(attom: AttomProperty | Record<string, unknown>): PropertySaleEvent[] {
+  const root = attom as AttomProperty & Record<string, unknown>
+  const raw = root.saleHistory ?? root.salehistory
+  if (!Array.isArray(raw)) return []
+
+  const events: PropertySaleEvent[] = []
+  for (const [index, row] of (raw as AttomSaleHistoryRow[]).entries()) {
+    if (!row || typeof row !== 'object') continue
+    const amount = row.amount || {}
+    const date =
+      row.saleTransDate ||
+      stringFromRecord(amount, 'saleRecDate', 'salerecdate') ||
+      row.saleSearchDate
+    if (!date) continue
+    const deedType =
+      stringFromRecord(amount, 'saleTransType', 'saletranstype', 'deedType', 'deedtype') ||
+      'Recorded transfer'
+    const documentNumber = stringFromRecord(amount, 'saleDocNum', 'saledocnum')
+    events.push({
+      id: `sale-${row.sequence ?? index}-${String(date).slice(0, 10)}`,
+      date: String(date).slice(0, 10),
+      recordedDate: stringFromRecord(amount, 'saleRecDate', 'salerecdate')?.slice(0, 10),
+      deedType,
+      documentNumber,
+      buyerName: row.buyerName?.replace(/,/g, ', ').replace(/\s+/g, ' ').trim(),
+      sellerName: row.sellerName?.replace(/,/g, ', ').replace(/\s+/g, ' ').trim(),
+      amountLabel: 'Not shown (buyer-first)',
+    })
+  }
+  return events
+}
+
+async function fetchAttomPackage(
+  packagePath: string,
+  params: {
+    apiKey: string
+    attomId?: number | string
+    street?: string
+    city?: string
+    state?: string
+    zipCode?: string
+  },
+): Promise<AttomProperty | null> {
+  const url = new URL(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/${packagePath}`)
+  if (params.attomId != null && String(params.attomId).trim()) {
+    url.searchParams.set('attomid', String(params.attomId))
+  } else if (params.street && params.city && params.state) {
+    url.searchParams.set('address1', params.street)
+    url.searchParams.set(
+      'address2',
+      [params.city, params.state, params.zipCode].filter(Boolean).join(', '),
+    )
+  } else {
+    return null
+  }
+
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json', apikey: params.apiKey },
+    })
+    const raw = await res.json().catch(() => null)
+    if (!res.ok) return null
+    return pickAttomProperty(raw)
+  } catch {
+    return null
+  }
 }
 
 export async function fetchAttomIdByAddress(params: {
@@ -337,8 +438,12 @@ export async function fetchAttomPropertyDetail(params: {
 }
 
 /**
- * Load county facts from Property Detail using the searched address.
- * Prefers a single detail call with address1/address2 (per ATTOM docs).
+ * County facts + tax assessment + sale / sales history.
+ * Parallel ATTOM packages per interactive docs:
+ * - /property/detail
+ * - /assessment/detail
+ * - /sale/detail
+ * - /saleshistory/expandedhistory
  */
 export async function fetchAttomCountyFacts(params: {
   apiKey: string
@@ -347,22 +452,81 @@ export async function fetchAttomCountyFacts(params: {
   state: string
   zipCode?: string
   attomId?: number | string
-}): Promise<{ ok: true; property: AttomProperty; attomId?: number } | { ok: false; error: string }> {
-  const detail = await fetchAttomPropertyDetail({
+}): Promise<
+  | {
+      ok: true
+      property: AttomProperty
+      fields: Partial<MockProperty>
+      attomId?: number
+      warnings: string[]
+    }
+  | { ok: false; error: string }
+> {
+  const lookup = {
     apiKey: params.apiKey,
     attomId: params.attomId,
     street: params.street,
     city: params.city,
     state: params.state,
     zipCode: params.zipCode,
-  })
-  if (!detail.ok) return detail
+  }
 
-  const attomId = detail.property.identifier?.attomId ?? detail.property.identifier?.Id
+  const [detail, assessment, sale, history] = await Promise.all([
+    fetchAttomPackage('property/detail', lookup),
+    fetchAttomPackage('assessment/detail', lookup),
+    fetchAttomPackage('sale/detail', lookup),
+    fetchAttomPackage('saleshistory/expandedhistory', lookup),
+  ])
+
+  if (!detail && !assessment && !sale && !history) {
+    return { ok: false, error: 'No ATTOM match for detail, assessment, or sales' }
+  }
+
+  const merged: AttomProperty = {
+    ...(detail || {}),
+    ...(assessment ? { assessment: assessment.assessment, identifier: assessment.identifier || detail?.identifier } : {}),
+    ...(sale ? { sale: sale.sale, identifier: sale.identifier || detail?.identifier } : {}),
+    ...(history
+      ? {
+          saleHistory: history.saleHistory ?? history.salehistory,
+          identifier: history.identifier || detail?.identifier,
+        }
+      : {}),
+    address: detail?.address || assessment?.address || sale?.address || history?.address,
+    location: detail?.location || assessment?.location || sale?.location || history?.location,
+    building: detail?.building || assessment?.building || sale?.building,
+    lot: detail?.lot || assessment?.lot || sale?.lot,
+    summary: detail?.summary || assessment?.summary || sale?.summary || history?.summary,
+    identifier:
+      detail?.identifier ||
+      assessment?.identifier ||
+      sale?.identifier ||
+      history?.identifier,
+  }
+
+  // Prefer owner names from expanded sales history when present
+  const historyOwner = (history as { owner?: NonNullable<AttomProperty['assessment']>['owner'] } | null)
+    ?.owner
+  if (historyOwner) {
+    merged.assessment = {
+      ...(merged.assessment || {}),
+      owner: historyOwner,
+    }
+  }
+
+  const fields = mapAttomToPropertyFields(merged)
+  const warnings: string[] = []
+  if (!detail) warnings.push('property/detail unavailable')
+  if (!assessment) warnings.push('assessment/detail unavailable')
+  if (!sale && !history) warnings.push('sale/saleshistory unavailable')
+
+  const attomId = merged.identifier?.attomId ?? merged.identifier?.Id
   return {
     ok: true,
-    property: detail.property,
+    property: merged,
+    fields,
     attomId: attomId != null ? Number(attomId) : undefined,
+    warnings,
   }
 }
 
