@@ -58,7 +58,7 @@ const surfaceMeta: Record<
     title: 'Buyer Community',
     Icon: Users,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'Fixed Plus & Watch labels — upvoted after presence (size labels can be remote)',
+    blurb: 'Fixed Plus & Watch labels — on-site votes after GPS Verify (size labels can be remote)',
   },
   schools: {
     title: 'Schools',
@@ -239,7 +239,7 @@ export function CatchUpFlow({
         </section>
 
         {isBuyerCommunity ? (
-          <BuyerCommunityPanel propertyId={propertyId} />
+          <BuyerCommunityPanel propertyId={propertyId} onRequestGpsVerify={onClose} />
         ) : isVerifiedVisits ? (
           <VerifiedVisitsPanel property={property} />
         ) : (

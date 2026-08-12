@@ -14,7 +14,7 @@ import { VisitPlanPicker } from '@/components/VisitPlanPicker'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/auth/AuthProvider'
-import { persistBuyerVerified, loadBuyerVoteState } from '@/data/buyerCommunityStorage'
+import { loadBuyerVoteState } from '@/data/buyerCommunityStorage'
 import {
   loadNotePad,
   notesCount,
@@ -351,10 +351,6 @@ function WatchlistRow({
   function handleMarkVisited() {
     const markingVisited = status !== 'visited'
     onChange(markWatchlistVisited(item.id, markingVisited))
-    if (markingVisited) {
-      // Unlock community voting when they mark the visit from this list
-      persistBuyerVerified(item.id, true)
-    }
   }
 
   function handleSavePlan(iso: string | null) {
@@ -663,7 +659,6 @@ export function WatchlistScreen() {
                     onRemove={(id) => setItems(removeFromWatchlist(id))}
                     onOpen={(row) => navigate(propertyPath(row))}
                     onContribute={(row) => {
-                      persistBuyerVerified(row.id, true)
                       navigate(propertyPath(row, { catchup: 'buyer-insights' }))
                     }}
                   />

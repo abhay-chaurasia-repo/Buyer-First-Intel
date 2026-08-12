@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ShieldCheck, ThumbsUp } from 'lucide-react'
+import { ChevronDown, Crosshair, ShieldCheck, ThumbsUp } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import {
@@ -12,7 +12,6 @@ import {
 import {
   loadBuyerVerified,
   loadBuyerVoteState,
-  persistBuyerVerified,
   persistBuyerVoteState,
   type BuyerVoteState,
 } from '@/data/buyerCommunityStorage'
@@ -120,7 +119,7 @@ function CategoryBlock({
                       ? voted
                         ? `Remove upvote from ${label.text}`
                         : `Upvote ${label.text}`
-                      : `Verify visit to upvote ${label.text}`
+                      : `GPS Verify on site to upvote ${label.text}`
                   }
                   data-testid={`button-upvote-${label.id}`}
                 >
@@ -142,12 +141,14 @@ function CategoryBlock({
 
 type BuyerCommunityPanelProps = {
   propertyId: string
+  /** Close the community sheet so the buyer can use GPS Verify on the property header. */
+  onRequestGpsVerify?: () => void
 }
 
 /**
- * Buyer Community: fixed labels only. Verified visitors upvote what they observe.
+ * Buyer Community: fixed labels only. On-site votes require GPS Verify (not a manual confirm).
  */
-export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
+export function BuyerCommunityPanel({ propertyId, onRequestGpsVerify }: BuyerCommunityPanelProps) {
   const { ownerId } = useAuth()
   const [voteState, setVoteState] = useState<BuyerVoteState>(() => loadBuyerVoteState(propertyId))
   const [verified, setVerified] = useState(() => loadBuyerVerified(propertyId))
@@ -157,15 +158,16 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
     setVerified(loadBuyerVerified(propertyId))
   }, [propertyId, ownerId])
 
+  useEffect(() => {
+    const refresh = () => setVerified(loadBuyerVerified(propertyId))
+    window.addEventListener('focus', refresh)
+    return () => window.removeEventListener('focus', refresh)
+  }, [propertyId])
+
   const totalVotes = useMemo(
     () => BUYER_COMMUNITY_LABELS.reduce((sum, label) => sum + voteCount(label, voteState), 0),
     [voteState],
   )
-
-  function handleConfirmVisit() {
-    setVerified(true)
-    persistBuyerVerified(propertyId, true)
-  }
 
   function handleToggleVote(labelId: string) {
     const label = BUYER_COMMUNITY_LABELS.find((entry) => entry.id === labelId)
@@ -192,8 +194,8 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
     <div className="mt-3 space-y-4 px-3" data-testid="buyer-community-panel">
       <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
-          Pre-set community labels only — no free text. Most need a verified visit; remote size
-          insights can be upvoted while comparing listings.
+          Pre-set community labels only — no free text. On-site Plus/Watch votes unlock after GPS
+          Verify on this property. Remote size insights can be upvoted anytime.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-night-faint">
           <span>
@@ -218,18 +220,29 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
             data-testid="text-verified-voter"
           >
             <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.25} />
-            Visit verified — tap a label to upvote or remove your vote
+            GPS verified — tap a label to upvote or remove your vote
           </p>
         ) : (
-          <button
-            type="button"
-            onClick={handleConfirmVisit}
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-saffron px-4 text-sm font-semibold text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)] transition-colors hover:bg-saffron-deep touch-manipulation"
-            data-testid="button-confirm-visit-to-vote"
-          >
-            <ShieldCheck className="h-4 w-4" strokeWidth={2.25} />
-            Confirm visit to unlock voting
-          </button>
+          <div className="mt-3 space-y-2" data-testid="gps-verify-required">
+            <p className="flex items-start gap-1.5 text-[12px] leading-snug text-night-muted">
+              <Crosshair className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow" strokeWidth={2.25} />
+              <span>
+                On-site labels stay locked until you use <span className="font-semibold text-night-ink">Verify</span> on
+                the property header while at the home.
+              </span>
+            </p>
+            {onRequestGpsVerify ? (
+              <button
+                type="button"
+                onClick={onRequestGpsVerify}
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-saffron/45 bg-saffron/15 px-4 text-sm font-semibold text-saffron-glow transition-colors hover:bg-saffron/25 touch-manipulation"
+                data-testid="button-go-gps-verify"
+              >
+                <Crosshair className="h-4 w-4" strokeWidth={2.25} />
+                Close & use GPS Verify
+              </button>
+            ) : null}
+          </div>
         )}
       </div>
 

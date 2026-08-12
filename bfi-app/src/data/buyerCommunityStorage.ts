@@ -1,8 +1,9 @@
-/** Shared Buyer Community vote / verify persistence for cross-surface reads. */
+/** Shared Buyer Community vote persistence. Visit unlock comes from GPS Verify. */
 
-import { readScopedItem, writeScopedItem } from './ownerScope'
+import { loadGpsVerified, persistGpsVerified, readScopedItem, writeScopedItem } from './ownerScope'
 
 export const BUYER_VOTES_STORAGE_KEY = 'bfi.buyer-community-votes'
+/** @deprecated Presence unlock is GPS Verify (`bfi.gpsVerified.*`). Kept for owner-scope migration lists. */
 export const BUYER_VERIFIED_STORAGE_KEY = 'bfi.buyer-community-verified'
 
 export type BuyerVoteState = {
@@ -41,24 +42,12 @@ export function persistBuyerVoteState(propertyId: string, state: BuyerVoteState)
   }
 }
 
+/** True when this property has GPS Verify — unlocks on-site community votes. */
 export function loadBuyerVerified(propertyId: string): boolean {
-  try {
-    const raw = readScopedItem(BUYER_VERIFIED_STORAGE_KEY)
-    if (!raw) return false
-    const all = JSON.parse(raw) as Record<string, boolean>
-    return Boolean(all[propertyId])
-  } catch {
-    return false
-  }
+  return loadGpsVerified(propertyId)
 }
 
+/** Prefer `persistGpsVerified` from the property Verify control. Kept for call-site compatibility. */
 export function persistBuyerVerified(propertyId: string, verified: boolean) {
-  try {
-    const raw = readScopedItem(BUYER_VERIFIED_STORAGE_KEY)
-    const all = raw ? (JSON.parse(raw) as Record<string, boolean>) : {}
-    all[propertyId] = verified
-    writeScopedItem(BUYER_VERIFIED_STORAGE_KEY, JSON.stringify(all))
-  } catch {
-    // Ignore storage failures in demo shell
-  }
+  persistGpsVerified(propertyId, verified)
 }
