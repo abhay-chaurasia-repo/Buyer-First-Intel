@@ -75,8 +75,11 @@ async function searchCensus(query: string, limit = 6): Promise<ResolvedAddress[]
     const lng = match.coordinates?.x
     if (!c?.city || !c?.state || lat == null || lng == null) continue
 
-    // fromAddress/toAddress are TIGER range ends — parse house from matchedAddress
-    const house = houseNumberFromMatchedAddress(match.matchedAddress) || c.fromAddress
+    // fromAddress/toAddress are TIGER range ends — parse house from matchedAddress,
+    // then prefer the house number the buyer actually typed/selected.
+    const queryHouse = query.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1]
+    const house =
+      queryHouse || houseNumberFromMatchedAddress(match.matchedAddress) || c.fromAddress
     const streetBits = [
       house,
       c.preDirection,
@@ -175,12 +178,26 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const land = num(market.mktLandValue) ?? num(assessed.assdLandValue)
   const improvement = num(market.mktImprValue)
 
+  const address = (attom.address || {}) as Record<string, unknown>
   const fields: Record<string, unknown> = {
     factsStatus: 'live',
     addressSource: 'edge',
     lastSalePriceLabel: 'Not shown (buyer-first)',
     claimedSqft: undefined,
     ownerOccupied: absentee.includes('OWNER') || ownerBlock.absenteeOwnerStatus === 'O',
+  }
+
+  if (typeof address.line1 === 'string' && address.line1.trim()) {
+    fields.address = titleCaseStreet(address.line1)
+  }
+  if (typeof address.locality === 'string' && address.locality.trim()) {
+    fields.city = titleCaseStreet(address.locality)
+  }
+  if (typeof address.countrySubd === 'string' && address.countrySubd.trim()) {
+    fields.state = String(address.countrySubd).toUpperCase().slice(0, 2)
+  }
+  if (typeof address.postal1 === 'string' && address.postal1.trim()) {
+    fields.zipCode = String(address.postal1).split('-')[0]!.trim()
   }
 
   if (sqft != null) fields.sqft = Math.round(sqft)
@@ -315,7 +332,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const match = matches[0] ?? null
+    let match = matches[0] ?? null
     if (!match) {
       return new Response(JSON.stringify({ match: null, matches: [], factsStatus: 'pending' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -323,6 +340,33 @@ Deno.serve(async (req) => {
     }
 
     const attom = await fetchAttomFacts(match)
+    if (attom.property) {
+      const queryHouse = query.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1]
+      const attomStreet =
+        typeof attom.property.address === 'string' ? attom.property.address : null
+      const attomHouse = attomStreet?.match(/^(\d+[A-Za-z]?)\b/)?.[1]
+      if (attomStreet && (!queryHouse || !attomHouse || queryHouse === attomHouse)) {
+        const city =
+          typeof attom.property.city === 'string' ? attom.property.city : match.city
+        const state =
+          typeof attom.property.state === 'string' ? attom.property.state : match.state
+        const zipCode =
+          typeof attom.property.zipCode === 'string' ? attom.property.zipCode : match.zipCode
+        const formatted = zipCode
+          ? `${attomStreet}, ${city}, ${state} ${zipCode}`
+          : `${attomStreet}, ${city}, ${state}`
+        match = {
+          ...match,
+          street: attomStreet,
+          city,
+          state,
+          zipCode,
+          formatted,
+          id: stableAddressId({ street: attomStreet, city, state, zipCode }),
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         match,

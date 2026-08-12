@@ -89,14 +89,17 @@ async function searchCensus(query: string): Promise<ResolvedAddress[]> {
     }
   }
 
+  const queryHouse = query.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1]
   const matches: ResolvedAddress[] = []
   for (const match of censusJson.result?.addressMatches ?? []) {
     const c = match.addressComponents
     const lat = match.coordinates?.y
     const lng = match.coordinates?.x
     if (!c?.city || !c.state || lat == null || lng == null) continue
-    // fromAddress/toAddress are TIGER range ends — parse house from matchedAddress
+    // fromAddress/toAddress are TIGER range ends — parse house from matchedAddress,
+    // then prefer the house number the buyer actually typed/selected.
     const house =
+      queryHouse ||
       (match.matchedAddress || '').split(',')[0]?.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1] ||
       c.fromAddress
     const streetBits = [
@@ -177,12 +180,26 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const land = num(market.mktLandValue) ?? num(assessed.assdLandValue)
   const improvement = num(market.mktImprValue)
 
+  const address = (attom.address || {}) as Record<string, unknown>
   const fields: Record<string, unknown> = {
     factsStatus: 'live',
     addressSource: 'edge',
     lastSalePriceLabel: 'Not shown (buyer-first)',
     claimedSqft: undefined,
     ownerOccupied: absentee.includes('OWNER') || ownerBlock.absenteeOwnerStatus === 'O',
+  }
+
+  if (typeof address.line1 === 'string' && address.line1.trim()) {
+    fields.address = titleCaseStreet(address.line1)
+  }
+  if (typeof address.locality === 'string' && address.locality.trim()) {
+    fields.city = titleCaseStreet(address.locality)
+  }
+  if (typeof address.countrySubd === 'string' && address.countrySubd.trim()) {
+    fields.state = String(address.countrySubd).toUpperCase().slice(0, 2)
+  }
+  if (typeof address.postal1 === 'string' && address.postal1.trim()) {
+    fields.zipCode = String(address.postal1).split('-')[0]!.trim()
   }
 
   if (sqft != null) fields.sqft = Math.round(sqft)
@@ -286,7 +303,7 @@ function propertyLookupApiPlugin(attomApiKey: string | undefined): Plugin {
       return
     }
 
-    const match = matches[0] ?? null
+    let match = matches[0] ?? null
     if (!match) {
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json')
@@ -303,6 +320,27 @@ function propertyLookupApiPlugin(attomApiKey: string | undefined): Plugin {
       if (attom.ok) {
         property = attom.property
         factsStatus = 'live'
+        // Prefer ATTOM's canonical street line when the house number still matches.
+        const queryHouse = query.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1]
+        const attomStreet = typeof property.address === 'string' ? property.address : null
+        const attomHouse = attomStreet?.match(/^(\d+[A-Za-z]?)\b/)?.[1]
+        if (attomStreet && (!queryHouse || !attomHouse || queryHouse === attomHouse)) {
+          const city = typeof property.city === 'string' ? property.city : match.city
+          const state = typeof property.state === 'string' ? property.state : match.state
+          const zipCode = typeof property.zipCode === 'string' ? property.zipCode : match.zipCode
+          const formatted = zipCode
+            ? `${attomStreet}, ${city}, ${state} ${zipCode}`
+            : `${attomStreet}, ${city}, ${state}`
+          match = {
+            ...match,
+            street: attomStreet,
+            city,
+            state,
+            zipCode,
+            formatted,
+            id: stableAddressId({ street: attomStreet, city, state, zipCode }),
+          }
+        }
       } else {
         attomError = attom.error
       }

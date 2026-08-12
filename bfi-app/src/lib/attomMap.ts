@@ -4,6 +4,7 @@
  */
 
 import type { MockProperty } from '@/data/mockProperty'
+import { titleCaseStreet } from '@/lib/addressSearch'
 
 type AttomOwner = {
   fullName?: string
@@ -201,6 +202,15 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
     // Buyer-first: never surface sale price from ATTOM
     lastSalePriceLabel: 'Not shown (buyer-first)',
   }
+
+  const line1 = attom.address?.line1?.trim()
+  const locality = attom.address?.locality?.trim()
+  const stateAbbr = attom.address?.countrySubd?.trim()
+  const postal = attom.address?.postal1?.trim()
+  if (line1) fields.address = titleCaseStreet(line1)
+  if (locality) fields.city = titleCaseStreet(locality)
+  if (stateAbbr) fields.state = stateAbbr.toUpperCase().slice(0, 2)
+  if (postal) fields.zipCode = postal.split('-')[0]!.trim()
 
   if (sqft != null) fields.sqft = Math.round(sqft)
   if (beds != null) fields.bedrooms = beds

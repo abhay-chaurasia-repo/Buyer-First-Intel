@@ -16,7 +16,8 @@ import { SearchPaywall, SearchQuotaBar } from '@/components/SearchQuotaPanel'
 import type { ResolvedAddress } from '@/data/addressTypes'
 import { authMethodLabel } from '@/data/authSession'
 import { APP_NAME } from '@/data/brand'
-import { suggestAddresses } from '@/lib/propertyLookup'
+import { isHouseNumberOnlyQuery } from '@/lib/addressSearch'
+import { suggestAddresses, rememberSelectedAddress } from '@/lib/propertyLookup'
 import {
   activateRemoteSearchSubscription,
   consumeSearch,
@@ -45,6 +46,7 @@ export function HomeScreen() {
   const paywallRef = useRef<HTMLDivElement>(null)
   const suggestSeq = useRef(0)
   const suggesting = showSuggestions && query.trim().length > 0
+  const houseOnly = isHouseNumberOnlyQuery(query)
 
   async function refreshQuota() {
     const next = await fetchSearchQuotaSnapshot(ownerId)
@@ -81,7 +83,6 @@ export function HomeScreen() {
     const trimmed = query.trim()
     setSearchError(null)
 
-    // Show the panel as soon as typing starts
     if (trimmed.length === 0) {
       setSuggestions([])
       setSuggestError(null)
@@ -91,13 +92,6 @@ export function HomeScreen() {
     }
 
     setShowSuggestions(true)
-
-    if (trimmed.length < 3) {
-      setSuggestions([])
-      setSuggestError(null)
-      setSuggestBusy(false)
-      return
-    }
 
     const seq = ++suggestSeq.current
     setSuggestBusy(true)
@@ -113,12 +107,13 @@ export function HomeScreen() {
         setSuggestError(null)
         setSuggestions(result.matches)
       })
-    }, 200)
+    }, houseOnly ? 80 : 160)
 
     return () => window.clearTimeout(timer)
-  }, [query])
+  }, [query, houseOnly])
 
-  async function goToAddress(formatted: string) {
+  async function goToAddress(formatted: string, selected?: ResolvedAddress) {
+    if (selected) rememberSelectedAddress(selected)
     setQuotaBusy(true)
     setSearchError(null)
     const access = await consumeSearch(formatted, ownerId)
@@ -139,6 +134,12 @@ export function HomeScreen() {
     const address = query.trim()
     if (!address || quotaBusy) return
 
+    if (houseOnly) {
+      setSearchError('Add the street name to match a US property (example: 3147 Swallow Dr).')
+      setShowSuggestions(true)
+      return
+    }
+
     setQuotaBusy(true)
     setSearchError(null)
     const result = await suggestAddresses(address)
@@ -152,7 +153,7 @@ export function HomeScreen() {
     if (!match) {
       setQuotaBusy(false)
       setSearchError(
-        'No US address match found. Add city and state (example: 3150 Duval St, Austin, TX).',
+        'No US address match found. Add a street name, city, and state (example: 3147 Swallow Dr, Marietta, GA).',
       )
       setShowSuggestions(true)
       return
@@ -160,23 +161,14 @@ export function HomeScreen() {
 
     setQuery(match.formatted)
     setSuggestions(result.matches)
-    const access = await consumeSearch(match.formatted, ownerId)
-    await refreshQuota()
     setQuotaBusy(false)
-
-    if (!access.ok) {
-      setShowPaywall(true)
-      return
-    }
-
-    setShowSuggestions(false)
-    navigate(`/property/${encodeURIComponent(match.formatted)}`)
+    await goToAddress(match.formatted, match)
   }
 
   async function handlePickSuggestion(match: ResolvedAddress) {
     setQuery(match.formatted)
     setShowSuggestions(false)
-    await goToAddress(match.formatted)
+    await goToAddress(match.formatted, match)
   }
 
   async function handleSubscribe() {
@@ -328,14 +320,9 @@ export function HomeScreen() {
               <div
                 id="address-suggestions"
                 role="listbox"
-                className="relative z-40 mt-2 max-h-[min(18rem,42vh)] overflow-y-auto overscroll-contain rounded-2xl border border-white/25 bg-night-elevated shadow-[0_16px_40px_rgb(0_0_0/0.55)]"
+                className="relative z-40 mt-2 max-h-[min(18rem,42vh)] overflow-y-auto overscroll-contain rounded-2xl border border-white/25 bg-[#2a1f20] shadow-[0_16px_40px_rgb(0_0_0/0.55)]"
                 data-testid="address-suggestions"
               >
-                {query.trim().length < 3 ? (
-                  <p className="px-3 py-3 text-[12px] text-night-faint">
-                    Keep typing the street — we’ll suggest matches for diligence.
-                  </p>
-                ) : null}
                 {suggestBusy ? (
                   <p className="px-3 py-3 text-[12px] text-night-faint">
                     Matching addresses for diligence…
@@ -344,12 +331,13 @@ export function HomeScreen() {
                 {suggestError ? (
                   <p className="px-3 py-3 text-[12px] text-red-300">{suggestError}</p>
                 ) : null}
-                {!suggestBusy &&
-                !suggestError &&
-                query.trim().length >= 3 &&
-                suggestions.length === 0 ? (
+                {!suggestBusy && !suggestError && suggestions.length === 0 ? (
                   <p className="px-3 py-3 text-[12px] text-night-faint">
-                    No match yet — add city and state for a stronger county lookup.
+                    {houseOnly
+                      ? 'Keep going — type the street (e.g. 3147 Swallow) and options appear.'
+                      : query.trim().length < 3
+                        ? 'Keep typing the street name — options appear as the address takes shape.'
+                        : 'Still looking — try adding city and state for a stronger match.'}
                   </p>
                 ) : null}
                 {suggestions.map((match) => (
@@ -359,7 +347,7 @@ export function HomeScreen() {
                     role="option"
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => void handlePickSuggestion(match)}
-                    className="flex w-full items-start gap-2 border-t border-white/10 px-3 py-2.5 text-left first:border-t-0 hover:bg-white/8 touch-manipulation"
+                    className="flex w-full items-start gap-2 border-t border-white/10 bg-[#2a1f20] px-3 py-2.5 text-left first:border-t-0 hover:bg-[#3a2a2b] touch-manipulation"
                     data-testid={`address-suggestion-${match.id}`}
                   >
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
@@ -386,25 +374,27 @@ export function HomeScreen() {
             </p>
           ) : null}
 
-          <div
-            ref={paywallRef}
-            className="animate-bfi-rise mt-3 w-full scroll-mt-3"
-            style={{ animationDelay: '110ms' }}
-          >
-            {snapshot ? (
-              <SearchQuotaBar snapshot={snapshot} />
-            ) : (
-              <p className="text-center text-[12px] text-night-faint">Loading search plan…</p>
-            )}
-            {snapshot && showPaywall ? (
-              <SearchPaywall
-                snapshot={snapshot}
-                onSubscribe={() => void handleSubscribe()}
-                busy={quotaBusy}
-                error={billingError}
-              />
-            ) : null}
-          </div>
+          {!suggesting ? (
+            <div
+              ref={paywallRef}
+              className="animate-bfi-rise mt-3 w-full scroll-mt-3"
+              style={{ animationDelay: '110ms' }}
+            >
+              {snapshot ? (
+                <SearchQuotaBar snapshot={snapshot} />
+              ) : (
+                <p className="text-center text-[12px] text-night-faint">Loading search plan…</p>
+              )}
+              {snapshot && showPaywall ? (
+                <SearchPaywall
+                  snapshot={snapshot}
+                  onSubscribe={() => void handleSubscribe()}
+                  busy={quotaBusy}
+                  error={billingError}
+                />
+              ) : null}
+            </div>
+          ) : null}
 
           {!suggesting ? (
             <>

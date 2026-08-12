@@ -128,13 +128,36 @@ async function searchCensus(query: string, limit = 6): Promise<ResolvedAddress[]
     result?: { addressMatches?: CensusMatch[] }
   }
   const matches = data.result?.addressMatches ?? []
+  const queryHouse = query.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1]
   const resolved: ResolvedAddress[] = []
   for (const match of matches) {
     const item = censusMatchToResolved(match)
-    if (item) resolved.push(item)
+    if (!item) continue
+    resolved.push(queryHouse ? lockStreetHouse(item, queryHouse) : item)
     if (resolved.length >= limit) break
   }
   return resolved
+}
+
+function lockStreetHouse(resolved: ResolvedAddress, wanted: string): ResolvedAddress {
+  const got = resolved.street.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1]
+  if (!got || got === wanted) return resolved
+  const streetRest = resolved.street.replace(/^\d+[A-Za-z]?\s*/, '').trim()
+  const street = `${wanted} ${streetRest}`.trim()
+  const formatted = resolved.zipCode
+    ? `${street}, ${resolved.city}, ${resolved.state} ${resolved.zipCode}`
+    : `${street}, ${resolved.city}, ${resolved.state}`
+  return {
+    ...resolved,
+    id: stableAddressId({
+      street,
+      city: resolved.city,
+      state: resolved.state,
+      zipCode: resolved.zipCode,
+    }),
+    street,
+    formatted,
+  }
 }
 
 /** Census has no browser CORS — ignore network failures and fall through. */
@@ -158,6 +181,8 @@ type NominatimHit = {
     village?: string
     hamlet?: string
     municipality?: string
+    suburb?: string
+    neighbourhood?: string
     county?: string
     state?: string
     postcode?: string
@@ -234,7 +259,16 @@ function nominatimToResolved(hit: NominatimHit): ResolvedAddress | null {
   if (!road || !a.house_number) return null
 
   const street = titleCaseStreet(`${a.house_number} ${road}`)
-  const cityName = a.city || a.town || a.village || a.hamlet || a.municipality
+  // Many US OSM hits put the place in neighbourhood/suburb/county, not city.
+  const cityName =
+    a.city ||
+    a.town ||
+    a.village ||
+    a.hamlet ||
+    a.municipality ||
+    a.suburb ||
+    a.neighbourhood ||
+    a.county
   if (!cityName || !a.state) return null
 
   const city = titleCaseStreet(cityName)
@@ -410,6 +444,11 @@ function friendlySearchError(err: unknown) {
   return message
 }
 
+/** True when the buyer has only typed a house number so far. */
+export function isHouseNumberOnlyQuery(query: string) {
+  return /^\d+[A-Za-z]?\s*$/i.test(query.trim())
+}
+
 /** Suggest / resolve US addresses for the search box. */
 export async function searchAddresses(query: string): Promise<AddressSearchResult> {
   const trimmed = query.trim()
@@ -423,10 +462,11 @@ export async function searchAddresses(query: string): Promise<AddressSearchResul
       return { ok: true, matches: dedupeMatches(edge).slice(0, 6) }
     }
 
-    // Browser-safe providers first (Census has no CORS headers).
-    let matches = await searchNominatimSafe(trimmed)
+    // Photon first — better partial-street autocomplete than Nominatim.
+    // Census has no browser CORS headers, so keep it last / safe.
+    let matches = await searchPhotonSafe(trimmed, 8)
     if (matches.length === 0) {
-      matches = await searchPhotonSafe(trimmed)
+      matches = await searchNominatimSafe(trimmed, 8)
     }
     if (matches.length === 0) {
       matches = await searchCensusSafe(trimmed)
