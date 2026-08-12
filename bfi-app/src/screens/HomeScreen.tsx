@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
@@ -34,12 +34,23 @@ export function HomeScreen() {
   const [showPaywall, setShowPaywall] = useState(false)
   const [quotaBusy, setQuotaBusy] = useState(false)
   const [billingError, setBillingError] = useState<string | null>(null)
+  const paywallRef = useRef<HTMLDivElement>(null)
 
   async function refreshQuota() {
     const next = await fetchSearchQuotaSnapshot(ownerId)
     setSnapshot(next)
     setShowPaywall(!next.subscribed && next.remaining === 0)
   }
+
+  useEffect(() => {
+    if (!showPaywall) return
+    const node = paywallRef.current
+    if (!node) return
+    // Bring paywall into the scroll area above the bottom nav (do not cover it).
+    window.requestAnimationFrame(() => {
+      node.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [showPaywall])
 
   useEffect(() => {
     let cancelled = false
@@ -108,9 +119,15 @@ export function HomeScreen() {
     <AppShell
       scene="search"
       sceneIntensity="medium"
-      contentClassName="relative min-h-0 overflow-y-auto overscroll-contain text-night-ink"
+      contentClassName="relative min-h-0 overflow-y-auto overscroll-contain scroll-pt-4 text-night-ink"
     >
-      <div className="relative flex flex-1 flex-col px-5 pb-4 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]">
+      <div
+        className={cn(
+          'relative flex flex-1 flex-col px-5 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]',
+          // Extra scroll room so the subscribe box clears the fixed bottom nav
+          showPaywall ? 'pb-10' : 'pb-4',
+        )}
+      >
         <header className="animate-bfi-fade flex items-center justify-between gap-3">
           <BrandLogo size={36} />
           {isSignedIn && session ? (
@@ -207,7 +224,11 @@ export function HomeScreen() {
             </div>
           </form>
 
-          <div className="animate-bfi-rise mt-3 w-full" style={{ animationDelay: '110ms' }}>
+          <div
+            ref={paywallRef}
+            className="animate-bfi-rise mt-3 w-full scroll-mt-3"
+            style={{ animationDelay: '110ms' }}
+          >
             {snapshot ? <SearchQuotaBar snapshot={snapshot} /> : (
               <p className="text-center text-[12px] text-night-faint">Loading search plan…</p>
             )}

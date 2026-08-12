@@ -5,7 +5,6 @@ import {
   CalendarClock,
   Check,
   ChevronDown,
-  Plus,
   Star,
   StickyNote,
   Trash2,
@@ -17,10 +16,9 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/auth/AuthProvider'
 import { persistBuyerVerified, loadBuyerVoteState } from '@/data/buyerCommunityStorage'
 import {
-  addNote,
-  deleteNote,
-  loadNotes,
-  type SavedNote,
+  loadNotePad,
+  notesCount,
+  saveNotePad,
 } from '@/data/propertyNotesStorage'
 import {
   checkDueVisitReminders,
@@ -168,17 +166,6 @@ function WatchlistMetaRail({
   )
 }
 
-function formatNoteWhen(iso: string) {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-    })
-  } catch {
-    return ''
-  }
-}
-
 function PropertyNotes({
   propertyId,
   onNotesChange,
@@ -186,122 +173,91 @@ function PropertyNotes({
   propertyId: string
   onNotesChange?: (count: number) => void
 }) {
-  const [notes, setNotes] = useState<SavedNote[]>(() => loadNotes(propertyId))
-  const [draft, setDraft] = useState('')
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [draft, setDraft] = useState(() => loadNotePad(propertyId))
+  const [savedPad, setSavedPad] = useState(() => loadNotePad(propertyId))
+  const [justSaved, setJustSaved] = useState(false)
 
   useEffect(() => {
-    const next = loadNotes(propertyId)
-    setNotes(next)
-    setDraft('')
-    setExpandedId(null)
-    onNotesChange?.(next.length)
+    const pad = loadNotePad(propertyId)
+    setDraft(pad)
+    setSavedPad(pad)
+    setJustSaved(false)
+    onNotesChange?.(pad.trim() ? 1 : 0)
   }, [propertyId, onNotesChange])
+
+  const dirty = draft.trim() !== savedPad.trim()
 
   function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!draft.trim()) return
-    const next = addNote(propertyId, draft)
-    setNotes(next)
-    onNotesChange?.(next.length)
-    setDraft('')
-    setExpandedId(next[0]?.id ?? null)
+    const saved = saveNotePad(propertyId, draft)
+    const pad = saved?.text ?? ''
+    setDraft(pad)
+    setSavedPad(pad)
+    setJustSaved(Boolean(pad))
+    onNotesChange?.(pad.trim() ? 1 : 0)
   }
 
-  function handleDelete(noteId: string) {
-    const next = deleteNote(propertyId, noteId)
-    setNotes(next)
-    onNotesChange?.(next.length)
-    if (expandedId === noteId) setExpandedId(null)
+  function handleClear() {
+    saveNotePad(propertyId, '')
+    setDraft('')
+    setSavedPad('')
+    setJustSaved(false)
+    onNotesChange?.(0)
   }
 
   return (
     <div className="border-t border-white/15 pt-2" data-testid={`notes-section-${propertyId}`}>
       <form
         onSubmit={handleSave}
-        className="flex items-center gap-1.5"
+        className="space-y-2"
         data-testid={`notes-form-${propertyId}`}
       >
-        <div className="relative min-w-0 flex-1">
-          <StickyNote
-            className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-saffron-glow/80"
-            aria-hidden
-          />
-          <input
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Jot a quick private note…"
-            className="min-h-9 w-full rounded-xl border border-white/20 bg-night/30 py-2 pr-3 pl-8 text-[13px] text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/55"
-            data-testid={`input-property-note-${propertyId}`}
-          />
+        <label className="flex items-center gap-1.5 text-[11px] font-semibold text-saffron-glow">
+          <StickyNote className="h-3.5 w-3.5" aria-hidden />
+          Private note
+        </label>
+        <textarea
+          value={draft}
+          onChange={(event) => {
+            setDraft(event.target.value)
+            setJustSaved(false)
+          }}
+          rows={3}
+          placeholder="Jot private thoughts — edit and save anytime…"
+          className="min-h-[4.5rem] w-full resize-y rounded-xl border border-white/20 bg-night/30 px-3 py-2.5 text-[13px] leading-relaxed text-night-ink outline-none placeholder:text-night-faint focus:border-saffron/55"
+          data-testid={`input-property-note-${propertyId}`}
+        />
+        <div className="flex items-center gap-2">
+          <button
+            type="submit"
+            disabled={!dirty}
+            className={cn(
+              'inline-flex min-h-9 flex-1 items-center justify-center rounded-xl px-3 text-[12px] font-semibold transition-colors touch-manipulation',
+              dirty
+                ? 'bg-saffron text-white shadow-[0_4px_12px_rgb(232_145_58/0.3)]'
+                : 'border border-white/15 text-night-faint',
+            )}
+            data-testid={`button-save-note-${propertyId}`}
+          >
+            {savedPad.trim() && !dirty ? 'Saved' : 'Save note'}
+          </button>
+          {savedPad.trim() ? (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 px-3 text-[12px] font-semibold text-night-muted touch-manipulation hover:border-watch/40 hover:text-watch-glow"
+              data-testid={`button-clear-note-${propertyId}`}
+            >
+              Clear
+            </button>
+          ) : null}
         </div>
-        <button
-          type="submit"
-          disabled={!draft.trim()}
-          className={cn(
-            'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors touch-manipulation',
-            draft.trim()
-              ? 'bg-saffron text-white shadow-[0_4px_12px_rgb(232_145_58/0.3)]'
-              : 'border border-white/15 text-night-faint',
-          )}
-          aria-label="Add note"
-          data-testid={`button-save-note-${propertyId}`}
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} />
-        </button>
+        {justSaved ? (
+          <p className="text-[10px] font-medium text-plus-glow" data-testid={`notes-saved-${propertyId}`}>
+            Note saved — you can edit it anytime.
+          </p>
+        ) : null}
       </form>
-
-      {notes.length > 0 ? (
-        <ul
-          className="mt-1.5 max-h-[5.5rem] space-y-1 overflow-y-auto overscroll-contain"
-          data-testid={`notes-list-${propertyId}`}
-        >
-          {notes.map((note, index) => {
-            const expanded = expandedId === note.id
-            return (
-              <li
-                key={note.id}
-                className={cn(
-                  'animate-bfi-fade flex items-start gap-1.5 rounded-lg border-l-2 py-1.5 pr-1 pl-2',
-                  index % 2 === 0
-                    ? 'border-saffron/55 bg-saffron/10'
-                    : 'border-saffron-bright/45 bg-white/[0.04]',
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={() => setExpandedId(expanded ? null : note.id)}
-                  className="min-w-0 flex-1 text-left touch-manipulation"
-                  aria-expanded={expanded}
-                >
-                  <p
-                    className={cn(
-                      'text-[12px] leading-snug text-night-ink',
-                      expanded ? 'whitespace-pre-wrap' : 'truncate',
-                    )}
-                  >
-                    {note.text}
-                  </p>
-                  {expanded ? (
-                    <p className="mt-0.5 text-[9px] font-medium tracking-wide text-night-faint uppercase">
-                      {formatNoteWhen(note.createdAt)}
-                    </p>
-                  ) : null}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(note.id)}
-                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-night-faint transition-colors hover:bg-saffron/20 hover:text-saffron-glow touch-manipulation"
-                  aria-label="Delete note"
-                  data-testid={`button-delete-note-${note.id}`}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      ) : null}
     </div>
   )
 }
@@ -322,7 +278,7 @@ function WatchlistRow({
   const [open, setOpen] = useState(false)
   const [planning, setPlanning] = useState(false)
   const status = visitPlanStatus(item)
-  const [noteCount, setNoteCount] = useState(() => loadNotes(item.id).length)
+  const [noteCount, setNoteCount] = useState(() => notesCount(item.id))
   const [hasShared, setHasShared] = useState(
     () => loadBuyerVoteState(item.id).myVotes.length > 0,
   )

@@ -1,4 +1,4 @@
-/** Private property notes — shared by Watchlist (primary) and any other surfaces. */
+/** Private property notes — one re-editable pad per home (not a row log). */
 
 import { readScopedItem, writeScopedItem } from './ownerScope'
 
@@ -8,6 +8,7 @@ export type SavedNote = {
   id: string
   text: string
   createdAt: string
+  updatedAt?: string
 }
 
 export function loadNotes(propertyKey: string): SavedNote[] {
@@ -37,17 +38,56 @@ export function persistNotes(propertyKey: string, notes: SavedNote[]) {
   }
 }
 
-export function addNote(propertyKey: string, text: string): SavedNote[] {
+/** Combined pad text for editing (legacy multi-row notes merge into one field). */
+export function loadNotePad(propertyKey: string): string {
+  const notes = loadNotes(propertyKey)
+  if (notes.length === 0) return ''
+  if (notes.length === 1) return notes[0]!.text
+  return notes
+    .map((note) => note.text.trim())
+    .filter(Boolean)
+    .join('\n\n')
+}
+
+/**
+ * Save (or clear) the single private note pad for a property.
+ * Re-saving updates the same note instead of appending rows.
+ */
+export function saveNotePad(propertyKey: string, text: string): SavedNote | null {
   const trimmed = text.trim()
-  if (!trimmed) return loadNotes(propertyKey)
-  const next: SavedNote[] = [
-    {
-      id: `note-${Date.now()}`,
-      text: trimmed,
-      createdAt: new Date().toISOString(),
-    },
-    ...loadNotes(propertyKey),
-  ]
+  const existing = loadNotes(propertyKey)
+  const now = new Date().toISOString()
+
+  if (!trimmed) {
+    persistNotes(propertyKey, [])
+    return null
+  }
+
+  const primary = existing[0]
+  const next: SavedNote = {
+    id: primary?.id ?? `note-${Date.now()}`,
+    text: trimmed,
+    createdAt: primary?.createdAt ?? now,
+    updatedAt: now,
+  }
+  persistNotes(propertyKey, [next])
+  return next
+}
+
+export function addNote(propertyKey: string, text: string): SavedNote[] {
+  const saved = saveNotePad(propertyKey, text)
+  return saved ? [saved] : []
+}
+
+export function updateNote(propertyKey: string, noteId: string, text: string): SavedNote[] {
+  const trimmed = text.trim()
+  if (!trimmed) {
+    return deleteNote(propertyKey, noteId)
+  }
+  const now = new Date().toISOString()
+  const next = loadNotes(propertyKey).map((note) =>
+    note.id === noteId ? { ...note, text: trimmed, updatedAt: now } : note,
+  )
   persistNotes(propertyKey, next)
   return next
 }
@@ -59,5 +99,5 @@ export function deleteNote(propertyKey: string, noteId: string): SavedNote[] {
 }
 
 export function notesCount(propertyKey: string) {
-  return loadNotes(propertyKey).length
+  return loadNotePad(propertyKey).trim() ? 1 : 0
 }

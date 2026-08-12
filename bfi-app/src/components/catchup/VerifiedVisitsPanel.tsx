@@ -8,7 +8,7 @@ import {
   Tag,
   Users,
 } from 'lucide-react'
-import { PlusWatchLegend } from '@/components/PlusWatchLegend'
+import { PlusWatchLegend, plusWatchChipClass } from '@/components/PlusWatchLegend'
 import type { MockProperty } from '@/data/mockProperty'
 import {
   formatVisitDate,
@@ -23,8 +23,8 @@ import { labelToneById } from '@/data/buyerCommunityLabels'
 import { cn } from '@/lib/utils'
 
 function toneClass(tone: VisitPatternSignal['tone']) {
-  if (tone === 'positive') return 'text-saffron-glow'
-  if (tone === 'caution') return 'text-saffron-bright'
+  if (tone === 'positive') return 'text-plus-glow'
+  if (tone === 'caution') return 'text-watch-glow'
   return 'text-night-muted'
 }
 
@@ -75,22 +75,18 @@ function VisitRow({ visit }: { visit: VerifiedVisit }) {
             <Tag className="h-3 w-3 text-saffron-glow" aria-hidden />
             {isYou ? 'Your Buyer Community labels' : 'Buyer Community labels'}
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="space-y-1.5">
             {visit.communityLabelIds.map((labelId) => {
               const text = labelTextById(labelId)
               const tone = labelToneById(labelId)
+              const isPlus = tone === 'positive'
               return (
-                <span
-                  key={labelId}
-                  className={cn(
-                    'rounded-lg border px-2 py-1 text-[11px] font-medium',
-                    tone === 'positive'
-                      ? 'border-saffron/35 bg-saffron/15 text-saffron-glow'
-                      : 'border-white/20 bg-night-ink/10 text-night-muted',
-                  )}
-                >
-                  {text}
-                </span>
+                <div key={labelId} className="flex items-start gap-2">
+                  <span className={cn('mt-0.5 shrink-0', plusWatchChipClass(isPlus ? 'plus' : 'watch'))}>
+                    {isPlus ? 'Plus' : 'Watch'}
+                  </span>
+                  <span className="min-w-0 text-[12px] leading-snug text-night-ink">{text}</span>
+                </div>
               )
             })}
           </div>

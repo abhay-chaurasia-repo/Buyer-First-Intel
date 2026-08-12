@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ShieldCheck, ThumbsUp } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
+import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import {
   BUYER_LABEL_CATEGORIES,
   BUYER_COMMUNITY_LABELS,
@@ -88,12 +89,7 @@ function CategoryBlock({
                 data-testid={`buyer-label-${label.id}`}
               >
                 <span
-                  className={cn(
-                    'shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
-                    label.tone === 'positive'
-                      ? 'bg-saffron/20 text-saffron-glow'
-                      : 'bg-night-ink/12 text-night-muted',
-                  )}
+                  className={cn('shrink-0', plusWatchChipClass(label.tone))}
                   data-testid={`tone-${label.id}`}
                 >
                   {label.tone === 'positive' ? 'Plus' : 'Watch'}
@@ -203,10 +199,10 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
           <span>
             {BUYER_COMMUNITY_LABELS.length} labels · {totalVotes} community upvotes
           </span>
-          <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 font-bold text-saffron-glow">
+          <span className={cn('rounded-md px-1.5 py-0.5 font-bold', plusWatchChipClass('plus'))}>
             Plus {BUYER_COMMUNITY_LABELS.filter((l) => l.tone === 'positive').length}
           </span>
-          <span className="rounded-md bg-night-ink/12 px-1.5 py-0.5 font-bold text-night-muted">
+          <span className={cn('rounded-md px-1.5 py-0.5 font-bold', plusWatchChipClass('watch'))}>
             Watch {BUYER_COMMUNITY_LABELS.filter((l) => l.tone === 'negative').length}
           </span>
           {voteState.myVotes.length > 0 ? (

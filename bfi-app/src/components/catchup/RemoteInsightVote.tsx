@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ThumbsUp } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
-import { PlusWatchLegend } from '@/components/PlusWatchLegend'
+import { PlusWatchLegend, plusWatchChipClass } from '@/components/PlusWatchLegend'
 import {
   labelById,
   labelRequiresVisit,
@@ -101,14 +101,7 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
               className="flex items-center gap-2 rounded-lg px-1 py-1"
               data-testid={`remote-insight-${label.id}`}
             >
-              <span
-                className={cn(
-                  'shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
-                  label.tone === 'positive'
-                    ? 'bg-saffron/20 text-saffron-glow'
-                    : 'bg-night-ink/12 text-night-muted',
-                )}
-              >
+              <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
                 {label.tone === 'positive' ? 'Plus' : 'Watch'}
               </span>
               <span className="min-w-0 flex-1 text-[12px] leading-snug text-night-ink">

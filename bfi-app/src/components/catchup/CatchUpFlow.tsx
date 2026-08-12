@@ -16,6 +16,7 @@ import {
   type CatchUpSurface,
 } from '@/data/catchUpApi'
 import { BUYER_COMMUNITY_LABELS } from '@/data/buyerCommunityLabels'
+import { PlusWatchLegend } from '@/components/PlusWatchLegend'
 import { BuyerCommunityPanel } from '@/components/catchup/BuyerCommunityPanel'
 import { RemoteInsightVote } from '@/components/catchup/RemoteInsightVote'
 import { VerifiedVisitsPanel } from '@/components/catchup/VerifiedVisitsPanel'
@@ -226,16 +227,7 @@ export function CatchUpFlow({
                 className="mt-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5 text-left"
                 data-testid="plus-watch-key"
               >
-                <p className="text-[12px] leading-snug text-night-ink">
-                  <span className="font-semibold text-saffron-glow">Plus</span>
-                  {' = '}
-                  upsides buyers noticed
-                </p>
-                <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
-                  <span className="font-semibold text-night-muted">Watch</span>
-                  {' = '}
-                  watch-outs to dig into
-                </p>
+                <PlusWatchLegend variant="full" showIntro={false} />
               </div>
             ) : (
               <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>

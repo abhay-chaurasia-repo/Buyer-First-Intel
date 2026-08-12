@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
+import { PlusWatchLegend, plusWatchChipClass } from '@/components/PlusWatchLegend'
 import { APP_TAGLINE } from '@/data/brand'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,7 @@ function SizeSnippet() {
         <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
           Remote insight · no visit needed
         </p>
+        <PlusWatchLegend variant="compact" showIntro={false} className="mt-1.5" />
         <div className="mt-1.5 space-y-1">
           {[
             { text: 'Published listing size matches county', tone: 'plus' as const, votes: 4 },
@@ -40,14 +42,7 @@ function SizeSnippet() {
             },
           ].map((label) => (
             <div key={label.text} className="flex items-center gap-2 py-1">
-              <span
-                className={cn(
-                  'shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
-                  label.tone === 'plus'
-                    ? 'bg-saffron/20 text-saffron-glow'
-                    : 'bg-night-ink/12 text-night-muted',
-                )}
-              >
+              <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
                 {label.tone === 'plus' ? 'Plus' : 'Watch'}
               </span>
               <span className="min-w-0 flex-1 text-[12px] leading-snug text-night-ink">
@@ -120,7 +115,8 @@ function CommunitySnippet() {
           Buyer Community
         </p>
       </div>
-      <div className="mt-3 space-y-1">
+      <PlusWatchLegend variant="compact" showIntro={false} className="mt-2.5" />
+      <div className="mt-2 space-y-1">
         {[
           { text: 'Quiet at night', tone: 'plus' as const, votes: 4 },
           { text: 'High-tension cables nearby', tone: 'watch' as const, votes: 2 },
@@ -131,14 +127,7 @@ function CommunitySnippet() {
             key={label.text}
             className="flex min-h-11 items-center gap-2 rounded-xl px-2 py-2"
           >
-            <span
-              className={cn(
-                'shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
-                label.tone === 'plus'
-                  ? 'bg-saffron/20 text-saffron-glow'
-                  : 'bg-night-ink/12 text-night-muted',
-              )}
-            >
+            <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
               {label.tone === 'plus' ? 'Plus' : 'Watch'}
             </span>
             <span className="min-w-0 flex-1 text-[13px] leading-snug text-night-ink">
