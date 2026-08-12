@@ -5,6 +5,7 @@ import {
   ClipboardCheck,
   FileSearch,
   LogOut,
+  MapPin,
   Search,
   Star,
 } from 'lucide-react'
@@ -12,8 +13,10 @@ import { useAuth } from '@/auth/AuthProvider'
 import { BrandLogo } from '@/components/BrandLogo'
 import { AppShell } from '@/components/layout/AppShell'
 import { SearchPaywall, SearchQuotaBar } from '@/components/SearchQuotaPanel'
+import type { ResolvedAddress } from '@/data/addressTypes'
 import { authMethodLabel } from '@/data/authSession'
 import { APP_NAME } from '@/data/brand'
+import { suggestAddresses } from '@/lib/propertyLookup'
 import {
   activateRemoteSearchSubscription,
   consumeSearch,
@@ -34,7 +37,13 @@ export function HomeScreen() {
   const [showPaywall, setShowPaywall] = useState(false)
   const [quotaBusy, setQuotaBusy] = useState(false)
   const [billingError, setBillingError] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<ResolvedAddress[]>([])
+  const [suggestBusy, setSuggestBusy] = useState(false)
+  const [suggestError, setSuggestError] = useState<string | null>(null)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const paywallRef = useRef<HTMLDivElement>(null)
+  const suggestSeq = useRef(0)
 
   async function refreshQuota() {
     const next = await fetchSearchQuotaSnapshot(ownerId)
@@ -46,7 +55,6 @@ export function HomeScreen() {
     if (!showPaywall) return
     const node = paywallRef.current
     if (!node) return
-    // Bring paywall into the scroll area above the bottom nav (do not cover it).
     window.requestAnimationFrame(() => {
       node.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
@@ -56,7 +64,6 @@ export function HomeScreen() {
     let cancelled = false
     void (async () => {
       await ensureRemoteProfile()
-      // If user already paid but webhook missed, sync from Stripe customer
       await confirmStripeCheckout(null)
       if (cancelled) return
       const next = await fetchSearchQuotaSnapshot(ownerId)
@@ -69,13 +76,40 @@ export function HomeScreen() {
     }
   }, [ownerId])
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const address = query.trim()
-    if (!address || quotaBusy) return
+  useEffect(() => {
+    const trimmed = query.trim()
+    setSearchError(null)
+    if (trimmed.length < 5) {
+      setSuggestions([])
+      setSuggestError(null)
+      setSuggestBusy(false)
+      return
+    }
 
+    const seq = ++suggestSeq.current
+    setSuggestBusy(true)
+    const timer = window.setTimeout(() => {
+      void suggestAddresses(trimmed).then((result) => {
+        if (seq !== suggestSeq.current) return
+        setSuggestBusy(false)
+        if (!result.ok) {
+          setSuggestError(result.error)
+          setSuggestions([])
+          return
+        }
+        setSuggestError(null)
+        setSuggestions(result.matches)
+        setShowSuggestions(true)
+      })
+    }, 350)
+
+    return () => window.clearTimeout(timer)
+  }, [query])
+
+  async function goToAddress(formatted: string) {
     setQuotaBusy(true)
-    const access = await consumeSearch(address, ownerId)
+    setSearchError(null)
+    const access = await consumeSearch(formatted, ownerId)
     await refreshQuota()
     setQuotaBusy(false)
 
@@ -84,7 +118,53 @@ export function HomeScreen() {
       return
     }
 
-    navigate(`/property/${encodeURIComponent(address)}`)
+    setShowSuggestions(false)
+    navigate(`/property/${encodeURIComponent(formatted)}`)
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const address = query.trim()
+    if (!address || quotaBusy) return
+
+    setQuotaBusy(true)
+    setSearchError(null)
+    const result = await suggestAddresses(address)
+    if (!result.ok) {
+      setQuotaBusy(false)
+      setSearchError(result.error)
+      return
+    }
+
+    const match = result.matches[0]
+    if (!match) {
+      setQuotaBusy(false)
+      setSearchError(
+        'No US address match found. Add city and state (example: 3150 Duval St, Austin, TX).',
+      )
+      setShowSuggestions(true)
+      return
+    }
+
+    setQuery(match.formatted)
+    setSuggestions(result.matches)
+    const access = await consumeSearch(match.formatted, ownerId)
+    await refreshQuota()
+    setQuotaBusy(false)
+
+    if (!access.ok) {
+      setShowPaywall(true)
+      return
+    }
+
+    setShowSuggestions(false)
+    navigate(`/property/${encodeURIComponent(match.formatted)}`)
+  }
+
+  async function handlePickSuggestion(match: ResolvedAddress) {
+    setQuery(match.formatted)
+    setShowSuggestions(false)
+    await goToAddress(match.formatted)
   }
 
   async function handleSubscribe() {
@@ -99,7 +179,6 @@ export function HomeScreen() {
         return
       }
       try {
-        // Stash that checkout started; success page also stores session_id from Stripe return URL
         sessionStorage.setItem('bfi.checkoutStartedAt', String(Date.now()))
       } catch {
         // ignore
@@ -108,7 +187,6 @@ export function HomeScreen() {
       return
     }
 
-    // Local / demo path when Stripe Edge Function is not configured yet
     await activateRemoteSearchSubscription(ownerId)
     await refreshQuota()
     setQuotaBusy(false)
@@ -124,7 +202,6 @@ export function HomeScreen() {
       <div
         className={cn(
           'relative flex flex-1 flex-col px-5 pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.35rem))]',
-          // Extra scroll room so the subscribe box clears the fixed bottom nav
           showPaywall ? 'pb-10' : 'pb-4',
         )}
       >
@@ -172,14 +249,14 @@ export function HomeScreen() {
               </span>
             </h1>
             <p className="mx-auto mt-10 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
-              Paste a property address. Verify public-record truth before you commit — and before you
+              Search a US property address. Match public records before you commit — and before you
               talk to an agent.
             </p>
           </div>
 
           <form
             onSubmit={handleSubmit}
-            className="animate-bfi-rise mt-6 w-full"
+            className="animate-bfi-rise relative mt-6 w-full"
             style={{ animationDelay: '80ms' }}
           >
             <label htmlFor={inputId} className="sr-only">
@@ -198,14 +275,25 @@ export function HomeScreen() {
                 id={inputId}
                 type="search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder="Paste property address"
+                onChange={(event) => {
+                  setQuery(event.target.value)
+                  setShowSuggestions(true)
+                }}
+                onFocus={() => {
+                  setIsFocused(true)
+                  setShowSuggestions(true)
+                }}
+                onBlur={() => {
+                  setIsFocused(false)
+                  window.setTimeout(() => setShowSuggestions(false), 150)
+                }}
+                placeholder="Street, city, state"
                 autoComplete="street-address"
                 enterKeyHint="search"
                 className="min-w-0 flex-1 bg-transparent py-3 text-[1.05rem] text-night-ink outline-none placeholder:text-night-faint"
                 data-testid="input-address-search"
+                aria-autocomplete="list"
+                aria-controls="address-suggestions"
               />
               <button
                 type="submit"
@@ -222,14 +310,62 @@ export function HomeScreen() {
                 <ArrowRight className="h-5 w-5" />
               </button>
             </div>
+
+            {showSuggestions && (suggestions.length > 0 || suggestBusy || suggestError) ? (
+              <div
+                id="address-suggestions"
+                role="listbox"
+                className="absolute inset-x-0 top-[calc(100%+0.4rem)] z-30 overflow-hidden rounded-2xl border border-white/25 bg-night/95 shadow-[0_16px_40px_rgb(0_0_0/0.45)] backdrop-blur-md"
+                data-testid="address-suggestions"
+              >
+                {suggestBusy ? (
+                  <p className="px-3 py-3 text-[12px] text-night-faint">Matching US addresses…</p>
+                ) : null}
+                {suggestError ? (
+                  <p className="px-3 py-3 text-[12px] text-red-300">{suggestError}</p>
+                ) : null}
+                {suggestions.map((match) => (
+                  <button
+                    key={match.id}
+                    type="button"
+                    role="option"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => void handlePickSuggestion(match)}
+                    className="flex w-full items-start gap-2 border-t border-white/10 px-3 py-2.5 text-left first:border-t-0 hover:bg-white/8 touch-manipulation"
+                    data-testid={`address-suggestion-${match.id}`}
+                  >
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-saffron-glow" aria-hidden />
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-night-ink">
+                        {match.street}
+                      </span>
+                      <span className="block text-[11px] text-night-faint">
+                        {match.city}, {match.state} {match.zipCode}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </form>
+
+          {searchError ? (
+            <p
+              className="mt-2 w-full text-center text-[12px] text-red-300"
+              data-testid="address-search-error"
+            >
+              {searchError}
+            </p>
+          ) : null}
 
           <div
             ref={paywallRef}
             className="animate-bfi-rise mt-3 w-full scroll-mt-3"
             style={{ animationDelay: '110ms' }}
           >
-            {snapshot ? <SearchQuotaBar snapshot={snapshot} /> : (
+            {snapshot ? (
+              <SearchQuotaBar snapshot={snapshot} />
+            ) : (
               <p className="text-center text-[12px] text-night-faint">Loading search plan…</p>
             )}
             {snapshot && showPaywall ? (

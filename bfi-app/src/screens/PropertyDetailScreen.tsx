@@ -24,9 +24,14 @@ import {
   resolvePropertyFromQuery,
   type HistoryAddress,
   type MetricCard,
+  type MockProperty,
 } from '@/data/mockProperty'
 import { loadGpsVerified, persistGpsVerified } from '@/data/ownerScope'
 import { isOnWatchlist, toggleWatchlist } from '@/data/watchlistStorage'
+import {
+  loadPropertyFromQuery,
+  type PropertyLookupStatus,
+} from '@/lib/propertyLookup'
 import { cn } from '@/lib/utils'
 
 const metricIcons: Record<MetricCard['accent'], LucideIcon> = {
@@ -103,10 +108,11 @@ export function PropertyDetailScreen() {
   const { ownerId } = useAuth()
   const { address = '' } = useParams<{ address: string }>()
   const decoded = decodeURIComponent(address)
-  const property = useMemo(
-    () => resolvePropertyFromQuery(decoded || DEMO_PROPERTY.address),
-    [decoded],
-  )
+  const query = decoded || DEMO_PROPERTY.address
+
+  const [property, setProperty] = useState<MockProperty>(() => resolvePropertyFromQuery(query))
+  const [lookupStatus, setLookupStatus] = useState<PropertyLookupStatus | null>(null)
+  const [lookupBusy, setLookupBusy] = useState(true)
   const propertyKey = property.id
 
   const [starred, setStarred] = useState(() => isOnWatchlist(property.id) || property.starred)
@@ -114,6 +120,24 @@ export function PropertyDetailScreen() {
   const [historyOpen, setHistoryOpen] = useState(true)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
+
+  useEffect(() => {
+    let cancelled = false
+    setLookupBusy(true)
+    setProperty(resolvePropertyFromQuery(query))
+    setLookupStatus(null)
+
+    void loadPropertyFromQuery(query).then((result) => {
+      if (cancelled) return
+      setProperty(result.property)
+      setLookupStatus(result.status)
+      setLookupBusy(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [query, ownerId])
 
   useEffect(() => {
     setStarred(isOnWatchlist(property.id) || property.starred)
@@ -238,6 +262,25 @@ export function PropertyDetailScreen() {
           </header>
 
           <div className="flex-1 overflow-y-auto pb-4">
+            {lookupBusy || lookupStatus ? (
+              <div className="px-3 pt-2" data-testid="property-lookup-status">
+                <p
+                  className={cn(
+                    'rounded-xl border px-3 py-2 text-[11px] leading-snug',
+                    lookupStatus?.warning
+                      ? 'border-watch/40 bg-watch-soft text-watch-glow'
+                      : 'border-white/20 bg-night/25 text-night-faint',
+                  )}
+                >
+                  {lookupBusy
+                    ? 'Matching address…'
+                    : lookupStatus?.warning
+                      ? lookupStatus.warning
+                      : lookupStatus?.sourceLabel}
+                </p>
+              </div>
+            ) : null}
+
             <section className="px-3 pt-4" aria-label="Quick actions" data-testid="metric-cards">
               <div className="grid grid-cols-3 gap-x-2 gap-y-4 px-0.5">
                 {metrics.map((card) => {

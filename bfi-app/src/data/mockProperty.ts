@@ -74,6 +74,13 @@ export type MockProperty = {
   city: string
   state: string
   zipCode: string
+  /** WGS84 from address match (GPS Verify will use these). */
+  lat?: number
+  lng?: number
+  /** How the street/city/state were obtained */
+  addressSource?: 'census' | 'nominatim' | 'edge' | 'demo' | 'unresolved'
+  /** County/ATTOM facts: demo shell, pending live bind, or live */
+  factsStatus?: 'demo' | 'live' | 'pending'
   sqft: number
   bedrooms: number
   bathrooms: number
@@ -161,6 +168,10 @@ export const DEMO_PROPERTY: MockProperty = {
   city: 'Austin',
   state: 'TX',
   zipCode: '78704',
+  lat: 30.2431,
+  lng: -97.7692,
+  addressSource: 'demo',
+  factsStatus: 'demo',
   sqft: 2509,
   bedrooms: 4,
   bathrooms: 2.5,
@@ -498,6 +509,7 @@ export function getChannelCanvas(
   return canvases[channelId]
 }
 
+/** Sync stub — prefer `loadPropertyFromQuery` for live address matching. */
 export function resolvePropertyFromQuery(query: string): MockProperty {
   const trimmed = query.trim()
   if (!trimmed) return DEMO_PROPERTY
@@ -508,5 +520,8 @@ export function resolvePropertyFromQuery(query: string): MockProperty {
     ...DEMO_PROPERTY,
     id: `lookup-${encodeURIComponent(trimmed.toLowerCase()).slice(0, 48)}`,
     address: street,
+    addressSource: 'unresolved',
+    factsStatus: 'pending',
+    starred: false,
   }
 }
