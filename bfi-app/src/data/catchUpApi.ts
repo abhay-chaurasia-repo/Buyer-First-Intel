@@ -70,7 +70,7 @@ function wrapResponse(
 /** GET /api/properties/:id/county-facts */
 export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse {
   const live = property.factsStatus === 'live'
-  const source = live ? 'ATTOM county / assessor facts' : 'County assessor living area'
+  const source = live ? 'ATTOM Property Detail (county facts)' : 'County assessor living area'
   const items: CatchUpCard[] = [
     {
       id: 'cf-living-area',

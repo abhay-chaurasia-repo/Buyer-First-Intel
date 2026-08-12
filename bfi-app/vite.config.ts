@@ -157,6 +157,7 @@ function mapAttomProperty(attom: Record<string, unknown>) {
 
   const sqft =
     num(size.livingSize) ??
+    num(size.livingsize) ??
     num(size.universalSize) ??
     num(size.universalsize) ??
     num(size.bldgSize) ??
@@ -164,7 +165,7 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const beds = num(rooms.beds)
   const baths =
     num(rooms.bathsTotal) ?? num(rooms.bathstotal) ?? num(rooms.bathsFull) ?? num(rooms.bathsfull)
-  const yearBuilt = num(summary.yearBuilt)
+  const yearBuilt = num(summary.yearBuilt) ?? num(summary.yearbuilt)
   let lotSqft = num(lot.lotSize2) ?? num(lot.lotsize2)
   if (!lotSqft) {
     const acres = num(lot.lotSize1) ?? num(lot.lotsize1)
@@ -241,19 +242,38 @@ function mapAttomProperty(attom: Record<string, unknown>) {
 
 async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   const address2 = [match.city, match.state, match.zipCode].filter(Boolean).join(', ')
-  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/expandedprofile')
-  url.searchParams.set('address1', match.street)
-  url.searchParams.set('address2', address2)
-  const res = await fetch(url, {
+
+  // 1) Resolve ATTOM id from address
+  const addressUrl = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address')
+  addressUrl.searchParams.set('address1', match.street)
+  addressUrl.searchParams.set('address2', address2)
+  const addressRes = await fetch(addressUrl, {
     headers: { Accept: 'application/json', apikey: apiKey },
   })
-  const raw = (await res.json().catch(() => null)) as {
+  const addressRaw = (await addressRes.json().catch(() => null)) as {
+    property?: Array<{ identifier?: { attomId?: number; Id?: number } }>
+    status?: { msg?: string }
+  } | null
+  if (!addressRes.ok) return { ok: false as const, error: `ATTOM address HTTP ${addressRes.status}` }
+  const addressHit = Array.isArray(addressRaw?.property) ? addressRaw.property[0] : null
+  const attomId = addressHit?.identifier?.attomId ?? addressHit?.identifier?.Id
+  if (attomId == null) {
+    return { ok: false as const, error: addressRaw?.status?.msg || 'No ATTOM id' }
+  }
+
+  // 2) County facts from Property Detail by attomid
+  const detailUrl = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail')
+  detailUrl.searchParams.set('attomid', String(attomId))
+  const detailRes = await fetch(detailUrl, {
+    headers: { Accept: 'application/json', apikey: apiKey },
+  })
+  const detailRaw = (await detailRes.json().catch(() => null)) as {
     property?: Record<string, unknown>[]
     status?: { msg?: string }
   } | null
-  if (!res.ok) return { ok: false as const, error: `ATTOM HTTP ${res.status}` }
-  const first = Array.isArray(raw?.property) ? raw.property[0] : null
-  if (!first) return { ok: false as const, error: raw?.status?.msg || 'No ATTOM match' }
+  if (!detailRes.ok) return { ok: false as const, error: `ATTOM detail HTTP ${detailRes.status}` }
+  const first = Array.isArray(detailRaw?.property) ? detailRaw.property[0] : null
+  if (!first) return { ok: false as const, error: detailRaw?.status?.msg || 'No ATTOM detail' }
   return { ok: true as const, property: mapAttomProperty(first) }
 }
 

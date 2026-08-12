@@ -33,6 +33,7 @@ type AttomProperty = {
   }
   summary?: {
     yearBuilt?: number
+    yearbuilt?: number
     absenteeInd?: string
     propclass?: string
     propClass?: string
@@ -41,6 +42,7 @@ type AttomProperty = {
   building?: {
     size?: {
       livingSize?: number
+      livingsize?: number
       universalsize?: number
       universalSize?: number
       bldgsize?: number
@@ -134,6 +136,7 @@ function moneyLabel(value: number | undefined, fallback: string) {
 function livingSqft(building?: AttomProperty['building']) {
   return (
     num(building?.size?.livingSize) ??
+    num(building?.size?.livingsize) ??
     num(building?.size?.universalSize) ??
     num(building?.size?.universalsize) ??
     num(building?.size?.bldgSize) ??
@@ -169,7 +172,7 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   const sqft = livingSqft(attom.building)
   const beds = num(attom.building?.rooms?.beds)
   const bath = baths(attom.building)
-  const yearBuilt = num(attom.summary?.yearBuilt)
+  const yearBuilt = num(attom.summary?.yearBuilt) ?? num(attom.summary?.yearbuilt)
   const lot = lotSqft(attom.lot)
   const apn = attom.identifier?.apn
   const zoning =
@@ -254,15 +257,15 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   return fields
 }
 
-export async function fetchAttomExpandedProfile(params: {
+export async function fetchAttomIdByAddress(params: {
   apiKey: string
   street: string
   city: string
   state: string
   zipCode?: string
-}): Promise<{ ok: true; property: AttomProperty } | { ok: false; error: string }> {
+}): Promise<{ ok: true; attomId: number; property: AttomProperty } | { ok: false; error: string }> {
   const address2 = [params.city, params.state, params.zipCode].filter(Boolean).join(', ')
-  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/expandedprofile')
+  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address')
   url.searchParams.set('address1', params.street)
   url.searchParams.set('address2', address2)
 
@@ -272,17 +275,80 @@ export async function fetchAttomExpandedProfile(params: {
       apikey: params.apiKey,
     },
   })
-
   const raw = await res.json().catch(() => null)
   if (!res.ok) {
-    return { ok: false, error: `ATTOM HTTP ${res.status}` }
+    return { ok: false, error: `ATTOM address HTTP ${res.status}` }
+  }
+
+  const property = pickAttomProperty(raw)
+  const attomId = property?.identifier?.attomId ?? property?.identifier?.Id
+  if (!property || attomId == null) {
+    const msg = (raw as { status?: { msg?: string } } | null)?.status?.msg || 'No ATTOM id'
+    return { ok: false, error: msg }
+  }
+
+  return { ok: true, attomId: Number(attomId), property }
+}
+
+/** County facts via ATTOM Property Detail (`GET /property/detail?attomid=`). */
+export async function fetchAttomPropertyDetail(params: {
+  apiKey: string
+  attomId: number | string
+}): Promise<{ ok: true; property: AttomProperty } | { ok: false; error: string }> {
+  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail')
+  url.searchParams.set('attomid', String(params.attomId))
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      Accept: 'application/json',
+      apikey: params.apiKey,
+    },
+  })
+  const raw = await res.json().catch(() => null)
+  if (!res.ok) {
+    return { ok: false, error: `ATTOM detail HTTP ${res.status}` }
   }
 
   const property = pickAttomProperty(raw)
   if (!property) {
-    const msg = (raw as { status?: { msg?: string } } | null)?.status?.msg || 'No ATTOM match'
+    const msg = (raw as { status?: { msg?: string } } | null)?.status?.msg || 'No ATTOM detail'
     return { ok: false, error: msg }
   }
 
   return { ok: true, property }
+}
+
+/**
+ * Resolve ATTOM id from address, then load county facts from Property Detail.
+ */
+export async function fetchAttomCountyFacts(params: {
+  apiKey: string
+  street: string
+  city: string
+  state: string
+  zipCode?: string
+}): Promise<{ ok: true; property: AttomProperty; attomId: number } | { ok: false; error: string }> {
+  const idHit = await fetchAttomIdByAddress(params)
+  if (!idHit.ok) return idHit
+
+  const detail = await fetchAttomPropertyDetail({
+    apiKey: params.apiKey,
+    attomId: idHit.attomId,
+  })
+  if (!detail.ok) return detail
+
+  return { ok: true, property: detail.property, attomId: idHit.attomId }
+}
+
+/** @deprecated use fetchAttomCountyFacts — kept for older call sites */
+export async function fetchAttomExpandedProfile(params: {
+  apiKey: string
+  street: string
+  city: string
+  state: string
+  zipCode?: string
+}): Promise<{ ok: true; property: AttomProperty } | { ok: false; error: string }> {
+  const result = await fetchAttomCountyFacts(params)
+  if (!result.ok) return result
+  return { ok: true, property: result.property }
 }
