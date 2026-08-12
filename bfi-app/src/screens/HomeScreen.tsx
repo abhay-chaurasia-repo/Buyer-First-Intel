@@ -44,6 +44,7 @@ export function HomeScreen() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const paywallRef = useRef<HTMLDivElement>(null)
   const suggestSeq = useRef(0)
+  const suggesting = showSuggestions && query.trim().length > 0
 
   async function refreshQuota() {
     const next = await fetchSearchQuotaSnapshot(ownerId)
@@ -267,7 +268,7 @@ export function HomeScreen() {
 
           <form
             onSubmit={handleSubmit}
-            className="animate-bfi-rise relative mt-6 w-full"
+            className="animate-bfi-rise mt-6 w-full"
             style={{ animationDelay: '80ms' }}
           >
             <label htmlFor={inputId} className="sr-only">
@@ -298,13 +299,14 @@ export function HomeScreen() {
                   setIsFocused(false)
                   window.setTimeout(() => setShowSuggestions(false), 150)
                 }}
-                placeholder="Verify county facts before you offer"
+                placeholder="Search property for diligence"
                 autoComplete="off"
                 enterKeyHint="search"
                 className="min-w-0 flex-1 bg-transparent py-3 text-[1.05rem] text-night-ink outline-none placeholder:text-night-faint"
                 data-testid="input-address-search"
                 aria-autocomplete="list"
                 aria-controls="address-suggestions"
+                aria-expanded={suggesting}
               />
               <button
                 type="submit"
@@ -322,11 +324,11 @@ export function HomeScreen() {
               </button>
             </div>
 
-            {showSuggestions && query.trim().length > 0 ? (
+            {suggesting ? (
               <div
                 id="address-suggestions"
                 role="listbox"
-                className="absolute inset-x-0 top-[calc(100%+0.4rem)] z-30 overflow-hidden rounded-2xl border border-white/25 bg-night/95 shadow-[0_16px_40px_rgb(0_0_0/0.45)] backdrop-blur-md"
+                className="relative z-40 mt-2 max-h-[min(18rem,42vh)] overflow-y-auto overscroll-contain rounded-2xl border border-white/25 bg-night-elevated shadow-[0_16px_40px_rgb(0_0_0/0.55)]"
                 data-testid="address-suggestions"
               >
                 {query.trim().length < 3 ? (
@@ -335,7 +337,9 @@ export function HomeScreen() {
                   </p>
                 ) : null}
                 {suggestBusy ? (
-                  <p className="px-3 py-3 text-[12px] text-night-faint">Matching addresses for diligence…</p>
+                  <p className="px-3 py-3 text-[12px] text-night-faint">
+                    Matching addresses for diligence…
+                  </p>
                 ) : null}
                 {suggestError ? (
                   <p className="px-3 py-3 text-[12px] text-red-300">{suggestError}</p>
@@ -402,54 +406,61 @@ export function HomeScreen() {
             ) : null}
           </div>
 
-          <p
-            className="animate-bfi-rise mt-5 text-center text-sm text-night-faint"
-            style={{ animationDelay: '140ms' }}
-          >
-            No MLS. No prices. County records first.
-          </p>
-
-          <section
-            className="animate-bfi-rise mt-7 w-full"
-            style={{ animationDelay: '200ms' }}
-            aria-label="How due diligence works"
-            data-testid="home-diligence-section"
-          >
-            <div className="rounded-[1.25rem] border border-white/25 bg-transparent p-4">
-              <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-                Start here
+          {!suggesting ? (
+            <>
+              <p
+                className="animate-bfi-rise mt-5 text-center text-sm text-night-faint"
+                style={{ animationDelay: '140ms' }}
+              >
+                No MLS. No prices. County records first.
               </p>
-              <ul className="mt-3 space-y-3.5">
-                <li className="flex gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
-                    <FileSearch className="h-4 w-4 text-saffron-glow" aria-hidden />
-                  </span>
-                  <p className="text-[13px] leading-relaxed text-night-muted">
-                    <span className="font-semibold text-night-ink">Search an address</span> to compare
-                    county living area, tax and sales history, schools, and community labels.
+
+              <section
+                className="animate-bfi-rise mt-7 w-full"
+                style={{ animationDelay: '200ms' }}
+                aria-label="How due diligence works"
+                data-testid="home-diligence-section"
+              >
+                <div className="rounded-[1.25rem] border border-white/25 bg-transparent p-4">
+                  <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+                    Start here
                   </p>
-                </li>
-                <li className="flex gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
-                    <Star className="h-4 w-4 text-saffron-glow" aria-hidden />
-                  </span>
-                  <p className="text-[13px] leading-relaxed text-night-muted">
-                    <span className="font-semibold text-night-ink">Star homes into Homes in Diligence</span>{' '}
-                    for visit planning and private notes.
-                  </p>
-                </li>
-                <li className="flex gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
-                    <ClipboardCheck className="h-4 w-4 text-saffron-glow" aria-hidden />
-                  </span>
-                  <p className="text-[13px] leading-relaxed text-night-muted">
-                    <span className="font-semibold text-night-ink">Follow your path</span> from Prepare →
-                    Diligence → Offer → Close.
-                  </p>
-                </li>
-              </ul>
-            </div>
-          </section>
+                  <ul className="mt-3 space-y-3.5">
+                    <li className="flex gap-3">
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
+                        <FileSearch className="h-4 w-4 text-saffron-glow" aria-hidden />
+                      </span>
+                      <p className="text-[13px] leading-relaxed text-night-muted">
+                        <span className="font-semibold text-night-ink">Search an address</span> to
+                        compare county living area, tax and sales history, schools, and community
+                        labels.
+                      </p>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
+                        <Star className="h-4 w-4 text-saffron-glow" aria-hidden />
+                      </span>
+                      <p className="text-[13px] leading-relaxed text-night-muted">
+                        <span className="font-semibold text-night-ink">
+                          Star homes into Homes in Diligence
+                        </span>{' '}
+                        for visit planning and private notes.
+                      </p>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-saffron/20">
+                        <ClipboardCheck className="h-4 w-4 text-saffron-glow" aria-hidden />
+                      </span>
+                      <p className="text-[13px] leading-relaxed text-night-muted">
+                        <span className="font-semibold text-night-ink">Follow your path</span> from
+                        Prepare → Diligence → Offer → Close.
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+              </section>
+            </>
+          ) : null}
         </div>
       </div>
     </AppShell>
