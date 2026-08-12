@@ -108,10 +108,16 @@ export type MockProperty = {
   sqft: number
   bedrooms: number
   bathrooms: number
+  /** ATTOM bathsFull when present (basicprofile) */
+  bathsFull?: number
+  /** ATTOM bathsPartial when present (basicprofile) */
+  bathsPartial?: number
   yearBuilt: number
   claimedSqft?: number
   verifiedVisits: number
   ownerName: string
+  /** Assessor mailing address one-line when published */
+  ownerMailingAddress?: string
   ownerOccupied: boolean
   lastSaleDate: string
   lastSalePriceLabel: string
@@ -390,15 +396,31 @@ export function getChannelCanvas(
         resourceKey: 'property.summary',
       },
       fields: [
-        { label: 'County living area', value: `${property.sqft.toLocaleString()} sqft`, source: 'ATTOM / county' },
+        {
+          label: 'County living area',
+          value: `${property.sqft.toLocaleString()} sqft`,
+          source: 'ATTOM basicprofile',
+        },
         {
           label: 'Claimed living area',
           value: property.claimedSqft ? `${property.claimedSqft.toLocaleString()} sqft` : '—',
           source: 'External claim',
         },
-        { label: 'Bedrooms', value: String(property.bedrooms), source: 'County' },
-        { label: 'Bathrooms', value: String(property.bathrooms), source: 'County' },
-        { label: 'Year built', value: String(property.yearBuilt), source: 'County' },
+        { label: 'Bedrooms', value: String(property.bedrooms), source: 'ATTOM basicprofile' },
+        {
+          label: 'Bathrooms',
+          value:
+            property.bathsFull != null || property.bathsPartial != null
+              ? `${property.bathrooms} (${[
+                  property.bathsFull != null ? `${property.bathsFull} full` : null,
+                  property.bathsPartial != null ? `${property.bathsPartial} partial` : null,
+                ]
+                  .filter(Boolean)
+                  .join(', ')})`
+              : String(property.bathrooms),
+          source: 'ATTOM basicprofile',
+        },
+        { label: 'Year built', value: String(property.yearBuilt), source: 'ATTOM basicprofile' },
         { label: 'Lot size', value: `${property.lotSizeSqft.toLocaleString()} sqft`, source: 'County' },
         { label: 'Zoning', value: property.zoning, source: 'County' },
         { label: 'APN', value: property.apn, source: 'County' },
@@ -418,9 +440,17 @@ export function getChannelCanvas(
         resourceKey: 'property.owner',
       },
       fields: [
-        { label: 'Owner of record', value: property.ownerName, source: 'County' },
-        { label: 'Owner occupied', value: property.ownerOccupied ? 'Yes' : 'No', source: 'County' },
-        { label: 'Mailing address', value: 'Same as property (stub)', source: 'County' },
+        { label: 'Owner of record', value: property.ownerName, source: 'ATTOM basicprofile' },
+        {
+          label: 'Owner occupied',
+          value: property.ownerOccupied ? 'Yes' : 'No',
+          source: 'ATTOM basicprofile',
+        },
+        {
+          label: 'Mailing address',
+          value: property.ownerMailingAddress || 'Same as property (stub)',
+          source: property.ownerMailingAddress ? 'ATTOM basicprofile' : 'County',
+        },
         { label: 'Ownership type', value: 'Trust', source: 'Deed stub' },
       ],
       notes: ['Owner identity is public-record only — not for outreach tooling.'],

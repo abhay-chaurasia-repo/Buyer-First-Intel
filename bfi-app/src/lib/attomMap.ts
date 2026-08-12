@@ -48,6 +48,9 @@ type AttomProperty = {
       universalSize?: number
       bldgsize?: number
       bldgSize?: number
+      /** Preferred living area from basicprofile */
+      grossSizeAdjusted?: number
+      grosssizeadjusted?: number
     }
     rooms?: {
       beds?: number
@@ -55,6 +58,8 @@ type AttomProperty = {
       bathstotal?: number
       bathsfull?: number
       bathsFull?: number
+      bathsPartial?: number
+      bathspartial?: number
     }
   }
   lot?: {
@@ -69,7 +74,11 @@ type AttomProperty = {
     owner?: {
       owner1?: AttomOwner
       owner2?: AttomOwner
+      owner3?: AttomOwner
+      owner4?: AttomOwner
       absenteeOwnerStatus?: string
+      mailingAddressOneLine?: string
+      mailingaddressoneline?: string
     }
     assessed?: Record<string, unknown>
     market?: Record<string, unknown>
@@ -80,6 +89,8 @@ type AttomProperty = {
     saleSearchDate?: string
     salesearchdate?: string
     amount?: Record<string, unknown>
+    /** basicprofile nests sale dollars under saleAmountData */
+    saleAmountData?: Record<string, unknown>
     calculation?: Record<string, unknown>
   }
   salehistory?: unknown
@@ -106,14 +117,28 @@ function titleCaseName(raw: string) {
     .join(' ')
 }
 
+function ownerNameFromBlock(owner?: AttomOwner & { fullname?: string }) {
+  const raw = owner?.fullName || owner?.fullname
+  if (!raw) return undefined
+  return titleCaseName(String(raw))
+}
+
 function ownerDisplay(assessment?: AttomProperty['assessment']) {
-  const o1 = assessment?.owner?.owner1 as AttomOwner & { fullname?: string } | undefined
-  const o2 = assessment?.owner?.owner2 as AttomOwner & { fullname?: string } | undefined
-  const names = [o1?.fullName || o1?.fullname, o2?.fullName || o2?.fullname]
-    .filter(Boolean)
-    .map((n) => titleCaseName(String(n)))
+  const names = [
+    ownerNameFromBlock(assessment?.owner?.owner1),
+    ownerNameFromBlock(assessment?.owner?.owner2),
+    ownerNameFromBlock(assessment?.owner?.owner3),
+    ownerNameFromBlock(assessment?.owner?.owner4),
+  ].filter(Boolean) as string[]
   if (names.length === 0) return undefined
   return names.join(' & ')
+}
+
+function ownerMailing(assessment?: AttomProperty['assessment']) {
+  const raw =
+    assessment?.owner?.mailingAddressOneLine || assessment?.owner?.mailingaddressoneline
+  if (!raw?.trim()) return undefined
+  return titleCaseStreet(raw.trim())
 }
 
 function moneyLabel(value: number | undefined, fallback: string) {
@@ -126,7 +151,10 @@ function moneyLabel(value: number | undefined, fallback: string) {
 }
 
 function livingSqft(building?: AttomProperty['building']) {
+  // basicprofile: prefer grossSizeAdjusted (buyer-facing county living area)
   return (
+    num(building?.size?.grossSizeAdjusted) ??
+    num(building?.size?.grosssizeadjusted) ??
     num(building?.size?.livingSize) ??
     num(building?.size?.livingsize) ??
     num(building?.size?.universalSize) ??
@@ -136,13 +164,25 @@ function livingSqft(building?: AttomProperty['building']) {
   )
 }
 
-function baths(building?: AttomProperty['building']) {
+function bathsTotal(building?: AttomProperty['building']) {
   return (
     num(building?.rooms?.bathsTotal) ??
     num(building?.rooms?.bathstotal) ??
     num(building?.rooms?.bathsFull) ??
     num(building?.rooms?.bathsfull)
   )
+}
+
+function bathsFull(building?: AttomProperty['building']) {
+  return num(building?.rooms?.bathsFull) ?? num(building?.rooms?.bathsfull)
+}
+
+function bathsPartial(building?: AttomProperty['building']) {
+  return num(building?.rooms?.bathsPartial) ?? num(building?.rooms?.bathspartial)
+}
+
+function saleAmountBlock(sale?: AttomProperty['sale']) {
+  return sale?.amount || sale?.saleAmountData
 }
 
 function lotSqft(lot?: AttomProperty['lot']) {
@@ -184,7 +224,9 @@ function stringFromRecord(block: Record<string, unknown> | undefined, ...keys: s
 export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProperty> {
   const sqft = livingSqft(attom.building)
   const beds = num(attom.building?.rooms?.beds)
-  const bath = baths(attom.building)
+  const bath = bathsTotal(attom.building)
+  const bathFull = bathsFull(attom.building)
+  const bathPartial = bathsPartial(attom.building)
   const yearBuilt = num(attom.summary?.yearBuilt) ?? num(attom.summary?.yearbuilt)
   const lot = lotSqft(attom.lot)
   const apn = attom.identifier?.apn
@@ -207,7 +249,7 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   const taxAmt = fromRecord(tax, 'taxAmt', 'taxamt')
   const marketTotal = fromRecord(market, 'mktTtlValue', 'mktttlvalue')
 
-  const saleAmount = attom.sale?.amount
+  const saleAmount = saleAmountBlock(attom.sale)
   const saleDate =
     attom.sale?.saleTransDate ||
     stringFromRecord(saleAmount, 'saleRecDate', 'salerecdate') ||
@@ -240,6 +282,8 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   if (sqft != null) fields.sqft = Math.round(sqft)
   if (beds != null) fields.bedrooms = beds
   if (bath != null) fields.bathrooms = bath
+  if (bathFull != null) fields.bathsFull = bathFull
+  if (bathPartial != null) fields.bathsPartial = bathPartial
   if (yearBuilt != null) fields.yearBuilt = Math.round(yearBuilt)
   if (lot != null) fields.lotSizeSqft = lot
   if (apn) fields.apn = apn
@@ -257,6 +301,8 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
 
   const owner = ownerDisplay(attom.assessment)
   if (owner) fields.ownerName = owner
+  const mailing = ownerMailing(attom.assessment)
+  if (mailing) fields.ownerMailingAddress = mailing
   fields.ownerOccupied = Boolean(ownerOccupied)
 
   if (saleDate) fields.lastSaleDate = String(saleDate).slice(0, 10)
@@ -392,9 +438,9 @@ export async function fetchAttomIdByAddress(params: {
 }
 
 /**
- * County facts via ATTOM Property Detail
- * Docs: GET /propertyapi/v1.0.0/property/detail
- * Accepts attomid OR address1+address2 (same endpoint the interactive docs exercise).
+ * County facts via ATTOM Property Basic Profile
+ * Docs: GET /propertyapi/v1.0.0/property/basicprofile
+ * Accepts attomid OR address1+address2 (same query shape as interactive docs).
  */
 export async function fetchAttomPropertyDetail(params: {
   apiKey: string
@@ -404,7 +450,9 @@ export async function fetchAttomPropertyDetail(params: {
   state?: string
   zipCode?: string
 }): Promise<{ ok: true; property: AttomProperty } | { ok: false; error: string }> {
-  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail')
+  const url = new URL(
+    'https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile',
+  )
   if (params.attomId != null && String(params.attomId).trim()) {
     url.searchParams.set('attomid', String(params.attomId))
   } else if (params.street && params.city && params.state) {
@@ -414,7 +462,7 @@ export async function fetchAttomPropertyDetail(params: {
       [params.city, params.state, params.zipCode].filter(Boolean).join(', '),
     )
   } else {
-    return { ok: false, error: 'ATTOM detail needs attomid or address1+address2' }
+    return { ok: false, error: 'ATTOM basicprofile needs attomid or address1+address2' }
   }
 
   const res = await fetch(url.toString(), {
@@ -425,12 +473,13 @@ export async function fetchAttomPropertyDetail(params: {
   })
   const raw = await res.json().catch(() => null)
   if (!res.ok) {
-    return { ok: false, error: `ATTOM detail HTTP ${res.status}` }
+    return { ok: false, error: `ATTOM basicprofile HTTP ${res.status}` }
   }
 
   const property = pickAttomProperty(raw)
   if (!property) {
-    const msg = (raw as { status?: { msg?: string } } | null)?.status?.msg || 'No ATTOM detail'
+    const msg =
+      (raw as { status?: { msg?: string } } | null)?.status?.msg || 'No ATTOM basicprofile'
     return { ok: false, error: msg }
   }
 
@@ -440,7 +489,7 @@ export async function fetchAttomPropertyDetail(params: {
 /**
  * County facts + tax assessment + sale / sales history.
  * Parallel ATTOM packages per interactive docs:
- * - /property/detail
+ * - /property/basicprofile  (County’s Fact: yearBuilt, grossSizeAdjusted, beds/baths, owner)
  * - /assessment/detail
  * - /sale/detail
  * - /saleshistory/expandedhistory
@@ -471,43 +520,59 @@ export async function fetchAttomCountyFacts(params: {
     zipCode: params.zipCode,
   }
 
-  const [detail, assessment, sale, history] = await Promise.all([
-    fetchAttomPackage('property/detail', lookup),
+  const [profile, assessment, sale, history] = await Promise.all([
+    fetchAttomPackage('property/basicprofile', lookup),
     fetchAttomPackage('assessment/detail', lookup),
     fetchAttomPackage('sale/detail', lookup),
     fetchAttomPackage('saleshistory/expandedhistory', lookup),
   ])
 
-  if (!detail && !assessment && !sale && !history) {
-    return { ok: false, error: 'No ATTOM match for detail, assessment, or sales' }
+  if (!profile && !assessment && !sale && !history) {
+    return { ok: false, error: 'No ATTOM match for basicprofile, assessment, or sales' }
   }
 
   const merged: AttomProperty = {
-    ...(detail || {}),
-    ...(assessment ? { assessment: assessment.assessment, identifier: assessment.identifier || detail?.identifier } : {}),
-    ...(sale ? { sale: sale.sale, identifier: sale.identifier || detail?.identifier } : {}),
-    ...(history
-      ? {
-          saleHistory: history.saleHistory ?? history.salehistory,
-          identifier: history.identifier || detail?.identifier,
-        }
-      : {}),
-    address: detail?.address || assessment?.address || sale?.address || history?.address,
-    location: detail?.location || assessment?.location || sale?.location || history?.location,
-    building: detail?.building || assessment?.building || sale?.building,
-    lot: detail?.lot || assessment?.lot || sale?.lot,
-    summary: detail?.summary || assessment?.summary || sale?.summary || history?.summary,
+    ...(profile || {}),
+    address: profile?.address || assessment?.address || sale?.address || history?.address,
+    location: profile?.location || assessment?.location || sale?.location || history?.location,
+    building: profile?.building || assessment?.building || sale?.building,
+    lot: profile?.lot || assessment?.lot || sale?.lot,
+    summary: profile?.summary || assessment?.summary || sale?.summary || history?.summary,
     identifier:
-      detail?.identifier ||
+      profile?.identifier ||
       assessment?.identifier ||
       sale?.identifier ||
       history?.identifier,
   }
 
-  // Prefer owner names from expanded sales history when present
+  // Deep-merge assessment so basicprofile owner is kept when assessment/detail lacks it
+  if (profile?.assessment || assessment?.assessment) {
+    const baseAssessment = (profile?.assessment || {}) as NonNullable<AttomProperty['assessment']>
+    const nextAssessment = (assessment?.assessment || {}) as NonNullable<
+      AttomProperty['assessment']
+    >
+    merged.assessment = {
+      ...baseAssessment,
+      ...nextAssessment,
+      owner: nextAssessment.owner || baseAssessment.owner,
+      assessed: nextAssessment.assessed || baseAssessment.assessed,
+      market: nextAssessment.market || baseAssessment.market,
+      tax: nextAssessment.tax || baseAssessment.tax,
+    }
+  }
+
+  if (sale?.sale || profile?.sale) {
+    merged.sale = sale?.sale || profile?.sale
+  }
+
+  if (history) {
+    merged.saleHistory = history.saleHistory ?? history.salehistory
+  }
+
+  // Prefer owner names from expanded sales history only when assessment has none
   const historyOwner = (history as { owner?: NonNullable<AttomProperty['assessment']>['owner'] } | null)
     ?.owner
-  if (historyOwner) {
+  if (historyOwner && !merged.assessment?.owner) {
     merged.assessment = {
       ...(merged.assessment || {}),
       owner: historyOwner,
@@ -516,7 +581,7 @@ export async function fetchAttomCountyFacts(params: {
 
   const fields = mapAttomToPropertyFields(merged)
   const warnings: string[] = []
-  if (!detail) warnings.push('property/detail unavailable')
+  if (!profile) warnings.push('property/basicprofile unavailable')
   if (!assessment) warnings.push('assessment/detail unavailable')
   if (!sale && !history) warnings.push('sale/saleshistory unavailable')
 

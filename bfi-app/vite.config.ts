@@ -153,9 +153,17 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const tax = (assessment.tax || {}) as Record<string, unknown>
   const sale = (attom.sale || {}) as Record<string, unknown>
   const saleAmount = (sale.amount || {}) as Record<string, unknown>
+  const saleAmountData = (sale.saleAmountData || {}) as Record<string, unknown>
+  const saleAmountBlock =
+    Object.keys(saleAmount).length > 0 ? saleAmount : saleAmountData
   const location = (attom.location || {}) as Record<string, unknown>
+  const owner3 = (ownerBlock.owner3 || {}) as Record<string, unknown>
+  const owner4 = (ownerBlock.owner4 || {}) as Record<string, unknown>
 
+  // basicprofile: prefer grossSizeAdjusted for County’s Fact living area
   const sqft =
+    num(size.grossSizeAdjusted) ??
+    num(size.grosssizeadjusted) ??
     num(size.livingSize) ??
     num(size.livingsize) ??
     num(size.universalSize) ??
@@ -165,6 +173,8 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const beds = num(rooms.beds)
   const baths =
     num(rooms.bathsTotal) ?? num(rooms.bathstotal) ?? num(rooms.bathsFull) ?? num(rooms.bathsfull)
+  const bathsFull = num(rooms.bathsFull) ?? num(rooms.bathsfull)
+  const bathsPartial = num(rooms.bathsPartial) ?? num(rooms.bathspartial)
   const yearBuilt = num(summary.yearBuilt) ?? num(summary.yearbuilt)
   let lotSqft = num(lot.lotSize2) ?? num(lot.lotsize2)
   if (!lotSqft) {
@@ -172,7 +182,12 @@ function mapAttomProperty(attom: Record<string, unknown>) {
     if (acres) lotSqft = Math.round(acres * 43560)
   }
 
-  const names = [owner1.fullName || owner1.fullname, owner2.fullName || owner2.fullname]
+  const names = [
+    owner1.fullName || owner1.fullname,
+    owner2.fullName || owner2.fullname,
+    owner3.fullName || owner3.fullname,
+    owner4.fullName || owner4.fullname,
+  ]
     .filter(Boolean)
     .map((n) => titleCaseStreet(String(n)))
   const absentee = String(summary.absenteeInd || '').toUpperCase()
@@ -212,6 +227,8 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   if (sqft != null) fields.sqft = Math.round(sqft)
   if (beds != null) fields.bedrooms = beds
   if (baths != null) fields.bathrooms = baths
+  if (bathsFull != null) fields.bathsFull = bathsFull
+  if (bathsPartial != null) fields.bathsPartial = bathsPartial
   if (yearBuilt != null) fields.yearBuilt = Math.round(yearBuilt)
   if (lotSqft != null) fields.lotSizeSqft = Math.round(lotSqft)
   if (identifier.apn) fields.apn = identifier.apn
@@ -234,18 +251,23 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   if (taxAmt != null) fields.taxAmountLabel = moneyLabel(taxAmt)
   if (marketTotal != null) fields.marketValueLabel = moneyLabel(marketTotal)
   if (names.length) fields.ownerName = names.join(' & ')
+  const mailing =
+    ownerBlock.mailingAddressOneLine || ownerBlock.mailingaddressoneline
+  if (typeof mailing === 'string' && mailing.trim()) {
+    fields.ownerMailingAddress = titleCaseStreet(mailing.trim())
+  }
   const saleDate =
     sale.saleTransDate ||
-    saleAmount.saleRecDate ||
-    saleAmount.salerecdate ||
+    saleAmountBlock.saleRecDate ||
+    saleAmountBlock.salerecdate ||
     sale.saleSearchDate ||
     sale.salesearchdate
   if (saleDate) fields.lastSaleDate = String(saleDate).slice(0, 10)
-  if (saleAmount.saleTransType || saleAmount.saletranstype) {
-    fields.deedType = String(saleAmount.saleTransType || saleAmount.saletranstype)
+  if (saleAmountBlock.saleTransType || saleAmountBlock.saletranstype) {
+    fields.deedType = String(saleAmountBlock.saleTransType || saleAmountBlock.saletranstype)
   } else if (Object.keys(sale).length) fields.deedType = 'Recorded transfer'
-  if (saleAmount.saleDocNum || saleAmount.saledocnum) {
-    fields.saleDocumentNumber = String(saleAmount.saleDocNum || saleAmount.saledocnum)
+  if (saleAmountBlock.saleDocNum || saleAmountBlock.saledocnum) {
+    fields.saleDocumentNumber = String(saleAmountBlock.saleDocNum || saleAmountBlock.saledocnum)
   }
   const lat = num(location.latitude)
   const lng = num(location.longitude)
@@ -322,22 +344,36 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
     }
   }
 
-  const [detail, assessment, sale, history] = await Promise.all([
-    load('property/detail'),
+  const [profile, assessment, sale, history] = await Promise.all([
+    load('property/basicprofile'),
     load('assessment/detail'),
     load('sale/detail'),
     load('saleshistory/expandedhistory'),
   ])
 
-  if (!detail && !assessment && !sale && !history) {
-    return { ok: false as const, error: 'No ATTOM match for detail, assessment, or sales' }
+  if (!profile && !assessment && !sale && !history) {
+    return {
+      ok: false as const,
+      error: 'No ATTOM match for basicprofile, assessment, or sales',
+    }
   }
 
   const merged: Record<string, unknown> = {
-    ...(detail || {}),
+    ...(profile || {}),
   }
-  if (assessment?.assessment) merged.assessment = assessment.assessment
-  if (sale?.sale) merged.sale = sale.sale
+  const baseAssessment = (profile?.assessment || {}) as Record<string, unknown>
+  const nextAssessment = (assessment?.assessment || {}) as Record<string, unknown>
+  if (Object.keys(baseAssessment).length || Object.keys(nextAssessment).length) {
+    merged.assessment = {
+      ...baseAssessment,
+      ...nextAssessment,
+      owner: nextAssessment.owner || baseAssessment.owner,
+      assessed: nextAssessment.assessed || baseAssessment.assessed,
+      market: nextAssessment.market || baseAssessment.market,
+      tax: nextAssessment.tax || baseAssessment.tax,
+    }
+  }
+  if (sale?.sale || profile?.sale) merged.sale = sale?.sale || profile?.sale
   if (history?.saleHistory || history?.salehistory) {
     merged.saleHistory = history.saleHistory ?? history.salehistory
   }
@@ -349,14 +385,20 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   }
   if (!merged.identifier) {
     merged.identifier =
-      detail?.identifier || assessment?.identifier || sale?.identifier || history?.identifier
+      profile?.identifier || assessment?.identifier || sale?.identifier || history?.identifier
   }
   if (!merged.address) {
-    merged.address = detail?.address || assessment?.address || sale?.address || history?.address
+    merged.address = profile?.address || assessment?.address || sale?.address || history?.address
   }
   if (!merged.location) {
     merged.location =
-      detail?.location || assessment?.location || sale?.location || history?.location
+      profile?.location || assessment?.location || sale?.location || history?.location
+  }
+  if (!merged.building) {
+    merged.building = profile?.building || assessment?.building || sale?.building
+  }
+  if (!merged.summary) {
+    merged.summary = profile?.summary || assessment?.summary || sale?.summary || history?.summary
   }
 
   return { ok: true as const, property: mapAttomProperty(merged) }
