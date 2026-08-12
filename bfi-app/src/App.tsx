@@ -10,6 +10,7 @@ import { RulesOfEngagementScreen } from '@/screens/RulesOfEngagementScreen'
 import { GuidanceScreen } from '@/screens/GuidanceScreen'
 import { ImpactStoryScreen } from '@/screens/ImpactStoryScreen'
 import { LoginScreen, SignupScreen } from '@/screens/AuthOptionsScreen'
+import { BillingCancelScreen, BillingSuccessScreen } from '@/screens/BillingScreens'
 
 function RootEntry() {
   if (!hasSeenImpact()) {
@@ -30,6 +31,22 @@ export default function App() {
         <Route path="/welcome" element={<ImpactStoryScreen />} />
         <Route path="/signup" element={<SignupScreen />} />
         <Route path="/login" element={<LoginScreen />} />
+        <Route
+          path="/billing/success"
+          element={
+            <RequireAuth>
+              <BillingSuccessScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/billing/cancel"
+          element={
+            <RequireAuth>
+              <BillingCancelScreen />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/property/:address"
           element={

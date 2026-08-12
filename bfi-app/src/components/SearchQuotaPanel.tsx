@@ -34,9 +34,11 @@ export function SearchQuotaBar({ snapshot }: SearchQuotaBarProps) {
 type SearchPaywallProps = {
   snapshot: SearchQuotaSnapshot
   onSubscribe: () => void
+  busy?: boolean
+  error?: string | null
 }
 
-export function SearchPaywall({ onSubscribe }: SearchPaywallProps) {
+export function SearchPaywall({ onSubscribe, busy = false, error = null }: SearchPaywallProps) {
   return (
     <div
       className="mt-4 rounded-[1.25rem] border border-saffron/40 bg-saffron/15 p-4 text-center"
@@ -52,14 +54,21 @@ export function SearchPaywall({ onSubscribe }: SearchPaywallProps) {
       <button
         type="button"
         onClick={onSubscribe}
-        className="mt-3.5 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.95rem] font-semibold text-white shadow-[0_10px_28px_rgb(232_145_58/0.35)] touch-manipulation hover:bg-saffron-deep"
+        disabled={busy}
+        className="mt-3.5 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.95rem] font-semibold text-white shadow-[0_10px_28px_rgb(232_145_58/0.35)] touch-manipulation hover:bg-saffron-deep disabled:opacity-60"
         data-testid="button-subscribe-unlimited-searches"
       >
-        Subscribe · {SEARCH_PLAN.priceLabel}
+        {busy ? 'Starting checkout…' : `Subscribe · ${SEARCH_PLAN.priceLabel}`}
       </button>
-      <p className="mt-2 text-[11px] text-night-faint">
-        Demo subscribe flag in your account — Stripe billing comes next.
-      </p>
+      {error ? (
+        <p className="mt-2 text-[12px] text-red-300" data-testid="billing-error">
+          {error}
+        </p>
+      ) : (
+        <p className="mt-2 text-[11px] text-night-faint">
+          Secure checkout with Stripe. Subscription renews monthly until you cancel.
+        </p>
+      )}
     </div>
   )
 }

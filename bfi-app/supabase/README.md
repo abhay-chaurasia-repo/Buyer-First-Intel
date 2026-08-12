@@ -1,21 +1,14 @@
-# Supabase setup — profiles + search quota
+# Supabase setup
 
-## 1. Run the migration
-1. Open Supabase → **SQL Editor** → New query
-2. Paste contents of `supabase/migrations/001_profiles_search_quota.sql`
-3. Click **Run**
+## Profiles + search quota
+1. SQL Editor → run `migrations/001_profiles_search_quota.sql`
+2. Confirm tables: `profiles`, `search_usage`
 
-## 2. Confirm tables
-**Table Editor** should show:
-- `profiles`
-- `search_usage`
+## Stripe subscription
+1. SQL Editor → run `migrations/002_stripe_subscription_fields.sql`
+2. Follow **`STRIPE_SETUP.md`** (Stripe product, Edge Functions, webhook secrets)
 
-## 3. App behavior
-- Phone-login users: quota + subscription flag live in Supabase
-- Quick / Apple / Facebook local sessions: still use localStorage until those IdPs are real
-
-## 4. Test
-1. Sign in with phone OTP
-2. Search addresses — count drops in UI
-3. In Table Editor → `search_usage` rows appear for your user
-4. After 10 unique addresses, Subscribe sets `profiles.subscription_active = true`
+## App behavior
+- Phone login → quota/subscription in Supabase
+- Subscribe button → Stripe Checkout (when functions + secrets are deployed)
+- Quick / Apple / Facebook still local until those IdPs are wired

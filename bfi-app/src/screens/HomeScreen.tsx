@@ -20,6 +20,7 @@ import {
   ensureRemoteProfile,
   fetchSearchQuotaSnapshot,
 } from '@/lib/searchQuotaApi'
+import { isStripeCheckoutEnabled, startStripeCheckout } from '@/lib/stripeCheckout'
 import type { SearchQuotaSnapshot } from '@/data/searchQuota'
 import { cn } from '@/lib/utils'
 
@@ -32,6 +33,7 @@ export function HomeScreen() {
   const [snapshot, setSnapshot] = useState<SearchQuotaSnapshot | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
   const [quotaBusy, setQuotaBusy] = useState(false)
+  const [billingError, setBillingError] = useState<string | null>(null)
 
   async function refreshQuota() {
     const next = await fetchSearchQuotaSnapshot(ownerId)
@@ -73,7 +75,21 @@ export function HomeScreen() {
   }
 
   async function handleSubscribe() {
+    setBillingError(null)
     setQuotaBusy(true)
+
+    if (isStripeCheckoutEnabled(ownerId)) {
+      const result = await startStripeCheckout()
+      setQuotaBusy(false)
+      if (!result.ok) {
+        setBillingError(result.error)
+        return
+      }
+      window.location.assign(result.url)
+      return
+    }
+
+    // Local / demo path when Stripe Edge Function is not configured yet
     await activateRemoteSearchSubscription(ownerId)
     await refreshQuota()
     setQuotaBusy(false)
@@ -188,7 +204,12 @@ export function HomeScreen() {
               <p className="text-center text-[12px] text-night-faint">Loading search plan…</p>
             )}
             {snapshot && showPaywall ? (
-              <SearchPaywall snapshot={snapshot} onSubscribe={() => void handleSubscribe()} />
+              <SearchPaywall
+                snapshot={snapshot}
+                onSubscribe={() => void handleSubscribe()}
+                busy={quotaBusy}
+                error={billingError}
+              />
             ) : null}
           </div>
 
