@@ -218,7 +218,7 @@ export function PropertyDetailScreen() {
           </header>
 
           <div className="flex-1 overflow-y-auto pb-4">
-            {lookupBusy || lookupStatus ? (
+            {lookupBusy || lookupStatus?.warning ? (
               <div className="px-3 pt-2" data-testid="property-lookup-status">
                 <p
                   className={cn(
@@ -228,11 +228,7 @@ export function PropertyDetailScreen() {
                       : 'border-white/20 bg-night/25 text-night-faint',
                   )}
                 >
-                  {lookupBusy
-                    ? 'Matching address…'
-                    : lookupStatus?.warning
-                      ? lookupStatus.warning
-                      : lookupStatus?.sourceLabel}
+                  {lookupBusy ? 'Matching address…' : lookupStatus?.warning}
                 </p>
               </div>
             ) : null}
@@ -272,73 +268,105 @@ export function PropertyDetailScreen() {
               </div>
             </section>
 
-            <section className="px-3 pt-5 pb-2" aria-label="Buyer Community" data-testid="buyer-community-promo">
-              <button
-                type="button"
-                onClick={() => setActiveSurface('buyer-insights')}
-                className="w-full rounded-2xl border border-white/20 bg-night-elevated/45 px-3.5 py-3.5 text-left transition-colors hover:border-saffron/40 hover:bg-night-elevated/65 active:opacity-90 touch-manipulation"
-                data-testid="button-open-buyer-community"
-              >
-                <span className="flex items-start gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-saffron/25 text-saffron-glow">
-                    <Users className="h-5 w-5" strokeWidth={2.25} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-display text-[13px] font-semibold text-saffron-glow">
-                      Buyer Community Insights
-                    </span>
-                    <span className="mt-1 block text-[11px] leading-snug text-night-ink">
-                      Structured signals from buyers who showed up — not listing hype. Open the
-                      catalog, then upvote what matches what you see.
-                    </span>
-                  </span>
-                </span>
-
-                <span className="mt-3 grid gap-y-1.5" style={{ gridTemplateColumns: '3.4rem 1fr' }}>
-                  <span className={cn('mt-0.5 justify-self-start', plusWatchChipClass('plus'))}>
-                    Plus
-                  </span>
-                  <span className="min-w-0 text-[11px] leading-snug text-night-faint">
-                    {PLUS_LABEL_SHORT} — encouraging cues worth confirming.
-                  </span>
-                  <span className={cn('mt-0.5 justify-self-start', plusWatchChipClass('watch'))}>
-                    Watch
-                  </span>
-                  <span className="min-w-0 text-[11px] leading-snug text-night-faint">
-                    {WATCH_LABEL_SHORT} — dig deeper before you commit.
-                  </span>
-                </span>
-
-                <span className="mt-3 block space-y-1.5 border-t border-white/10 pt-3 text-[11px] leading-snug text-night-faint">
-                  <span className="flex items-start gap-1.5">
+            <section
+              className="px-3 pt-5 pb-2"
+              aria-label="How diligence voting works"
+              data-testid="buyer-community-promo"
+            >
+              <div className="rounded-2xl border border-white/20 bg-night-elevated/45 px-3.5 py-3.5">
+                {/* 1 — County's Fact remote path */}
+                <div data-testid="promo-county-fact">
+                  <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+                    County&apos;s Fact
+                  </p>
+                  <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
+                    Living-area labels can be voted <span className="font-semibold">remotely</span>{' '}
+                    — no GPS visit required. Compare county sqft to the published listing size,
+                    then upvote whether it matches or looks overstated.
+                  </p>
+                  <ol className="mt-2 list-decimal space-y-1 pl-4 text-[11px] leading-snug text-night-faint">
+                    <li>Open County&apos;s Fact and read grossSizeAdjusted.</li>
+                    <li>Check the published size on Zillow or Redfin.</li>
+                    <li>Upvote Match or Overstated in the remote insight panel.</li>
+                  </ol>
+                  <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-night-faint">
                     <Crosshair
                       className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow"
                       strokeWidth={2.25}
                     />
                     <span>
-                      <span className="font-semibold text-night-ink">Visit-verified voting:</span>{' '}
-                      use Verify on this header while at the home to unlock on-site Plus/Watch
-                      upvotes.
+                      GPS Verify is <span className="font-semibold text-night-ink">not needed</span>{' '}
+                      for this size check — it&apos;s the one remote exception.
                     </span>
-                  </span>
-                  <span className="flex items-start gap-1.5">
-                    <FileText
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSurface('county-facts')}
+                    className="mt-2.5 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.04] px-3 text-[12px] font-semibold text-saffron-glow transition-colors hover:border-saffron/40 touch-manipulation"
+                    data-testid="button-promo-open-county-facts"
+                  >
+                    <FileText className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    Open County&apos;s Fact
+                  </button>
+                </div>
+
+                <div className="my-3.5 border-t border-white/12" />
+
+                {/* 2 — Community insights + GPS + Plus/Watch */}
+                <div data-testid="promo-community-insights">
+                  <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+                    Buyer Community Insights
+                  </p>
+                  <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
+                    Everything else is visit-backed. Structured Plus/Watch labels from buyers who
+                    showed up — not listing hype.
+                  </p>
+                  <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-night-faint">
+                    <Crosshair
                       className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow"
                       strokeWidth={2.25}
                     />
                     <span>
-                      <span className="font-semibold text-night-ink">Remote size check:</span> only
-                      county-vs-listing living-area labels can be voted without a visit — open
-                      County&apos;s Fact, compare grossSizeAdjusted to Zillow/Redfin, then upvote
-                      match or overstated.
+                      <span className="font-semibold text-night-ink">GPS verification:</span> tap
+                      Verify on this header while at the home to unlock on-site community upvotes.
                     </span>
-                  </span>
-                </span>
+                  </p>
 
-                <span className="mt-3 block text-center text-[11px] font-semibold text-saffron-glow">
-                  Open Buyer Community →
-                </span>
-              </button>
+                  <div
+                    className="mt-3 space-y-2 rounded-xl border border-white/12 bg-black/20 px-3 py-2.5"
+                    data-testid="promo-plus-watch"
+                  >
+                    <div className="grid items-start gap-x-3" style={{ gridTemplateColumns: '3.6rem 1fr' }}>
+                      <span className={cn('justify-self-start', plusWatchChipClass('plus'))}>
+                        Plus
+                      </span>
+                      <p className="min-w-0 text-[11px] leading-snug text-night-ink">
+                        <span className="font-semibold text-plus-glow">Upsides</span>
+                        <span className="text-night-faint"> — {PLUS_LABEL_SHORT}.</span>
+                      </p>
+                    </div>
+                    <div className="grid items-start gap-x-3" style={{ gridTemplateColumns: '3.6rem 1fr' }}>
+                      <span className={cn('justify-self-start', plusWatchChipClass('watch'))}>
+                        Watch
+                      </span>
+                      <p className="min-w-0 text-[11px] leading-snug text-night-ink">
+                        <span className="font-semibold text-watch-glow">Watch-outs</span>
+                        <span className="text-night-faint"> — {WATCH_LABEL_SHORT}.</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveSurface('buyer-insights')}
+                    className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-saffron/45 bg-saffron/15 px-4 text-[12px] font-semibold text-saffron-glow transition-colors hover:bg-saffron/25 touch-manipulation"
+                    data-testid="button-open-buyer-community"
+                  >
+                    <Users className="h-4 w-4" strokeWidth={2.25} />
+                    Open Buyer Community
+                  </button>
+                </div>
+              </div>
             </section>
           </div>
         </>
