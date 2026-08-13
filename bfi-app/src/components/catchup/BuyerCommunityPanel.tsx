@@ -186,10 +186,10 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
   return (
     <div className="mt-6 space-y-4 px-3 pt-1" data-testid="buyer-community-panel">
       <div
-        className="flex min-h-11 items-center px-2 py-1.5"
+        className="flex min-h-11 items-center justify-center px-2 py-1.5"
         data-testid="buyer-community-page-title"
       >
-        <h2 className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+        <h2 className="text-center font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           Buyer Community Insights
         </h2>
       </div>
