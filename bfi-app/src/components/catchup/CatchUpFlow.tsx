@@ -72,11 +72,6 @@ function stripHash(value: string) {
   return value.replace(/^#+/, '').replaceAll('#', '')
 }
 
-function truncateAddress(address: string, max = 22) {
-  if (address.length <= max) return address
-  return `${address.slice(0, max - 1)}…`
-}
-
 function DetailSection({ card, propertyId }: { card: CatchUpCard; propertyId: string }) {
   const [open, setOpen] = useState(true)
   const fieldCount = card.fields?.length ?? 0
@@ -170,9 +165,9 @@ export function CatchUpFlow({
 }: CatchUpFlowProps) {
   const meta = surfaceMeta[surface]
   const items = response.items
-  const truncated = truncateAddress(address)
   const isBuyerCommunity = surface === 'buyer-insights'
   const isVerifiedVisits = surface === 'verified-visits'
+  const isCountyFacts = surface === 'county-facts'
   const headerCount = isBuyerCommunity
     ? BUYER_COMMUNITY_LABELS.length
     : isVerifiedVisits
@@ -192,7 +187,7 @@ export function CatchUpFlow({
         className="relative z-20 shrink-0 bfi-status-pad"
         data-testid="tile-detail-top-bar"
       >
-        <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-3 pb-2.5 pt-2">
+        <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-start gap-2 px-3 pb-2.5 pt-2">
           <button
             type="button"
             onClick={onClose}
@@ -205,11 +200,10 @@ export function CatchUpFlow({
 
           <h1
             id="detail-title"
-            className="truncate text-center font-display text-[15px] font-semibold tracking-tight text-saffron-glow"
-            title={address}
+            className="min-w-0 text-center font-display text-[13px] font-semibold leading-snug tracking-tight text-balance text-saffron-glow sm:text-[15px]"
             data-testid="text-tile-address"
           >
-            {truncated}
+            {address}
           </h1>
 
           <span className="w-11" aria-hidden />
@@ -231,10 +225,10 @@ export function CatchUpFlow({
               >
                 <PlusWatchLegend variant="full" showIntro={false} />
               </div>
-            ) : (
+            ) : isCountyFacts ? null : (
               <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
             )}
-            {surface !== 'county-facts' ? (
+            {!isCountyFacts ? (
               <span className="mt-2 inline-flex rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
                 {headerCount}
               </span>

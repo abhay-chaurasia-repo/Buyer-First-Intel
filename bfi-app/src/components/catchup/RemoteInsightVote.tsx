@@ -86,8 +86,8 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
       <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
         Remote insight · no visit needed
       </p>
-      <p className="mt-1 text-[10px] text-night-faint">
-        Compare county sqft with the published size on Zillow or Redfin, then upvote one.
+      <p className="mt-1 whitespace-nowrap text-[9px] leading-none text-night-faint sm:text-[10px]">
+        Compare county sqft to Zillow/Redfin, then upvote one.
       </p>
       <div className="mt-1.5 space-y-1">
         {labels.map((label) => {
