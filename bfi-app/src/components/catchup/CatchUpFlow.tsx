@@ -80,6 +80,7 @@ function truncateAddress(address: string, max = 22) {
 function DetailSection({ card, propertyId }: { card: CatchUpCard; propertyId: string }) {
   const [open, setOpen] = useState(true)
   const fieldCount = card.fields?.length ?? 0
+  const hasFields = fieldCount > 0
 
   return (
     <section data-testid={`detail-section-${card.id}`}>
@@ -108,10 +109,13 @@ function DetailSection({ card, propertyId }: { card: CatchUpCard; propertyId: st
 
       {open ? (
         <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
-          <p className="px-2 pb-1 text-[11px] text-night-faint">{stripHash(card.preview)}</p>
+          {/* Preview is a duplicate of field rows when fields exist — show only as fallback. */}
+          {!hasFields && card.preview ? (
+            <p className="px-2 py-2 text-sm text-night-ink">{stripHash(card.preview)}</p>
+          ) : null}
 
-          {card.fields && card.fields.length > 0
-            ? card.fields.map((field) => (
+          {hasFields
+            ? card.fields!.map((field) => (
                 <div
                   key={`${field.label}-${field.value}`}
                   className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-2 py-2"
@@ -123,9 +127,7 @@ function DetailSection({ card, propertyId }: { card: CatchUpCard; propertyId: st
                   </span>
                 </div>
               ))
-            : (
-                <p className="px-2 py-2 text-sm text-night-ink">{stripHash(card.preview)}</p>
-              )}
+            : null}
 
           {card.insightLabelIds?.length || card.insightLabelId ? (
             <RemoteInsightVote
@@ -232,9 +234,11 @@ export function CatchUpFlow({
             ) : (
               <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
             )}
-            <span className="mt-2 inline-flex rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-              {headerCount}
-            </span>
+            {surface !== 'county-facts' ? (
+              <span className="mt-2 inline-flex rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+                {headerCount}
+              </span>
+            ) : null}
           </div>
         </section>
 
