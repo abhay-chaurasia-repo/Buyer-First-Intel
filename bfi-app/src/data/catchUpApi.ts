@@ -1,4 +1,12 @@
 import type { MockProperty } from './mockProperty'
+import {
+  COUNTY_FACT_MISSING,
+  formatCountyLot,
+  formatCountyNumber,
+  formatCountySqft,
+  formatCountyText,
+  isMissingCountyNumber,
+} from '@/lib/formatCountyFact'
 
 /** API-shaped payloads ready for future fetch() binding */
 
@@ -102,9 +110,15 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           .filter(Boolean)
           .join(', ')
       : null
-  const lotLabel = property.lotSizeAcres
-    ? `${property.lotSizeSqft.toLocaleString()} sqft · ${property.lotSizeAcres} ac`
-    : `${property.lotSizeSqft.toLocaleString()} sqft`
+  const lotLabel = formatCountyLot(property.lotSizeSqft, property.lotSizeAcres)
+  const sqftLabel = formatCountySqft(property.sqft)
+  const bedsLabel = formatCountyNumber(property.bedrooms)
+  const bathsLabel = !isMissingCountyNumber(property.bathrooms)
+    ? bathDetail
+      ? `${property.bathrooms} (${bathDetail})`
+      : String(property.bathrooms)
+    : COUNTY_FACT_MISSING
+  const yearLabel = formatCountyNumber(property.yearBuilt)
   const items: CatchUpCard[] = [
     {
       id: 'cf-living-area',
@@ -113,14 +127,16 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       unreadCount: 1,
       headline: 'County living-area fact',
       preview: live
-        ? `County grossSizeAdjusted shows ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote whether it matches or looks overstated.`
+        ? isMissingCountyNumber(property.sqft)
+          ? 'County living area not published in ATTOM basicprofile for this parcel. Compare listing size on Zillow or Redfin when available.'
+          : `County grossSizeAdjusted shows ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote whether it matches or looks overstated.`
         : `Demo shell shows ${property.sqft.toLocaleString()} sqft — replace by searching a live address with ATTOM bound.`,
       timestamp: isoMinutesAgo(18),
       source,
       fields: [
         {
           label: live ? 'grossSizeAdjusted' : 'County sqft (demo)',
-          value: `${property.sqft.toLocaleString()} sqft`,
+          value: sqftLabel,
         },
       ],
       insightLabelIds: [
@@ -134,18 +150,21 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       channel: 'county-rooms',
       unreadCount: 1,
       headline: 'Beds, baths, year built',
-      preview: `${property.bedrooms} bed · ${property.bathrooms} bath · built ${property.yearBuilt} · lot ${lotLabel}.`,
+      preview: [
+        `${bedsLabel} bed`,
+        `${formatCountyNumber(property.bathrooms)} bath`,
+        `built ${yearLabel}`,
+        `lot ${lotLabel}`,
+      ].join(' · ') + '.',
       timestamp: isoMinutesAgo(40),
       source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
       fields: [
-        { label: 'Beds', value: String(property.bedrooms) },
+        { label: 'Beds', value: bedsLabel },
         {
           label: 'Baths total',
-          value: bathDetail
-            ? `${property.bathrooms} (${bathDetail})`
-            : String(property.bathrooms),
+          value: bathsLabel,
         },
-        { label: 'Year built', value: String(property.yearBuilt) },
+        { label: 'Year built', value: yearLabel },
         ...(property.levels != null
           ? [{ label: 'Levels', value: String(property.levels) }]
           : []),
@@ -156,8 +175,8 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           ? [{ label: 'Fireplaces', value: String(property.fireplaceCount) }]
           : []),
         { label: 'Lot', value: lotLabel },
-        { label: 'Zoning', value: property.zoning },
-        { label: 'APN', value: property.apn },
+        { label: 'Zoning', value: formatCountyText(property.zoning) },
+        { label: 'APN', value: formatCountyText(property.apn) },
       ],
     },
     {
@@ -186,8 +205,8 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           ? [{ label: 'Legal', value: property.legalDescription }]
           : []),
         ...(property.countyName ? [{ label: 'County', value: property.countyName }] : []),
-        { label: 'Zoning', value: property.zoning },
-        { label: 'APN', value: property.apn },
+        { label: 'Zoning', value: formatCountyText(property.zoning) },
+        { label: 'APN', value: formatCountyText(property.apn) },
       ],
     },
     {
@@ -380,15 +399,17 @@ export function fetchTaxHistoryApi(property: MockProperty): CatchUpApiResponse {
       type: 'tax',
       channel: 'tax-assessment',
       unreadCount: 1,
-      headline: `${property.taxYear} assessed value`,
+      headline: isMissingCountyNumber(property.taxYear)
+        ? 'Assessed value'
+        : `${property.taxYear} assessed value`,
       preview: live
         ? `${property.taxAssessedValueLabel}. Land and improvement values from ATTOM assessment.`
         : `${property.taxAssessedValueLabel}. Homestead exemption flagged in stub data.`,
       timestamp: isoMinutesAgo(25),
       source: live ? 'ATTOM /assessment/detail' : 'GET /api/properties/:id · tax',
       fields: [
-        { label: 'Tax year', value: String(property.taxYear) },
-        { label: 'Assessed', value: property.taxAssessedValueLabel },
+        { label: 'Tax year', value: formatCountyNumber(property.taxYear) },
+        { label: 'Assessed', value: formatCountyText(property.taxAssessedValueLabel) },
         {
           label: 'Annual tax',
           value: property.taxAmountLabel || (live ? '—' : 'Stub — bind ATTOM tax amount'),

@@ -1,4 +1,11 @@
 import { BUYER_LABEL_CATEGORIES } from '@/data/buyerCommunityLabels'
+import {
+  formatCountyLot,
+  formatCountyNumber,
+  formatCountySqft,
+  formatCountyText,
+  isMissingCountyNumber,
+} from '@/lib/formatCountyFact'
 
 export type PropertyChannelId =
   | '01-property-summary'
@@ -441,7 +448,7 @@ export function getChannelCanvas(
       fields: [
         {
           label: 'County living area',
-          value: `${property.sqft.toLocaleString()} sqft`,
+          value: formatCountySqft(property.sqft),
           source: 'ATTOM basicprofile',
         },
         {
@@ -449,11 +456,12 @@ export function getChannelCanvas(
           value: property.claimedSqft ? `${property.claimedSqft.toLocaleString()} sqft` : '—',
           source: 'External claim',
         },
-        { label: 'Bedrooms', value: String(property.bedrooms), source: 'ATTOM basicprofile' },
+        { label: 'Bedrooms', value: formatCountyNumber(property.bedrooms), source: 'ATTOM basicprofile' },
         {
           label: 'Bathrooms',
-          value:
-            property.bathsFull != null || property.bathsPartial != null
+          value: isMissingCountyNumber(property.bathrooms)
+            ? '—'
+            : property.bathsFull != null || property.bathsPartial != null
               ? `${property.bathrooms} (${[
                   property.bathsFull != null ? `${property.bathsFull} full` : null,
                   property.bathsPartial != null ? `${property.bathsPartial} partial` : null,
@@ -463,15 +471,17 @@ export function getChannelCanvas(
               : String(property.bathrooms),
           source: 'ATTOM basicprofile',
         },
-        { label: 'Year built', value: String(property.yearBuilt), source: 'ATTOM basicprofile' },
+        {
+          label: 'Year built',
+          value: formatCountyNumber(property.yearBuilt),
+          source: 'ATTOM basicprofile',
+        },
         ...(property.levels != null
           ? [{ label: 'Levels', value: String(property.levels), source: 'ATTOM basicprofile' }]
           : []),
         {
           label: 'Lot size',
-          value: property.lotSizeAcres
-            ? `${property.lotSizeSqft.toLocaleString()} sqft · ${property.lotSizeAcres} ac`
-            : `${property.lotSizeSqft.toLocaleString()} sqft`,
+          value: formatCountyLot(property.lotSizeSqft, property.lotSizeAcres),
           source: 'County',
         },
         ...(property.propertyTypeLabel
@@ -495,8 +505,8 @@ export function getChannelCanvas(
         ...(property.countyName
           ? [{ label: 'County', value: property.countyName, source: 'ATTOM basicprofile' }]
           : []),
-        { label: 'Zoning', value: property.zoning, source: 'County' },
-        { label: 'APN', value: property.apn, source: 'County' },
+        { label: 'Zoning', value: formatCountyText(property.zoning), source: 'County' },
+        { label: 'APN', value: formatCountyText(property.apn), source: 'County' },
         ...(property.garageType
           ? [
               {
@@ -593,7 +603,7 @@ export function getChannelCanvas(
         resourceKey: 'property.tax',
       },
       fields: [
-        { label: 'Tax year', value: String(property.taxYear), source: 'Assessor' },
+        { label: 'Tax year', value: formatCountyNumber(property.taxYear), source: 'Assessor' },
         { label: 'Assessed value', value: property.taxAssessedValueLabel, source: 'Assessor' },
         { label: 'Land assessed', value: 'Stub — bind ATTOM land value', source: 'Assessor' },
         { label: 'Improvement assessed', value: 'Stub — bind ATTOM improvement value', source: 'Assessor' },
