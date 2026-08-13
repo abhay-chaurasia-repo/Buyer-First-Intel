@@ -325,8 +325,9 @@ export const SEARCH_HISTORY: HistoryAddress[] = [
 ]
 
 export function getMetricCards(property: MockProperty): MetricCard[] {
+  const live = property.factsStatus === 'live'
   const hasDiscrepancy = Boolean(
-    property.claimedSqft && property.sqft && property.claimedSqft !== property.sqft,
+    live && property.claimedSqft && property.sqft && property.claimedSqft !== property.sqft,
   )
 
   return [
@@ -335,23 +336,35 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
       title: "County's Fact",
       subtitle: 'Public records',
       badge: hasDiscrepancy ? '1' : undefined,
-      detail: `County ${property.sqft.toLocaleString()} sqft · ${property.bedrooms}/${property.bathrooms}`,
+      detail: live
+        ? `County ${property.sqft.toLocaleString()} sqft · ${property.bedrooms}/${property.bathrooms}`
+        : property.factsStatus === 'demo'
+          ? `Demo ${property.sqft.toLocaleString()} sqft · ${property.bedrooms}/${property.bathrooms}`
+          : 'Pending ATTOM county bind',
       accent: 'county-facts',
     },
     {
       id: 'sales-history',
       title: 'Sales History',
       subtitle: 'Deed transfers',
-      badge: '2',
-      detail: `${property.deedType} · ${property.lastSaleDate}`,
+      badge: live ? '2' : undefined,
+      detail: live
+        ? `${property.deedType} · ${property.lastSaleDate}`
+        : property.factsStatus === 'demo'
+          ? `${property.deedType} · ${property.lastSaleDate}`
+          : 'Pending recorded transfers',
       accent: 'sales-history',
     },
     {
       id: 'tax-history',
       title: 'Tax History',
       subtitle: 'Assessments',
-      badge: '2',
-      detail: `${property.taxYear} · ${property.taxAssessedValueLabel}`,
+      badge: live ? '2' : undefined,
+      detail: live
+        ? `${property.taxYear} · ${property.taxAssessedValueLabel}`
+        : property.factsStatus === 'demo'
+          ? `${property.taxYear} · ${property.taxAssessedValueLabel}`
+          : 'Pending assessor roll',
       accent: 'tax-history',
     },
     {
@@ -572,6 +585,21 @@ export function resolvePropertyFromQuery(query: string): MockProperty {
 
   return {
     ...DEMO_PROPERTY,
+    sqft: 0,
+    bedrooms: 0,
+    bathrooms: 0,
+    yearBuilt: 0,
+    claimedSqft: undefined,
+    verifiedVisits: 0,
+    ownerName: '—',
+    ownerOccupied: false,
+    lastSaleDate: '—',
+    deedType: '—',
+    taxAssessedValueLabel: 'Pending county assessor',
+    taxYear: 0,
+    lotSizeSqft: 0,
+    apn: '—',
+    zoning: '—',
     id: `lookup-${encodeURIComponent(trimmed.toLowerCase()).slice(0, 48)}`,
     address: street,
     addressSource: 'unresolved',

@@ -70,7 +70,29 @@ function wrapResponse(
 /** GET /api/properties/:id/county-facts */
 export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse {
   const live = property.factsStatus === 'live'
-  const source = live ? 'ATTOM /property/basicprofile' : 'County assessor living area'
+  const demo = property.factsStatus === 'demo'
+
+  if (!live && !demo) {
+    return wrapResponse(property.id, `/api/properties/${property.id}/county-facts`, [
+      {
+        id: 'cf-pending',
+        type: 'spec',
+        channel: 'county-pending',
+        unreadCount: 1,
+        headline: 'County facts pending',
+        preview:
+          'Address matched. Waiting for ATTOM /property/basicprofile (year built, living area, beds/baths, owner). Demo numbers are not shown.',
+        timestamp: isoMinutesAgo(2),
+        source: 'Pending ATTOM basicprofile',
+        fields: [
+          { label: 'Status', value: 'Pending live county bind' },
+          { label: 'Address', value: `${property.address}, ${property.city}, ${property.state}` },
+        ],
+      },
+    ])
+  }
+
+  const source = live ? 'ATTOM /property/basicprofile' : 'Demo county shell'
   const bathDetail =
     property.bathsFull != null || property.bathsPartial != null
       ? [
@@ -89,12 +111,12 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       headline: 'County living-area fact',
       preview: live
         ? `County grossSizeAdjusted shows ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote whether it matches or looks overstated.`
-        : `County records show ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote whether it matches or looks overstated.`,
+        : `Demo shell shows ${property.sqft.toLocaleString()} sqft — replace by searching a live address with ATTOM bound.`,
       timestamp: isoMinutesAgo(18),
       source,
       fields: [
         {
-          label: live ? 'grossSizeAdjusted' : 'County sqft',
+          label: live ? 'grossSizeAdjusted' : 'County sqft (demo)',
           value: `${property.sqft.toLocaleString()} sqft`,
         },
       ],
@@ -111,7 +133,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       headline: 'Beds, baths, year built',
       preview: `${property.bedrooms} bed · ${property.bathrooms} bath · built ${property.yearBuilt} · lot ${property.lotSizeSqft.toLocaleString()} sqft.`,
       timestamp: isoMinutesAgo(40),
-      source: live ? 'ATTOM /property/basicprofile' : 'GET /api/properties/:id',
+      source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
       fields: [
         { label: 'Beds', value: String(property.bedrooms) },
         {
@@ -134,7 +156,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       headline: 'Owner of record',
       preview: `${property.ownerName} · owner-occupied: ${property.ownerOccupied ? 'Yes' : 'No'}. Public-record only.`,
       timestamp: isoMinutesAgo(90),
-      source: live ? 'ATTOM basicprofile assessment.owner' : 'GET /api/properties/:id',
+      source: live ? 'ATTOM basicprofile assessment.owner' : 'Demo county shell',
       fields: [
         { label: 'Owner', value: property.ownerName },
         { label: 'Occupied', value: property.ownerOccupied ? 'Yes' : 'No' },
@@ -142,7 +164,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           ? [{ label: 'Mailing', value: property.ownerMailingAddress }]
           : live
             ? []
-            : [{ label: 'Mailing', value: 'Same as property (stub)' }]),
+            : [{ label: 'Mailing', value: 'Same as property (demo)' }]),
       ],
     },
   ]

@@ -9,7 +9,42 @@ import { DEMO_PROPERTY, type MockProperty } from '@/data/mockProperty'
 import { isHouseNumberOnlyQuery, resolveAddress, searchAddresses } from '@/lib/addressSearch'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 
-const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v8'
+/**
+ * Demo county/tax/sale fields must never ride along on a real address shell.
+ * Only ATTOM (factsStatus: live) or explicit demo mode may populate these.
+ */
+function blankCountyFacts(): Partial<MockProperty> {
+  return {
+    sqft: 0,
+    bedrooms: 0,
+    bathrooms: 0,
+    bathsFull: undefined,
+    bathsPartial: undefined,
+    yearBuilt: 0,
+    claimedSqft: undefined,
+    verifiedVisits: 0,
+    ownerName: '—',
+    ownerMailingAddress: undefined,
+    ownerOccupied: false,
+    lastSaleDate: '—',
+    lastSalePriceLabel: 'Not shown (buyer-first)',
+    deedType: '—',
+    saleDocumentNumber: undefined,
+    taxAssessedValueLabel: 'Pending county assessor',
+    taxYear: 0,
+    taxLandLabel: undefined,
+    taxImprovementLabel: undefined,
+    taxAmountLabel: undefined,
+    marketValueLabel: undefined,
+    lotSizeSqft: 0,
+    apn: '—',
+    zoning: '—',
+    attomId: undefined,
+    salesHistory: undefined,
+  }
+}
+
+const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v9'
 const SELECTED_ADDRESS_KEY = 'bfi.selectedAddress.v1'
 const RECENT_ADDRESSES_KEY = 'bfi.recentAddressSuggestions.v1'
 
@@ -21,6 +56,7 @@ try {
   sessionStorage.removeItem('bfi.propertyLookupCache.v5')
   sessionStorage.removeItem('bfi.propertyLookupCache.v6')
   sessionStorage.removeItem('bfi.propertyLookupCache.v7')
+  sessionStorage.removeItem('bfi.propertyLookupCache.v8')
 } catch {
   // ignore
 }
@@ -216,6 +252,7 @@ export function propertyFromResolvedAddress(
 ): MockProperty {
   return {
     ...DEMO_PROPERTY,
+    ...blankCountyFacts(),
     ...extras,
     id: resolved.id,
     address: resolved.street,
@@ -239,6 +276,7 @@ export function propertyFromUnresolvedQuery(query: string): MockProperty {
   const street = trimmed.includes(',') ? trimmed.split(',')[0]!.trim() : trimmed
   return {
     ...DEMO_PROPERTY,
+    ...blankCountyFacts(),
     id: `lookup-${encodeURIComponent(trimmed.toLowerCase()).slice(0, 48)}`,
     address: street,
     addressSource: 'unresolved',
@@ -292,7 +330,7 @@ function resultFromPayload(
     status: statusFor(
       property,
       payload.attomError
-        ? `ATTOM: ${payload.attomError}. Showing matched address; county facts stay illustrative.`
+        ? `ATTOM: ${payload.attomError}. Address matched; county facts stay pending.`
         : undefined,
     ),
   }
