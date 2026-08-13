@@ -13,6 +13,7 @@ export const OWNED_STORAGE_BASES = [
   'bfi.watchlist',
   'bfi.property-notes',
   'bfi.journey-checklist',
+  'bfi.buyer-community-votes.v2',
   'bfi.buyer-community-votes',
   'bfi.buyer-community-verified',
   'bfi.visit-reminders-fired',
