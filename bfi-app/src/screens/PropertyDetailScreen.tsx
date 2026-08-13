@@ -13,8 +13,13 @@ import {
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { CatchUpFlow, type CatchUpSurface } from '@/components/catchup/CatchUpFlow'
+import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import { useAuth } from '@/auth/AuthProvider'
 import { fetchSurfaceApi } from '@/data/catchUpApi'
+import {
+  PLUS_LABEL_SHORT,
+  WATCH_LABEL_SHORT,
+} from '@/data/buyerCommunityLabels'
 import {
   DEMO_PROPERTY,
   getMetricCards,
@@ -271,19 +276,67 @@ export function PropertyDetailScreen() {
               <button
                 type="button"
                 onClick={() => setActiveSurface('buyer-insights')}
-                className="flex w-full items-center gap-3 rounded-2xl border border-white/20 bg-night-elevated/45 px-3.5 py-3 text-left transition-colors hover:border-saffron/40 hover:bg-night-elevated/65 active:opacity-90 touch-manipulation"
+                className="w-full rounded-2xl border border-white/20 bg-night-elevated/45 px-3.5 py-3.5 text-left transition-colors hover:border-saffron/40 hover:bg-night-elevated/65 active:opacity-90 touch-manipulation"
                 data-testid="button-open-buyer-community"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-saffron/25 text-saffron-glow">
-                  <Users className="h-5 w-5" strokeWidth={2.25} />
+                <span className="flex items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-saffron/25 text-saffron-glow">
+                    <Users className="h-5 w-5" strokeWidth={2.25} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-[13px] font-semibold text-saffron-glow">
+                      Buyer Community Insights
+                    </span>
+                    <span className="mt-1 block text-[11px] leading-snug text-night-ink">
+                      Structured signals from buyers who showed up — not listing hype. Open the
+                      catalog, then upvote what matches what you see.
+                    </span>
+                  </span>
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-display text-[13px] font-semibold text-saffron-glow">
-                    Buyer Community
+
+                <span className="mt-3 grid gap-y-1.5" style={{ gridTemplateColumns: '3.4rem 1fr' }}>
+                  <span className={cn('mt-0.5 justify-self-start', plusWatchChipClass('plus'))}>
+                    Plus
                   </span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-night-faint">
-                    Browse Plus &amp; Watch labels from buyers — upvote what matches what you see.
+                  <span className="min-w-0 text-[11px] leading-snug text-night-faint">
+                    {PLUS_LABEL_SHORT} — encouraging cues worth confirming.
                   </span>
+                  <span className={cn('mt-0.5 justify-self-start', plusWatchChipClass('watch'))}>
+                    Watch
+                  </span>
+                  <span className="min-w-0 text-[11px] leading-snug text-night-faint">
+                    {WATCH_LABEL_SHORT} — dig deeper before you commit.
+                  </span>
+                </span>
+
+                <span className="mt-3 block space-y-1.5 border-t border-white/10 pt-3 text-[11px] leading-snug text-night-faint">
+                  <span className="flex items-start gap-1.5">
+                    <Crosshair
+                      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow"
+                      strokeWidth={2.25}
+                    />
+                    <span>
+                      <span className="font-semibold text-night-ink">Visit-verified voting:</span>{' '}
+                      use Verify on this header while at the home to unlock on-site Plus/Watch
+                      upvotes.
+                    </span>
+                  </span>
+                  <span className="flex items-start gap-1.5">
+                    <FileText
+                      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow"
+                      strokeWidth={2.25}
+                    />
+                    <span>
+                      <span className="font-semibold text-night-ink">Remote size check:</span> only
+                      county-vs-listing living-area labels can be voted without a visit — open
+                      County&apos;s Fact, compare grossSizeAdjusted to Zillow/Redfin, then upvote
+                      match or overstated.
+                    </span>
+                  </span>
+                </span>
+
+                <span className="mt-3 block text-center text-[11px] font-semibold text-saffron-glow">
+                  Open Buyer Community →
                 </span>
               </button>
             </section>
