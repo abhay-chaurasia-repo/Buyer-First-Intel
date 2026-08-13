@@ -72,37 +72,58 @@ function stripHash(value: string) {
   return value.replace(/^#+/, '').replaceAll('#', '')
 }
 
-function DetailSection({ card, propertyId }: { card: CatchUpCard; propertyId: string }) {
+function DetailSection({
+  card,
+  propertyId,
+  collapsible = true,
+}: {
+  card: CatchUpCard
+  propertyId: string
+  /** County’s Fact entries stay open — buyers scroll the full set. */
+  collapsible?: boolean
+}) {
   const [open, setOpen] = useState(true)
   const fieldCount = card.fields?.length ?? 0
   const hasFields = fieldCount > 0
+  const expanded = collapsible ? open : true
 
   return (
     <section data-testid={`detail-section-${card.id}`}>
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full min-h-11 items-center gap-2 rounded-xl px-2 py-1.5 text-left touch-manipulation"
-        aria-expanded={open}
-        data-testid={`button-toggle-section-${card.id}`}
-      >
-        <ChevronDown
-          className={cn(
-            'h-4 w-4 text-saffron-glow transition-transform',
-            !open && '-rotate-90',
-          )}
-        />
-        <span className="min-w-0 flex-1 truncate font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-          {stripHash(card.headline)}
-        </span>
-        {fieldCount > 0 ? (
-          <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-            {fieldCount}
+      {collapsible ? (
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="flex w-full min-h-11 items-center gap-2 rounded-xl px-2 py-1.5 text-left touch-manipulation"
+          aria-expanded={open}
+          data-testid={`button-toggle-section-${card.id}`}
+        >
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 text-saffron-glow transition-transform',
+              !open && '-rotate-90',
+            )}
+          />
+          <span className="min-w-0 flex-1 truncate font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+            {stripHash(card.headline)}
           </span>
-        ) : null}
-      </button>
+          {fieldCount > 0 ? (
+            <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+              {fieldCount}
+            </span>
+          ) : null}
+        </button>
+      ) : (
+        <div
+          className="flex w-full min-h-11 items-center gap-2 px-2 py-1.5"
+          data-testid={`section-heading-${card.id}`}
+        >
+          <span className="min-w-0 flex-1 font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+            {stripHash(card.headline)}
+          </span>
+        </div>
+      )}
 
-      {open ? (
+      {expanded ? (
         <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
           {/* Preview is a duplicate of field rows when fields exist — show only as fallback. */}
           {!hasFields && card.preview ? (
@@ -245,7 +266,12 @@ export function CatchUpFlow({
           <div className={cn('space-y-4 px-3', isCountyFacts ? 'mt-6 pt-1' : 'mt-3')}>
             {items.length > 0 ? (
               items.map((card) => (
-                <DetailSection key={card.id} card={card} propertyId={propertyId} />
+                <DetailSection
+                  key={card.id}
+                  card={card}
+                  propertyId={propertyId}
+                  collapsible={!isCountyFacts}
+                />
               ))
             ) : (
               <div className="rounded-2xl border border-white/25 bg-transparent p-4 text-center">

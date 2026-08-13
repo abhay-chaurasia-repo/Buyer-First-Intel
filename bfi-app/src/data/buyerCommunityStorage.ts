@@ -2,7 +2,7 @@
 
 import { loadGpsVerified, persistGpsVerified, readScopedItem, writeScopedItem } from './ownerScope'
 
-export const BUYER_VOTES_STORAGE_KEY = 'bfi.buyer-community-votes'
+export const BUYER_VOTES_STORAGE_KEY = 'bfi.buyer-community-votes.v2'
 /** @deprecated Presence unlock is GPS Verify (`bfi.gpsVerified.*`). Kept for owner-scope migration lists. */
 export const BUYER_VERIFIED_STORAGE_KEY = 'bfi.buyer-community-verified'
 

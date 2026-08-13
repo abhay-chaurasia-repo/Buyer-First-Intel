@@ -83,7 +83,7 @@ export const BUYER_COMMUNITY_LABELS: BuyerCommunityLabel[] = [
     categoryId: 'size-records',
     text: 'Published listing size matches county',
     tone: 'positive',
-    seedVotes: 4,
+    seedVotes: 0,
     requiresVisit: false,
   },
   {
@@ -91,7 +91,7 @@ export const BUYER_COMMUNITY_LABELS: BuyerCommunityLabel[] = [
     categoryId: 'size-records',
     text: 'Published listing size looks larger than county',
     tone: 'negative',
-    seedVotes: 5,
+    seedVotes: 0,
     requiresVisit: false,
   },
   // Size & records — positive
