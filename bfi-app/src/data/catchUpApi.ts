@@ -102,6 +102,9 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           .filter(Boolean)
           .join(', ')
       : null
+  const lotLabel = property.lotSizeAcres
+    ? `${property.lotSizeSqft.toLocaleString()} sqft · ${property.lotSizeAcres} ac`
+    : `${property.lotSizeSqft.toLocaleString()} sqft`
   const items: CatchUpCard[] = [
     {
       id: 'cf-living-area',
@@ -131,7 +134,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       channel: 'county-rooms',
       unreadCount: 1,
       headline: 'Beds, baths, year built',
-      preview: `${property.bedrooms} bed · ${property.bathrooms} bath · built ${property.yearBuilt} · lot ${property.lotSizeSqft.toLocaleString()} sqft.`,
+      preview: `${property.bedrooms} bed · ${property.bathrooms} bath · built ${property.yearBuilt} · lot ${lotLabel}.`,
       timestamp: isoMinutesAgo(40),
       source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
       fields: [
@@ -143,9 +146,90 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
             : String(property.bathrooms),
         },
         { label: 'Year built', value: String(property.yearBuilt) },
-        { label: 'Lot', value: `${property.lotSizeSqft.toLocaleString()} sqft` },
+        ...(property.levels != null
+          ? [{ label: 'Levels', value: String(property.levels) }]
+          : []),
+        ...(property.roomsTotal != null
+          ? [{ label: 'Rooms total', value: String(property.roomsTotal) }]
+          : []),
+        ...(property.fireplaceCount != null
+          ? [{ label: 'Fireplaces', value: String(property.fireplaceCount) }]
+          : []),
+        { label: 'Lot', value: lotLabel },
         { label: 'Zoning', value: property.zoning },
         { label: 'APN', value: property.apn },
+      ],
+    },
+    {
+      id: 'cf-identity',
+      type: 'spec',
+      channel: 'county-identity',
+      unreadCount: live ? 1 : 0,
+      headline: 'Property type & land identity',
+      preview: [
+        property.propertyTypeLabel,
+        property.subdivisionName ? `Subdivision ${property.subdivisionName}` : null,
+        property.countyName ? `${property.countyName} County` : null,
+      ]
+        .filter(Boolean)
+        .join(' · ') || 'County identity fields when published.',
+      timestamp: isoMinutesAgo(55),
+      source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
+      fields: [
+        ...(property.propertyTypeLabel
+          ? [{ label: 'Property type', value: property.propertyTypeLabel }]
+          : []),
+        ...(property.subdivisionName
+          ? [{ label: 'Subdivision', value: property.subdivisionName }]
+          : []),
+        ...(property.legalDescription
+          ? [{ label: 'Legal', value: property.legalDescription }]
+          : []),
+        ...(property.countyName ? [{ label: 'County', value: property.countyName }] : []),
+        { label: 'Zoning', value: property.zoning },
+        { label: 'APN', value: property.apn },
+      ],
+    },
+    {
+      id: 'cf-systems',
+      type: 'spec',
+      channel: 'county-systems',
+      unreadCount: live ? 1 : 0,
+      headline: 'Systems, garage & construction',
+      preview: [
+        property.heatingType && property.heatingFuel
+          ? `${property.heatingType} / ${property.heatingFuel}`
+          : property.heatingType,
+        property.coolingType ? `Cool ${property.coolingType}` : null,
+        property.garageType,
+        property.constructionCondition,
+      ]
+        .filter(Boolean)
+        .join(' · ') || 'Utility and shell facts when published.',
+      timestamp: isoMinutesAgo(70),
+      source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
+      fields: [
+        ...(property.garageType
+          ? [
+              {
+                label: 'Garage',
+                value: property.garageSizeSqft
+                  ? `${property.garageType} · ${property.garageSizeSqft.toLocaleString()} sqft`
+                  : property.garageType,
+              },
+            ]
+          : []),
+        ...(property.coolingType ? [{ label: 'Cooling', value: property.coolingType }] : []),
+        ...(property.heatingType ? [{ label: 'Heating', value: property.heatingType }] : []),
+        ...(property.heatingFuel ? [{ label: 'Fuel', value: property.heatingFuel }] : []),
+        ...(property.wallType ? [{ label: 'Walls', value: property.wallType }] : []),
+        ...(property.constructionCondition
+          ? [{ label: 'Condition', value: property.constructionCondition }]
+          : []),
+        ...(property.constructionType
+          ? [{ label: 'Construction', value: property.constructionType }]
+          : []),
+        ...(property.frameType ? [{ label: 'Frame', value: property.frameType }] : []),
       ],
     },
     {
@@ -165,6 +249,38 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           : live
             ? []
             : [{ label: 'Mailing', value: 'Same as property (demo)' }]),
+      ],
+    },
+    {
+      id: 'cf-freshness',
+      type: 'record_update',
+      channel: 'county-freshness',
+      unreadCount: 0,
+      headline: 'Record freshness',
+      preview: live
+        ? [
+            property.factsPubDate ? `Published ${property.factsPubDate}` : null,
+            property.factsLastModified ? `Modified ${property.factsLastModified}` : null,
+            property.locationAccuracy ? `Location ${property.locationAccuracy}` : null,
+          ]
+            .filter(Boolean)
+            .join(' · ') || 'ATTOM vintage when published.'
+        : 'Demo shell has no ATTOM vintage.',
+      timestamp: isoMinutesAgo(120),
+      source: live ? 'ATTOM basicprofile vintage / location' : 'Demo county shell',
+      fields: [
+        ...(property.factsPubDate
+          ? [{ label: 'Published', value: property.factsPubDate }]
+          : []),
+        ...(property.factsLastModified
+          ? [{ label: 'Last modified', value: property.factsLastModified }]
+          : []),
+        ...(property.locationAccuracy
+          ? [{ label: 'Geo accuracy', value: property.locationAccuracy }]
+          : []),
+        ...(property.attomId != null
+          ? [{ label: 'ATTOM ID', value: String(property.attomId) }]
+          : []),
       ],
     },
   ]

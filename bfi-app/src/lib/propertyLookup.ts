@@ -37,14 +37,34 @@ function blankCountyFacts(): Partial<MockProperty> {
     taxAmountLabel: undefined,
     marketValueLabel: undefined,
     lotSizeSqft: 0,
+    lotSizeAcres: undefined,
     apn: '—',
     zoning: '—',
+    propertyTypeLabel: undefined,
+    legalDescription: undefined,
+    subdivisionName: undefined,
+    countyName: undefined,
+    levels: undefined,
+    roomsTotal: undefined,
+    garageType: undefined,
+    garageSizeSqft: undefined,
+    coolingType: undefined,
+    heatingType: undefined,
+    heatingFuel: undefined,
+    wallType: undefined,
+    constructionCondition: undefined,
+    constructionType: undefined,
+    frameType: undefined,
+    fireplaceCount: undefined,
+    locationAccuracy: undefined,
+    factsLastModified: undefined,
+    factsPubDate: undefined,
     attomId: undefined,
     salesHistory: undefined,
   }
 }
 
-const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v9'
+const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v10'
 const SELECTED_ADDRESS_KEY = 'bfi.selectedAddress.v1'
 const RECENT_ADDRESSES_KEY = 'bfi.recentAddressSuggestions.v1'
 
@@ -57,6 +77,7 @@ try {
   sessionStorage.removeItem('bfi.propertyLookupCache.v6')
   sessionStorage.removeItem('bfi.propertyLookupCache.v7')
   sessionStorage.removeItem('bfi.propertyLookupCache.v8')
+  sessionStorage.removeItem('bfi.propertyLookupCache.v9')
 } catch {
   // ignore
 }

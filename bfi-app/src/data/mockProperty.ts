@@ -125,8 +125,38 @@ export type MockProperty = {
   taxAssessedValueLabel: string
   taxYear: number
   lotSizeSqft: number
+  /** Lot acres from ATTOM lotSize1 when published */
+  lotSizeAcres?: number
   apn: string
   zoning: string
+  /** propClass / propertyType from ATTOM summary */
+  propertyTypeLabel?: string
+  /** summary.legal1 */
+  legalDescription?: string
+  /** area.subdName */
+  subdivisionName?: string
+  /** area.countrySecSubd (county) */
+  countyName?: string
+  /** building.summary.levels */
+  levels?: number
+  /** building.rooms.roomsTotal */
+  roomsTotal?: number
+  garageType?: string
+  garageSizeSqft?: number
+  coolingType?: string
+  heatingType?: string
+  heatingFuel?: string
+  wallType?: string
+  constructionCondition?: string
+  constructionType?: string
+  frameType?: string
+  fireplaceCount?: number
+  /** location.accuracy e.g. Rooftop */
+  locationAccuracy?: string
+  /** vintage.lastModified */
+  factsLastModified?: string
+  /** vintage.pubDate */
+  factsPubDate?: string
   starred: boolean
 }
 
@@ -434,9 +464,77 @@ export function getChannelCanvas(
           source: 'ATTOM basicprofile',
         },
         { label: 'Year built', value: String(property.yearBuilt), source: 'ATTOM basicprofile' },
-        { label: 'Lot size', value: `${property.lotSizeSqft.toLocaleString()} sqft`, source: 'County' },
+        ...(property.levels != null
+          ? [{ label: 'Levels', value: String(property.levels), source: 'ATTOM basicprofile' }]
+          : []),
+        {
+          label: 'Lot size',
+          value: property.lotSizeAcres
+            ? `${property.lotSizeSqft.toLocaleString()} sqft · ${property.lotSizeAcres} ac`
+            : `${property.lotSizeSqft.toLocaleString()} sqft`,
+          source: 'County',
+        },
+        ...(property.propertyTypeLabel
+          ? [
+              {
+                label: 'Property type',
+                value: property.propertyTypeLabel,
+                source: 'ATTOM basicprofile',
+              },
+            ]
+          : []),
+        ...(property.subdivisionName
+          ? [
+              {
+                label: 'Subdivision',
+                value: property.subdivisionName,
+                source: 'ATTOM basicprofile',
+              },
+            ]
+          : []),
+        ...(property.countyName
+          ? [{ label: 'County', value: property.countyName, source: 'ATTOM basicprofile' }]
+          : []),
         { label: 'Zoning', value: property.zoning, source: 'County' },
         { label: 'APN', value: property.apn, source: 'County' },
+        ...(property.garageType
+          ? [
+              {
+                label: 'Garage',
+                value: property.garageSizeSqft
+                  ? `${property.garageType} · ${property.garageSizeSqft.toLocaleString()} sqft`
+                  : property.garageType,
+                source: 'ATTOM basicprofile',
+              },
+            ]
+          : []),
+        ...(property.heatingType
+          ? [{ label: 'Heating', value: property.heatingType, source: 'ATTOM basicprofile' }]
+          : []),
+        ...(property.coolingType
+          ? [{ label: 'Cooling', value: property.coolingType, source: 'ATTOM basicprofile' }]
+          : []),
+        ...(property.constructionCondition
+          ? [
+              {
+                label: 'Condition',
+                value: property.constructionCondition,
+                source: 'ATTOM basicprofile',
+              },
+            ]
+          : []),
+        ...(property.factsPubDate
+          ? [{ label: 'Record published', value: property.factsPubDate, source: 'ATTOM vintage' }]
+          : []),
+        ...(property.locationAccuracy
+          ? [
+              {
+                label: 'Geo accuracy',
+                value: property.locationAccuracy,
+                source: 'ATTOM location',
+              },
+            ]
+          : []),
       ],
       notes: [
         'Size discrepancy flagged for buyer huddle before offer.',

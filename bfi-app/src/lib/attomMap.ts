@@ -31,6 +31,7 @@ type AttomProperty = {
   location?: {
     latitude?: string | number
     longitude?: string | number
+    accuracy?: string
   }
   summary?: {
     yearBuilt?: number
@@ -39,6 +40,18 @@ type AttomProperty = {
     propclass?: string
     propClass?: string
     propertyType?: string
+    propType?: string
+    legal1?: string
+  }
+  area?: {
+    countrySecSubd?: string
+    subdName?: string
+  }
+  utilities?: {
+    coolingType?: string
+    heatingFuel?: string
+    heatingType?: string
+    wallType?: string
   }
   building?: {
     size?: {
@@ -60,6 +73,27 @@ type AttomProperty = {
       bathsFull?: number
       bathsPartial?: number
       bathspartial?: number
+      roomsTotal?: number
+      roomstotal?: number
+    }
+    interior?: {
+      fplcCount?: number
+      fplccount?: number
+    }
+    construction?: {
+      condition?: string
+      constructionType?: string
+      frameType?: string
+    }
+    parking?: {
+      garageType?: string
+      prkgSize?: number
+      prkgsize?: number
+      prkgType?: string
+    }
+    summary?: {
+      levels?: number
+      unitsCount?: number
     }
   }
   lot?: {
@@ -69,6 +103,10 @@ type AttomProperty = {
     lotSize1?: number
     siteZoningIdent?: string
     zoningType?: string
+  }
+  vintage?: {
+    lastModified?: string
+    pubDate?: string
   }
   assessment?: {
     owner?: {
@@ -229,13 +267,14 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   const bathPartial = bathsPartial(attom.building)
   const yearBuilt = num(attom.summary?.yearBuilt) ?? num(attom.summary?.yearbuilt)
   const lot = lotSqft(attom.lot)
+  const lotAcres = num(attom.lot?.lotSize1) ?? num(attom.lot?.lotsize1)
   const apn = attom.identifier?.apn
-  const zoning =
-    attom.lot?.siteZoningIdent ||
-    attom.lot?.zoningType ||
+  const zoning = attom.lot?.siteZoningIdent || attom.lot?.zoningType
+  const propertyTypeLabel =
     attom.summary?.propClass ||
     attom.summary?.propclass ||
-    attom.summary?.propertyType
+    attom.summary?.propertyType ||
+    attom.summary?.propType
 
   const assessed = attom.assessment?.assessed
   const market = attom.assessment?.market
@@ -286,8 +325,70 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   if (bathPartial != null) fields.bathsPartial = bathPartial
   if (yearBuilt != null) fields.yearBuilt = Math.round(yearBuilt)
   if (lot != null) fields.lotSizeSqft = lot
+  if (lotAcres != null && lotAcres > 0) fields.lotSizeAcres = lotAcres
   if (apn) fields.apn = apn
   if (zoning) fields.zoning = String(zoning)
+  else if (propertyTypeLabel) fields.zoning = String(propertyTypeLabel)
+  if (propertyTypeLabel) fields.propertyTypeLabel = titleCaseStreet(String(propertyTypeLabel))
+  if (attom.summary?.legal1?.trim()) {
+    fields.legalDescription = titleCaseStreet(attom.summary.legal1.trim())
+  }
+  if (attom.area?.subdName?.trim()) {
+    fields.subdivisionName = titleCaseStreet(attom.area.subdName.trim())
+  }
+  if (attom.area?.countrySecSubd?.trim()) {
+    fields.countyName = titleCaseStreet(attom.area.countrySecSubd.trim())
+  }
+
+  const levels = num(attom.building?.summary?.levels)
+  if (levels != null) fields.levels = Math.round(levels)
+  const roomsTotal =
+    num(attom.building?.rooms?.roomsTotal) ?? num(attom.building?.rooms?.roomstotal)
+  if (roomsTotal != null) fields.roomsTotal = Math.round(roomsTotal)
+
+  const garageType =
+    attom.building?.parking?.garageType || attom.building?.parking?.prkgType
+  if (garageType) fields.garageType = titleCaseStreet(String(garageType))
+  const garageSize =
+    num(attom.building?.parking?.prkgSize) ?? num(attom.building?.parking?.prkgsize)
+  if (garageSize != null) fields.garageSizeSqft = Math.round(garageSize)
+
+  if (attom.utilities?.coolingType) {
+    fields.coolingType = titleCaseStreet(attom.utilities.coolingType)
+  }
+  if (attom.utilities?.heatingType) {
+    fields.heatingType = titleCaseStreet(attom.utilities.heatingType)
+  }
+  if (attom.utilities?.heatingFuel) {
+    fields.heatingFuel = titleCaseStreet(attom.utilities.heatingFuel)
+  }
+  if (attom.utilities?.wallType) {
+    fields.wallType = titleCaseStreet(attom.utilities.wallType)
+  }
+
+  if (attom.building?.construction?.condition) {
+    fields.constructionCondition = titleCaseStreet(attom.building.construction.condition)
+  }
+  if (attom.building?.construction?.constructionType) {
+    fields.constructionType = titleCaseStreet(attom.building.construction.constructionType)
+  }
+  if (attom.building?.construction?.frameType) {
+    fields.frameType = titleCaseStreet(attom.building.construction.frameType)
+  }
+  const fireplaces =
+    num(attom.building?.interior?.fplcCount) ?? num(attom.building?.interior?.fplccount)
+  if (fireplaces != null) fields.fireplaceCount = Math.round(fireplaces)
+
+  if (attom.location?.accuracy?.trim()) {
+    fields.locationAccuracy = titleCaseStreet(attom.location.accuracy.trim())
+  }
+  if (attom.vintage?.lastModified?.trim()) {
+    fields.factsLastModified = attom.vintage.lastModified.trim().slice(0, 10)
+  }
+  if (attom.vintage?.pubDate?.trim()) {
+    fields.factsPubDate = attom.vintage.pubDate.trim().slice(0, 10)
+  }
+
   if (taxYear != null) fields.taxYear = Math.round(taxYear)
   if (assessedTotal != null) {
     fields.taxAssessedValueLabel = `Assessed ${moneyLabel(assessedTotal, '')} · ${fields.taxYear ?? 'county'}`.trim()

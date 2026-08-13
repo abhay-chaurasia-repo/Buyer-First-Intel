@@ -295,6 +295,13 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const saleAmountBlock =
     Object.keys(saleAmount).length > 0 ? saleAmount : saleAmountData
   const location = (attom.location || {}) as Record<string, unknown>
+  const area = (attom.area || {}) as Record<string, unknown>
+  const utilities = (attom.utilities || {}) as Record<string, unknown>
+  const interior = (building.interior || {}) as Record<string, unknown>
+  const construction = (building.construction || {}) as Record<string, unknown>
+  const parking = (building.parking || {}) as Record<string, unknown>
+  const buildingSummary = (building.summary || {}) as Record<string, unknown>
+  const vintage = (attom.vintage || {}) as Record<string, unknown>
   const owner3 = (ownerBlock.owner3 || {}) as Record<string, unknown>
   const owner4 = (ownerBlock.owner4 || {}) as Record<string, unknown>
 
@@ -315,9 +322,9 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const bathsPartial = num(rooms.bathsPartial) ?? num(rooms.bathspartial)
   const yearBuilt = num(summary.yearBuilt) ?? num(summary.yearbuilt)
   let lotSqft = num(lot.lotSize2) ?? num(lot.lotsize2)
-  if (!lotSqft) {
-    const acres = num(lot.lotSize1) ?? num(lot.lotsize1)
-    if (acres) lotSqft = Math.round(acres * 43560)
+  const lotAcres = num(lot.lotSize1) ?? num(lot.lotsize1)
+  if (!lotSqft && lotAcres) {
+    lotSqft = Math.round(lotAcres * 43560)
   }
 
   const names = [
@@ -339,6 +346,8 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const improvement = num(market.mktImprValue) ?? num(market.mktimprvalue)
   const taxAmt = num(tax.taxAmt) ?? num(tax.taxamt)
   const marketTotal = num(market.mktTtlValue) ?? num(market.mktttlvalue)
+  const propertyTypeLabel =
+    summary.propClass || summary.propclass || summary.propertyType || summary.propType
 
   const address = (attom.address || {}) as Record<string, unknown>
   const fields: Record<string, unknown> = {
@@ -369,13 +378,63 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   if (bathsPartial != null) fields.bathsPartial = bathsPartial
   if (yearBuilt != null) fields.yearBuilt = Math.round(yearBuilt)
   if (lotSqft != null) fields.lotSizeSqft = Math.round(lotSqft)
+  if (lotAcres != null && lotAcres > 0) fields.lotSizeAcres = lotAcres
   if (identifier.apn) fields.apn = identifier.apn
-  fields.zoning =
-    lot.siteZoningIdent ||
-    lot.zoningType ||
-    summary.propClass ||
-    summary.propclass ||
-    summary.propertyType
+  const zoning = lot.siteZoningIdent || lot.zoningType
+  if (zoning) fields.zoning = zoning
+  else if (propertyTypeLabel) fields.zoning = propertyTypeLabel
+  if (propertyTypeLabel) fields.propertyTypeLabel = titleCaseStreet(String(propertyTypeLabel))
+  if (typeof summary.legal1 === 'string' && summary.legal1.trim()) {
+    fields.legalDescription = titleCaseStreet(summary.legal1)
+  }
+  if (typeof area.subdName === 'string' && area.subdName.trim()) {
+    fields.subdivisionName = titleCaseStreet(area.subdName)
+  }
+  if (typeof area.countrySecSubd === 'string' && area.countrySecSubd.trim()) {
+    fields.countyName = titleCaseStreet(area.countrySecSubd)
+  }
+  const levels = num(buildingSummary.levels)
+  if (levels != null) fields.levels = Math.round(levels)
+  const roomsTotal = num(rooms.roomsTotal) ?? num(rooms.roomstotal)
+  if (roomsTotal != null) fields.roomsTotal = Math.round(roomsTotal)
+  const garageType = parking.garageType || parking.prkgType
+  if (typeof garageType === 'string' && garageType.trim()) {
+    fields.garageType = titleCaseStreet(garageType)
+  }
+  const garageSize = num(parking.prkgSize) ?? num(parking.prkgsize)
+  if (garageSize != null) fields.garageSizeSqft = Math.round(garageSize)
+  if (typeof utilities.coolingType === 'string' && utilities.coolingType.trim()) {
+    fields.coolingType = titleCaseStreet(utilities.coolingType)
+  }
+  if (typeof utilities.heatingType === 'string' && utilities.heatingType.trim()) {
+    fields.heatingType = titleCaseStreet(utilities.heatingType)
+  }
+  if (typeof utilities.heatingFuel === 'string' && utilities.heatingFuel.trim()) {
+    fields.heatingFuel = titleCaseStreet(utilities.heatingFuel)
+  }
+  if (typeof utilities.wallType === 'string' && utilities.wallType.trim()) {
+    fields.wallType = titleCaseStreet(utilities.wallType)
+  }
+  if (typeof construction.condition === 'string' && construction.condition.trim()) {
+    fields.constructionCondition = titleCaseStreet(construction.condition)
+  }
+  if (typeof construction.constructionType === 'string' && construction.constructionType.trim()) {
+    fields.constructionType = titleCaseStreet(construction.constructionType)
+  }
+  if (typeof construction.frameType === 'string' && construction.frameType.trim()) {
+    fields.frameType = titleCaseStreet(construction.frameType)
+  }
+  const fireplaces = num(interior.fplcCount) ?? num(interior.fplccount)
+  if (fireplaces != null) fields.fireplaceCount = Math.round(fireplaces)
+  if (typeof location.accuracy === 'string' && location.accuracy.trim()) {
+    fields.locationAccuracy = titleCaseStreet(location.accuracy)
+  }
+  if (typeof vintage.lastModified === 'string' && vintage.lastModified.trim()) {
+    fields.factsLastModified = String(vintage.lastModified).slice(0, 10)
+  }
+  if (typeof vintage.pubDate === 'string' && vintage.pubDate.trim()) {
+    fields.factsPubDate = String(vintage.pubDate).slice(0, 10)
+  }
   if (taxYear != null) fields.taxYear = Math.round(taxYear)
   if (assessedTotal != null) {
     fields.taxAssessedValueLabel = `Assessed ${moneyLabel(assessedTotal)} · ${fields.taxYear ?? 'county'}`

@@ -12,7 +12,10 @@
 ## Step 2 — ATTOM county facts + tax + sales (done in code)
 - Mapper: `src/lib/attomMap.ts`
 - Parallel packages on resolve:
-  - [`GET /property/basicprofile`](https://api.developer.attomdata.com/docs#!/Property32V1/propertyBasicProfile) — County’s Fact (`yearBuilt`, `grossSizeAdjusted`, `beds`, `bathsFull` / `bathsPartial` / `bathsTotal`, `assessment.owner`)
+- [`GET /property/basicprofile`](https://api.developer.attomdata.com/docs#!/Property32V1/propertyBasicProfile) — County’s Fact
+    - Core: `yearBuilt`, `grossSizeAdjusted`, `beds`, `bathsFull` / `bathsPartial` / `bathsTotal`, `assessment.owner`
+    - High-value: property type, legal/subdivision/county, lot acres+sqft, levels/rooms/fireplace, garage, utilities, construction, geo accuracy, vintage dates
+    - Sale **amounts** and mortgage **amounts** stay hidden (buyer-first)
   - `GET /assessment/detail` — Tax History (tax year, assessed, land, improvement, annual tax, market value)
   - `GET /sale/detail` — latest transfer (date, deed type, document #; **sale amount hidden**)
   - `GET /saleshistory/expandedhistory` — Sales History deed chain (buyer/seller/doc; **amounts hidden**)
