@@ -113,16 +113,12 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       unreadCount: 1,
       headline: 'County living-area fact',
       preview: live
-        ? `County grossSizeAdjusted shows ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote whether it matches or looks overstated.`
-        : `Demo shell shows ${property.sqft.toLocaleString()} sqft — replace by searching a live address with ATTOM bound.`,
+        ? `County living area ${property.sqft.toLocaleString()} sqft (grossSizeAdjusted).`
+        : `Demo living area ${property.sqft.toLocaleString()} sqft.`,
       timestamp: isoMinutesAgo(18),
       source,
-      fields: [
-        {
-          label: live ? 'grossSizeAdjusted' : 'County sqft (demo)',
-          value: `${property.sqft.toLocaleString()} sqft`,
-        },
-      ],
+      // Preview already carries sqft — no duplicate field row.
+      fields: [],
       insightLabelIds: [
         'published-listing-size-matches-county',
         'published-listing-size-overstated',
@@ -137,15 +133,8 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       preview: `${property.bedrooms} bed · ${property.bathrooms} bath · built ${property.yearBuilt} · lot ${lotLabel}.`,
       timestamp: isoMinutesAgo(40),
       source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
+      // Beds/baths/year/lot are in the preview — only extras below.
       fields: [
-        { label: 'Beds', value: String(property.bedrooms) },
-        {
-          label: 'Baths total',
-          value: bathDetail
-            ? `${property.bathrooms} (${bathDetail})`
-            : String(property.bathrooms),
-        },
-        { label: 'Year built', value: String(property.yearBuilt) },
         ...(property.levels != null
           ? [{ label: 'Levels', value: String(property.levels) }]
           : []),
@@ -155,9 +144,9 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
         ...(property.fireplaceCount != null
           ? [{ label: 'Fireplaces', value: String(property.fireplaceCount) }]
           : []),
-        { label: 'Lot', value: lotLabel },
-        { label: 'Zoning', value: property.zoning },
-        { label: 'APN', value: property.apn },
+        ...(bathDetail
+          ? [{ label: 'Bath detail', value: bathDetail }]
+          : []),
       ],
     },
     {
@@ -176,16 +165,9 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       timestamp: isoMinutesAgo(55),
       source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
       fields: [
-        ...(property.propertyTypeLabel
-          ? [{ label: 'Property type', value: property.propertyTypeLabel }]
-          : []),
-        ...(property.subdivisionName
-          ? [{ label: 'Subdivision', value: property.subdivisionName }]
-          : []),
         ...(property.legalDescription
           ? [{ label: 'Legal', value: property.legalDescription }]
           : []),
-        ...(property.countyName ? [{ label: 'County', value: property.countyName }] : []),
         { label: 'Zoning', value: property.zoning },
         { label: 'APN', value: property.apn },
       ],
@@ -209,23 +191,10 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       timestamp: isoMinutesAgo(70),
       source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
       fields: [
-        ...(property.garageType
-          ? [
-              {
-                label: 'Garage',
-                value: property.garageSizeSqft
-                  ? `${property.garageType} · ${property.garageSizeSqft.toLocaleString()} sqft`
-                  : property.garageType,
-              },
-            ]
+        ...(property.garageSizeSqft != null
+          ? [{ label: 'Garage size', value: `${property.garageSizeSqft.toLocaleString()} sqft` }]
           : []),
-        ...(property.coolingType ? [{ label: 'Cooling', value: property.coolingType }] : []),
-        ...(property.heatingType ? [{ label: 'Heating', value: property.heatingType }] : []),
-        ...(property.heatingFuel ? [{ label: 'Fuel', value: property.heatingFuel }] : []),
         ...(property.wallType ? [{ label: 'Walls', value: property.wallType }] : []),
-        ...(property.constructionCondition
-          ? [{ label: 'Condition', value: property.constructionCondition }]
-          : []),
         ...(property.constructionType
           ? [{ label: 'Construction', value: property.constructionType }]
           : []),
@@ -242,8 +211,6 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       timestamp: isoMinutesAgo(90),
       source: live ? 'ATTOM basicprofile assessment.owner' : 'Demo county shell',
       fields: [
-        { label: 'Owner', value: property.ownerName },
-        { label: 'Occupied', value: property.ownerOccupied ? 'Yes' : 'No' },
         ...(property.ownerMailingAddress
           ? [{ label: 'Mailing', value: property.ownerMailingAddress }]
           : live
@@ -269,15 +236,6 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       timestamp: isoMinutesAgo(120),
       source: live ? 'ATTOM basicprofile vintage / location' : 'Demo county shell',
       fields: [
-        ...(property.factsPubDate
-          ? [{ label: 'Published', value: property.factsPubDate }]
-          : []),
-        ...(property.factsLastModified
-          ? [{ label: 'Last modified', value: property.factsLastModified }]
-          : []),
-        ...(property.locationAccuracy
-          ? [{ label: 'Geo accuracy', value: property.locationAccuracy }]
-          : []),
         ...(property.attomId != null
           ? [{ label: 'ATTOM ID', value: String(property.attomId) }]
           : []),
