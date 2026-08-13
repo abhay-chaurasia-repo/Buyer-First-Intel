@@ -80,16 +80,16 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
 
   return (
     <div
-      className="mt-1.5 rounded-xl border border-saffron/35 bg-saffron/10 px-2.5 py-2"
+      className="mt-2 rounded-xl border border-white/15 bg-night-elevated/55 px-3 py-2.5 shadow-[inset_0_1px_0_rgb(246_231_200_/0.06)]"
       data-testid="remote-insight-group"
     >
-      <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
+      <p className="text-[10px] font-bold tracking-[0.14em] text-saffron-glow/90 uppercase">
         Remote insight · no visit needed
       </p>
-      <p className="mt-1 whitespace-nowrap text-[9px] leading-none text-night-faint sm:text-[10px]">
+      <p className="mt-1 text-[10px] leading-snug text-night-faint">
         Compare county sqft to Zillow/Redfin, then upvote one.
       </p>
-      <div className="mt-1.5 space-y-1">
+      <div className="mt-2 space-y-1">
         {labels.map((label) => {
           const canVote = verified || !labelRequiresVisit(label)
           const voted = voteState.myVotes.includes(label.id)
@@ -97,7 +97,7 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
           return (
             <div
               key={label.id}
-              className="flex items-center gap-2 rounded-lg px-1 py-1"
+              className="flex items-center gap-2 rounded-lg px-0.5 py-1"
               data-testid={`remote-insight-${label.id}`}
             >
               <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
@@ -113,8 +113,8 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
                 className={cn(
                   'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold touch-manipulation',
                   voted
-                    ? 'border-saffron/55 bg-saffron/25 text-saffron-glow'
-                    : 'border-white/25 bg-transparent text-night-muted hover:border-saffron/40 hover:text-saffron-glow',
+                    ? 'border-saffron/50 bg-saffron/20 text-saffron-glow'
+                    : 'border-white/20 bg-white/[0.04] text-night-muted hover:border-white/35 hover:text-saffron-glow',
                   !canVote && 'cursor-not-allowed opacity-55',
                 )}
                 aria-pressed={voted}

@@ -187,11 +187,11 @@ export function CatchUpFlow({
         className="relative z-20 shrink-0 bfi-status-pad"
         data-testid="tile-detail-top-bar"
       >
-        <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-start gap-2 px-3 pb-2.5 pt-2">
+        <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-3 pb-2.5 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-night-muted transition-colors hover:bg-night-ink/10 hover:text-saffron-glow touch-manipulation"
+            className="inline-flex h-11 min-h-11 min-w-11 items-center justify-center self-center rounded-xl text-night-muted transition-colors hover:bg-night-ink/10 hover:text-saffron-glow touch-manipulation"
             aria-label="Back to property"
             data-testid="button-back-detail"
           >
@@ -200,48 +200,49 @@ export function CatchUpFlow({
 
           <h1
             id="detail-title"
-            className="min-w-0 text-center font-display text-[13px] font-semibold leading-snug tracking-tight text-balance text-saffron-glow sm:text-[15px]"
+            className="flex min-h-11 min-w-0 items-center justify-center text-center font-display text-[13px] font-semibold leading-snug tracking-tight text-balance text-saffron-glow sm:text-[15px]"
             data-testid="text-tile-address"
           >
             {address}
           </h1>
 
-          <span className="w-11" aria-hidden />
+          <span className="h-11 w-11" aria-hidden />
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto overscroll-contain pb-4">
-        <section className="px-3 pt-4" data-testid="tile-section-header">
-          <div className="px-2 py-1.5 text-center">
-            <p className="font-display text-[13px] font-extrabold tracking-tight">
-              <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
-                {meta.title}
-              </span>
-            </p>
-            {isBuyerCommunity ? (
-              <div
-                className="mt-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5 text-left"
-                data-testid="plus-watch-key"
-              >
-                <PlusWatchLegend variant="full" showIntro={false} />
-              </div>
-            ) : isCountyFacts ? null : (
-              <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
-            )}
-            {!isCountyFacts ? (
+        {/* County’s Fact: section headlines already name each box — skip redundant page title */}
+        {!isCountyFacts ? (
+          <section className="px-3 pt-4" data-testid="tile-section-header">
+            <div className="px-2 py-1.5 text-center">
+              <p className="font-display text-[13px] font-extrabold tracking-tight">
+                <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
+                  {meta.title}
+                </span>
+              </p>
+              {isBuyerCommunity ? (
+                <div
+                  className="mt-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5 text-left"
+                  data-testid="plus-watch-key"
+                >
+                  <PlusWatchLegend variant="full" showIntro={false} />
+                </div>
+              ) : (
+                <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
+              )}
               <span className="mt-2 inline-flex rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
                 {headerCount}
               </span>
-            ) : null}
-          </div>
-        </section>
+            </div>
+          </section>
+        ) : null}
 
         {isBuyerCommunity ? (
           <BuyerCommunityPanel propertyId={propertyId} onRequestGpsVerify={onClose} />
         ) : isVerifiedVisits ? (
           <VerifiedVisitsPanel property={property} />
         ) : (
-          <div className="mt-3 space-y-4 px-3">
+          <div className={cn('space-y-4 px-3', isCountyFacts ? 'mt-6 pt-1' : 'mt-3')}>
             {items.length > 0 ? (
               items.map((card) => (
                 <DetailSection key={card.id} card={card} propertyId={propertyId} />
