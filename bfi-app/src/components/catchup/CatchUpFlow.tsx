@@ -123,7 +123,9 @@ function DetailSection({ card, propertyId }: { card: CatchUpCard; propertyId: st
                   </span>
                 </div>
               ))
-            : null}
+            : (
+                <p className="px-2 py-2 text-sm text-night-ink">{stripHash(card.preview)}</p>
+              )}
 
           {card.insightLabelIds?.length || card.insightLabelId ? (
             <RemoteInsightVote
