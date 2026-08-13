@@ -266,6 +266,27 @@ export function PropertyDetailScreen() {
                 })}
               </div>
             </section>
+
+            <section className="px-3 pt-5 pb-2" aria-label="Buyer Community" data-testid="buyer-community-promo">
+              <button
+                type="button"
+                onClick={() => setActiveSurface('buyer-insights')}
+                className="flex w-full items-center gap-3 rounded-2xl border border-white/20 bg-night-elevated/45 px-3.5 py-3 text-left transition-colors hover:border-saffron/40 hover:bg-night-elevated/65 active:opacity-90 touch-manipulation"
+                data-testid="button-open-buyer-community"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-saffron/25 text-saffron-glow">
+                  <Users className="h-5 w-5" strokeWidth={2.25} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-[13px] font-semibold text-saffron-glow">
+                    Buyer Community
+                  </span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-night-faint">
+                    Browse Plus &amp; Watch labels from buyers — upvote what matches what you see.
+                  </span>
+                </span>
+              </button>
+            </section>
           </div>
         </>
       )}

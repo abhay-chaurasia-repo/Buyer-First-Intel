@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, Crosshair, ShieldCheck, ThumbsUp } from 'lucide-react'
+import { ChevronDown, ThumbsUp } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import {
@@ -141,14 +141,12 @@ function CategoryBlock({
 
 type BuyerCommunityPanelProps = {
   propertyId: string
-  /** Close the community sheet so the buyer can use GPS Verify on the property header. */
-  onRequestGpsVerify?: () => void
 }
 
 /**
  * Buyer Community: fixed labels only. On-site votes require GPS Verify (not a manual confirm).
  */
-export function BuyerCommunityPanel({ propertyId, onRequestGpsVerify }: BuyerCommunityPanelProps) {
+export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
   const { ownerId } = useAuth()
   const [voteState, setVoteState] = useState<BuyerVoteState>(() => loadBuyerVoteState(propertyId))
   const [verified, setVerified] = useState(() => loadBuyerVerified(propertyId))
@@ -163,11 +161,6 @@ export function BuyerCommunityPanel({ propertyId, onRequestGpsVerify }: BuyerCom
     window.addEventListener('focus', refresh)
     return () => window.removeEventListener('focus', refresh)
   }, [propertyId])
-
-  const totalVotes = useMemo(
-    () => BUYER_COMMUNITY_LABELS.reduce((sum, label) => sum + voteCount(label, voteState), 0),
-    [voteState],
-  )
 
   function handleToggleVote(labelId: string) {
     const label = BUYER_COMMUNITY_LABELS.find((entry) => entry.id === labelId)
@@ -191,61 +184,7 @@ export function BuyerCommunityPanel({ propertyId, onRequestGpsVerify }: BuyerCom
   }
 
   return (
-    <div className="mt-3 space-y-4 px-3" data-testid="buyer-community-panel">
-      <div className="rounded-2xl border border-white/25 bg-transparent p-3">
-        <p className="text-[13px] leading-relaxed text-night-ink">
-          Pre-set community labels only — no free text. On-site Plus/Watch votes unlock after GPS
-          Verify on this property. Remote size insights can be upvoted anytime.
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-night-faint">
-          <span>
-            {BUYER_COMMUNITY_LABELS.length} labels · {totalVotes} community upvotes
-          </span>
-          <span className={cn('rounded-md px-1.5 py-0.5 font-bold', plusWatchChipClass('plus'))}>
-            Plus {BUYER_COMMUNITY_LABELS.filter((l) => l.tone === 'positive').length}
-          </span>
-          <span className={cn('rounded-md px-1.5 py-0.5 font-bold', plusWatchChipClass('watch'))}>
-            Watch {BUYER_COMMUNITY_LABELS.filter((l) => l.tone === 'negative').length}
-          </span>
-          {voteState.myVotes.length > 0 ? (
-            <span className="rounded-md bg-saffron/20 px-1.5 py-0.5 font-bold text-saffron-glow">
-              You: {voteState.myVotes.length}
-            </span>
-          ) : null}
-        </div>
-
-        {verified ? (
-          <p
-            className="mt-3 flex items-center gap-1.5 text-[12px] font-medium text-saffron-glow"
-            data-testid="text-verified-voter"
-          >
-            <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.25} />
-            GPS verified — tap a label to upvote or remove your vote
-          </p>
-        ) : (
-          <div className="mt-3 space-y-2" data-testid="gps-verify-required">
-            <p className="flex items-start gap-1.5 text-[12px] leading-snug text-night-muted">
-              <Crosshair className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow" strokeWidth={2.25} />
-              <span>
-                On-site labels stay locked until you use <span className="font-semibold text-night-ink">Verify</span> on
-                the property header while at the home.
-              </span>
-            </p>
-            {onRequestGpsVerify ? (
-              <button
-                type="button"
-                onClick={onRequestGpsVerify}
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-saffron/45 bg-saffron/15 px-4 text-sm font-semibold text-saffron-glow transition-colors hover:bg-saffron/25 touch-manipulation"
-                data-testid="button-go-gps-verify"
-              >
-                <Crosshair className="h-4 w-4" strokeWidth={2.25} />
-                Close & use GPS Verify
-              </button>
-            ) : null}
-          </div>
-        )}
-      </div>
-
+    <div className="mt-6 space-y-4 px-3 pt-1" data-testid="buyer-community-panel">
       {BUYER_LABEL_CATEGORIES.map((category) => (
         <CategoryBlock
           key={category.id}

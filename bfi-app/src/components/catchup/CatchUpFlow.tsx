@@ -15,8 +15,6 @@ import {
   type CatchUpCard,
   type CatchUpSurface,
 } from '@/data/catchUpApi'
-import { BUYER_COMMUNITY_LABELS } from '@/data/buyerCommunityLabels'
-import { PlusWatchLegend } from '@/components/PlusWatchLegend'
 import { BuyerCommunityPanel } from '@/components/catchup/BuyerCommunityPanel'
 import { RemoteInsightVote } from '@/components/catchup/RemoteInsightVote'
 import { VerifiedVisitsPanel } from '@/components/catchup/VerifiedVisitsPanel'
@@ -189,11 +187,9 @@ export function CatchUpFlow({
   const isBuyerCommunity = surface === 'buyer-insights'
   const isVerifiedVisits = surface === 'verified-visits'
   const isCountyFacts = surface === 'county-facts'
-  const headerCount = isBuyerCommunity
-    ? BUYER_COMMUNITY_LABELS.length
-    : isVerifiedVisits
-      ? getVerifiedVisitsBundle(property).visits.length
-      : items.length
+  const headerCount = isVerifiedVisits
+    ? getVerifiedVisitsBundle(property).visits.length
+    : items.length
 
   return (
     <div
@@ -232,8 +228,8 @@ export function CatchUpFlow({
       </header>
 
       <div className="flex-1 overflow-y-auto overscroll-contain pb-4">
-        {/* County’s Fact: section headlines already name each box — skip redundant page title */}
-        {!isCountyFacts ? (
+        {/* County’s Fact / Buyer Community: skip redundant chrome — content speaks for itself */}
+        {!isCountyFacts && !isBuyerCommunity ? (
           <section className="px-3 pt-4" data-testid="tile-section-header">
             <div className="px-2 py-1.5 text-center">
               <p className="font-display text-[13px] font-extrabold tracking-tight">
@@ -241,16 +237,7 @@ export function CatchUpFlow({
                   {meta.title}
                 </span>
               </p>
-              {isBuyerCommunity ? (
-                <div
-                  className="mt-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5 text-left"
-                  data-testid="plus-watch-key"
-                >
-                  <PlusWatchLegend variant="full" showIntro={false} />
-                </div>
-              ) : (
-                <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
-              )}
+              <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
               <span className="mt-2 inline-flex rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
                 {headerCount}
               </span>
@@ -259,7 +246,7 @@ export function CatchUpFlow({
         ) : null}
 
         {isBuyerCommunity ? (
-          <BuyerCommunityPanel propertyId={propertyId} onRequestGpsVerify={onClose} />
+          <BuyerCommunityPanel propertyId={propertyId} />
         ) : isVerifiedVisits ? (
           <VerifiedVisitsPanel property={property} />
         ) : (
