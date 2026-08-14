@@ -4,6 +4,7 @@
  * change the house number the buyer tapped.
  */
 
+import { Capacitor } from '@capacitor/core'
 import type { ResolvedAddress } from '@/data/addressTypes'
 import { DEMO_PROPERTY, type MockProperty } from '@/data/mockProperty'
 import { isHouseNumberOnlyQuery, resolveAddress, searchAddresses } from '@/lib/addressSearch'
@@ -384,6 +385,8 @@ function resultFromPayload(
 }
 
 async function lookupViaLocalApi(query: string, mode: 'search' | 'resolve') {
+  // Native shells load static dist/ — Vite's /api proxy does not exist there.
+  if (Capacitor.isNativePlatform()) return null
   try {
     const res = await fetch('/api/property-lookup', {
       method: 'POST',

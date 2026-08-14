@@ -1163,6 +1163,8 @@ export default defineConfig(({ mode }) => {
   const googleMapsApiKey = env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY
 
   return {
+    // Relative asset URLs so Capacitor can load the build from the native WebView.
+    base: './',
     plugins: [
       react(),
       tailwindcss(),

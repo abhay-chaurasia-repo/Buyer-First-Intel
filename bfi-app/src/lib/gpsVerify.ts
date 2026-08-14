@@ -1,7 +1,11 @@
 /**
  * On-site GPS Verify: compare device position to the property pin.
  * Unlocks Buyer Community on-site votes when within radius.
+ * Uses Capacitor Geolocation on iOS/Android, browser geolocation on web.
  */
+
+import { Capacitor } from '@capacitor/core'
+import { Geolocation } from '@capacitor/geolocation'
 
 export const GPS_VERIFY_RADIUS_METERS = 100
 /** Reject fixes that are too imprecise to trust a 100m gate. */
@@ -53,14 +57,53 @@ export type GpsVerifyAttempt =
       accuracyMeters?: number
     }
 
-function readPosition(): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
+type PositionFix = {
+  latitude: number
+  longitude: number
+  accuracy: number
+}
+
+async function readPosition(): Promise<PositionFix> {
+  if (Capacitor.isNativePlatform()) {
+    const permission = await Geolocation.requestPermissions()
+    const location = permission.location || permission.coarseLocation
+    if (location === 'denied') {
+      const err = new Error('Location permission denied') as Error & { code: number }
+      err.code = 1
+      throw err
+    }
+    const position = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 20_000,
+      maximumAge: 0,
+    })
+    return {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy ?? Number.POSITIVE_INFINITY,
+    }
+  }
+
+  if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    const err = new Error('Geolocation unsupported') as Error & { code: number }
+    err.code = 2
+    throw err
+  }
+
+  const position = await new Promise<GeolocationPosition>((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject, {
       enableHighAccuracy: true,
       timeout: 20_000,
       maximumAge: 0,
     })
   })
+  return {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+    accuracy: Number.isFinite(position.coords.accuracy)
+      ? position.coords.accuracy
+      : Number.POSITIVE_INFINITY,
+  }
 }
 
 export async function attemptGpsVerify(property: {
@@ -83,7 +126,10 @@ export async function attemptGpsVerify(property: {
     }
   }
 
-  if (typeof navigator === 'undefined' || !navigator.geolocation) {
+  if (
+    !Capacitor.isNativePlatform() &&
+    (typeof navigator === 'undefined' || !navigator.geolocation)
+  ) {
     return {
       ok: false,
       reason: 'unsupported',
@@ -92,8 +138,7 @@ export async function attemptGpsVerify(property: {
   }
 
   try {
-    const position = await readPosition()
-    const { latitude, longitude, accuracy } = position.coords
+    const { latitude, longitude, accuracy } = await readPosition()
     const accuracyMeters = Number.isFinite(accuracy) ? accuracy : Number.POSITIVE_INFINITY
     const distance = distanceMeters(latitude, longitude, pinLat, pinLng)
 
@@ -127,14 +172,14 @@ export async function attemptGpsVerify(property: {
   } catch (error) {
     const code =
       error && typeof error === 'object' && 'code' in error
-        ? Number((error as GeolocationPositionError).code)
+        ? Number((error as { code?: number }).code)
         : undefined
 
     if (code === 1) {
       return {
         ok: false,
         reason: 'denied',
-        message: 'Location permission is off. Allow location for this site, then tap Verify again.',
+        message: 'Location permission is off. Allow location for this app, then tap Verify again.',
       }
     }
     if (code === 3) {
@@ -176,9 +221,7 @@ export function watchNearbyProperty(
     pinLat == null ||
     pinLng == null ||
     !Number.isFinite(pinLat) ||
-    !Number.isFinite(pinLng) ||
-    typeof navigator === 'undefined' ||
-    !navigator.geolocation
+    !Number.isFinite(pinLng)
   ) {
     onUpdate({
       nearby: false,
@@ -189,16 +232,86 @@ export function watchNearbyProperty(
     return () => undefined
   }
 
-  const handle = navigator.geolocation.watchPosition(
+  let cancelled = false
+  let browserWatchId: number | null = null
+  let nativeWatchId: string | null = null
+
+  const emitFix = (latitude: number, longitude: number, accuracy: number | null) => {
+    if (cancelled) return
+    const distance = distanceMeters(latitude, longitude, pinLat, pinLng)
+    onUpdate({
+      nearby: distance <= nudgeMeters,
+      distanceMeters: Math.round(distance),
+      accuracyMeters: accuracy != null && Number.isFinite(accuracy) ? Math.round(accuracy) : null,
+    })
+  }
+
+  if (Capacitor.isNativePlatform()) {
+    void (async () => {
+      try {
+        await Geolocation.requestPermissions()
+        if (cancelled) return
+        nativeWatchId = await Geolocation.watchPosition(
+          {
+            enableHighAccuracy: true,
+            timeout: 25_000,
+            maximumAge: 15_000,
+          },
+          (position, err) => {
+            if (cancelled) return
+            if (err || !position) {
+              onUpdate({
+                nearby: false,
+                distanceMeters: null,
+                accuracyMeters: null,
+                error: 'unavailable',
+              })
+              return
+            }
+            emitFix(
+              position.coords.latitude,
+              position.coords.longitude,
+              position.coords.accuracy ?? null,
+            )
+          },
+        )
+      } catch {
+        if (!cancelled) {
+          onUpdate({
+            nearby: false,
+            distanceMeters: null,
+            accuracyMeters: null,
+            error: 'denied',
+          })
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      if (nativeWatchId) {
+        void Geolocation.clearWatch({ id: nativeWatchId })
+      }
+    }
+  }
+
+  if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    onUpdate({
+      nearby: false,
+      distanceMeters: null,
+      accuracyMeters: null,
+      error: 'unsupported',
+    })
+    return () => undefined
+  }
+
+  browserWatchId = navigator.geolocation.watchPosition(
     (position) => {
-      const { latitude, longitude, accuracy } = position.coords
-      const distance = distanceMeters(latitude, longitude, pinLat, pinLng)
-      const accuracyMeters = Number.isFinite(accuracy) ? accuracy : null
-      onUpdate({
-        nearby: distance <= nudgeMeters,
-        distanceMeters: Math.round(distance),
-        accuracyMeters: accuracyMeters != null ? Math.round(accuracyMeters) : null,
-      })
+      emitFix(
+        position.coords.latitude,
+        position.coords.longitude,
+        Number.isFinite(position.coords.accuracy) ? position.coords.accuracy : null,
+      )
     },
     (error) => {
       onUpdate({
@@ -216,6 +329,9 @@ export function watchNearbyProperty(
   )
 
   return () => {
-    navigator.geolocation.clearWatch(handle)
+    cancelled = true
+    if (browserWatchId != null) {
+      navigator.geolocation.clearWatch(browserWatchId)
+    }
   }
 }

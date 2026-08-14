@@ -1,32 +1,28 @@
-# React + TypeScript + Vite
+# Due Diligence · for home buyers
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Buyer due-diligence app (React + Vite + TypeScript). County facts, sales & tax history, schools, and on-site GPS Verify for Buyer Community labels.
 
-Currently, two official plugins are available:
+## Develop (web)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+cd bfi-app
+npm install
+cp .env.example .env.local   # if present — add Supabase + keys as needed
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## iOS & Android
+
+Native shells use **Capacitor**. See **[MOBILE.md](./MOBILE.md)** for setup, sync, and store roadmap.
+
+```bash
+npm run cap:sync      # build web → sync into ios/ + android/
+npm run cap:android   # Android Studio
+npm run cap:ios       # Xcode (Mac only)
+```
+
+App id: `com.duediligence.buyer`
+
+## Backend
+
+Property lookup runs through Vite’s `/api` proxy in local web dev, or the Supabase Edge Function `property-lookup` in production / native builds. See `supabase/README.md` and `supabase/PROPERTY_DATA.md`.
