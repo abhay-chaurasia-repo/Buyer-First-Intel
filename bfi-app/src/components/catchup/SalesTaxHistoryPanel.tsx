@@ -34,7 +34,7 @@ function buildSalesRows(property: MockProperty): PropertySaleEvent[] {
         date: property.lastSaleDate,
         deedType: property.deedType || 'Recorded transfer',
         documentNumber: property.saleDocumentNumber,
-        amountLabel: property.lastSalePriceLabel || 'Not shown (buyer-first)',
+        amountLabel: property.lastSalePriceLabel || '—',
       },
     ]
   }
@@ -90,7 +90,7 @@ function SaleRow({ event }: { event: PropertySaleEvent }) {
     event.loanDocumentNumber
       ? { label: 'Loan document #', value: event.loanDocumentNumber }
       : null,
-    { label: 'Amount', value: event.amountLabel || 'Not shown (buyer-first)' },
+    { label: 'Sale amount', value: event.amountLabel || '—' },
   ].filter(Boolean) as { label: string; value: string }[]
 
   const eventLabel = [event.deedType, event.deedCode ? `(${event.deedCode})` : null]
@@ -119,8 +119,8 @@ function SaleRow({ event }: { event: PropertySaleEvent }) {
           ) : null}
         </span>
         <span className="inline-flex items-center gap-1 text-[12px] text-night-muted">
-          <span className="max-w-[6.5rem] truncate text-right text-[11px] text-night-faint">
-            Not shown
+          <span className="max-w-[7rem] truncate text-right text-[13px] font-semibold text-night-ink">
+            {event.amountLabel || '—'}
           </span>
           <ChevronDown
             className={cn('h-3.5 w-3.5 text-saffron-glow transition-transform', !open && '-rotate-90')}
@@ -216,7 +216,7 @@ export function SalesTaxHistoryPanel({
         <p className="mt-0.5 px-1 text-[11px] text-night-muted">
           {isSales
             ? live
-              ? 'ATTOM deed chain · sale amounts hidden (buyer-first)'
+              ? 'ATTOM deed chain · recorded sale amounts when published'
               : 'Demo shell — live ATTOM transfers appear after address resolve'
             : live
               ? 'Multi-year assessor rolls from ATTOM'
@@ -251,8 +251,7 @@ export function SalesTaxHistoryPanel({
               </button>
             ) : null}
             <p className="mt-2 px-1 text-[11px] text-night-faint">
-              Sale prices intentionally hidden (buyer-first). Tap a row for deed, parties, and loan
-              cues.
+              Tap a row for deed, parties, and loan cues. Mortgage amounts stay hidden.
             </p>
           </div>
         ) : (

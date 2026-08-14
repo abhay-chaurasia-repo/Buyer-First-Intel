@@ -353,10 +353,11 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   const fields: Record<string, unknown> = {
     factsStatus: 'live',
     addressSource: 'edge',
-    lastSalePriceLabel: 'Not shown (buyer-first)',
     claimedSqft: undefined,
     ownerOccupied: absentee.includes('OWNER') || ownerBlock.absenteeOwnerStatus === 'O',
   }
+  const salePrice = num(saleAmountBlock.saleAmt) ?? num(saleAmountBlock.saleamt)
+  fields.lastSalePriceLabel = salePrice != null ? moneyLabel(salePrice) : '—'
 
   if (typeof address.line1 === 'string' && address.line1.trim()) {
     fields.address = titleCaseStreet(address.line1)
@@ -620,7 +621,10 @@ function mapAttomProperty(attom: Record<string, unknown>) {
             firstMortgage.trustDeedDocumentNumber || firstMortgage.ident
               ? String(firstMortgage.trustDeedDocumentNumber || firstMortgage.ident)
               : undefined,
-          amountLabel: 'Not shown (buyer-first)',
+          amountLabel: (() => {
+            const salePrice = num(amount.saleAmt) ?? num(amount.saleamt)
+            return salePrice != null ? moneyLabel(salePrice) : '—'
+          })(),
         }
       })
       .filter(Boolean)

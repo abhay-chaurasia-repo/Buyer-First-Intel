@@ -27,7 +27,7 @@ function blankCountyFacts(): Partial<MockProperty> {
     ownerMailingAddress: undefined,
     ownerOccupied: false,
     lastSaleDate: '—',
-    lastSalePriceLabel: 'Not shown (buyer-first)',
+    lastSalePriceLabel: '—',
     deedType: '—',
     saleDocumentNumber: undefined,
     taxAssessedValueLabel: 'Pending county assessor',
@@ -84,7 +84,7 @@ function blankCountyFacts(): Partial<MockProperty> {
   }
 }
 
-const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v15'
+const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v16'
 const SELECTED_ADDRESS_KEY = 'bfi.selectedAddress.v1'
 const RECENT_ADDRESSES_KEY = 'bfi.recentAddressSuggestions.v1'
 
@@ -103,6 +103,7 @@ try {
   sessionStorage.removeItem('bfi.propertyLookupCache.v12')
   sessionStorage.removeItem('bfi.propertyLookupCache.v13')
   sessionStorage.removeItem('bfi.propertyLookupCache.v14')
+  sessionStorage.removeItem('bfi.propertyLookupCache.v15')
 } catch {
   // ignore
 }

@@ -15,7 +15,7 @@
 - [`GET /property/basicprofile`](https://api.developer.attomdata.com/docs#!/Property32V1/propertyBasicProfile) — County’s Fact
     - Core: `yearBuilt`, `grossSizeAdjusted`, `beds`, `bathsFull` / `bathsPartial` / `bathsTotal`, `assessment.owner`
     - High-value: property type, legal/subdivision/county, lot acres+sqft, levels/rooms/fireplace, garage, utilities, construction, geo accuracy, vintage dates
-    - Sale **amounts** and mortgage **amounts** stay hidden (buyer-first)
+    - Sale amounts shown when published; mortgage **amounts** stay hidden (buyer-first)
   - [`GET /property/expandedprofile`](https://api.developer.attomdata.com/docs) — County’s Fact extras
     - Architecture, roof shape, major improvements year, gross/ground-floor size, parking spaces
     - Municipality / tax code area / lot #, quitclaim & REO flags, last seller
@@ -24,10 +24,10 @@
     - `effectiveDate`, `permitNumber`, `status`, `type` / `subType`, `description`, `projectName`, `fees`, `homeOwnerName`, `classifiers`
   - `GET /assessment/detail` — Tax History (tax year, assessed, land, improvement, annual tax, market value)
   - `GET /assessmenthistory/detail` — multi-year Tax History table (year / tax / assessment + land/improvement/market)
-  - `GET /sale/detail` — latest transfer (date, deed type, document #; **sale amount hidden**)
+  - `GET /sale/detail` — latest transfer (date, deed type, document #, **sale amount** when published)
   - `GET /saleshistory/expandedhistory` — Sales History deed chain
-    - Transfer type, deed code (LW/QC/GD), buyer/seller, doc #, deed-in-lieu, seller carry-back
-    - Title company + per-event lender / loan type / term / due date / loan doc # (**amounts hidden**)
+    - Transfer type, deed code (LW/QC/GD), buyer/seller, doc #, deed-in-lieu, seller carry-back, **sale amount**
+    - Title company + per-event lender / loan type / term / due date / loan doc # (mortgage **amounts hidden**)
   - [`GET /property/detailwithschools`](https://api.developer.attomdata.com/docs) (v4) — Schools CatchUp
     - District name/type + assigned campuses (name, letter rating, grades, public/private, distance, lat/lng)
     - Property block overlaps basicprofile — used only for `school` + `schoolDistrict`

@@ -489,7 +489,11 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
       channel: 'last-sale',
       unreadCount: 1,
       headline: 'Most recent transfer',
-      preview: `${property.deedType} recorded ${property.lastSaleDate}. Sale amount intentionally de-emphasized.`,
+      preview: `${property.deedType} recorded ${property.lastSaleDate}${
+        property.lastSalePriceLabel && property.lastSalePriceLabel !== '—'
+          ? ` · ${property.lastSalePriceLabel}`
+          : ''
+      }.`,
       timestamp: isoMinutesAgo(12),
       source: live ? 'ATTOM /sale/detail' : 'GET /api/properties/:id · sales',
       fields: [

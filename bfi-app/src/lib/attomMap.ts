@@ -438,9 +438,11 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   const fields: Partial<MockProperty> = {
     factsStatus: 'live',
     addressSource: 'edge',
-    // Buyer-first: never surface sale price from ATTOM
-    lastSalePriceLabel: 'Not shown (buyer-first)',
   }
+
+  const salePrice = fromRecord(saleAmount, 'saleAmt', 'saleamt')
+  fields.lastSalePriceLabel =
+    salePrice != null ? moneyLabel(salePrice, '—') : '—'
 
   const line1 = attom.address?.line1?.trim()
   const locality = attom.address?.locality?.trim()
@@ -714,7 +716,10 @@ export function mapAttomSalesHistory(attom: AttomProperty | Record<string, unkno
       loanTermMonths: loanTerm || undefined,
       loanDueDate: loanDue ? loanDue.slice(0, 10) : undefined,
       loanDocumentNumber: loanDoc || undefined,
-      amountLabel: 'Not shown (buyer-first)',
+      amountLabel: (() => {
+        const salePrice = num(amount.saleAmt ?? amount.saleamt)
+        return salePrice != null ? moneyLabel(salePrice, '—') : '—'
+      })(),
     })
   }
   return events

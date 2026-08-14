@@ -99,7 +99,7 @@ export type PropertySaleEvent = {
   loanTermMonths?: string
   loanDueDate?: string
   loanDocumentNumber?: string
-  /** Buyer-first: never show raw sale amount */
+  /** Formatted sale amount from ATTOM when published */
   amountLabel: string
 }
 
@@ -180,7 +180,7 @@ export type MockProperty = {
   taxAmountLabel?: string
   /** Market value label when assessor publishes it */
   marketValueLabel?: string
-  /** Recorded transfers for Sales History (prices hidden) */
+  /** Recorded transfers for Sales History */
   salesHistory?: PropertySaleEvent[]
   /** Building permits from ATTOM /property/buildingpermits */
   buildingPermits?: BuildingPermit[]
@@ -354,7 +354,7 @@ export const DEMO_PROPERTY: MockProperty = {
   ownerName: 'Rivera Family Trust',
   ownerOccupied: true,
   lastSaleDate: '2019-06-14',
-  lastSalePriceLabel: 'Not shown (buyer-first)',
+  lastSalePriceLabel: '$485,000',
   deedType: 'Warranty Deed',
   taxAssessedValueLabel: 'County assessed · 2025',
   taxYear: 2025,
@@ -716,7 +716,7 @@ export function getChannelCanvas(
       },
       fields: [
         { label: 'Last sale date', value: property.lastSaleDate, source: 'County recorder' },
-        { label: 'Sale amount', value: property.lastSalePriceLabel, source: 'Policy' },
+        { label: 'Sale amount', value: property.lastSalePriceLabel, source: 'ATTOM' },
         { label: 'Deed type', value: property.deedType, source: 'County recorder' },
         { label: 'Document #', value: '2019-084221 (stub)', source: 'Recorder stub' },
       ],
