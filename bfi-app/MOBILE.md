@@ -79,9 +79,25 @@ Then Run ▶ on a simulator or plugged-in phone.
 4. TestFlight + Play internal testing
 5. Store listings, privacy nutrition labels (location usage)
 
-## Production API note
+## Production API note (why ATTOM may show “Pending” on the phone)
 
-Dev uses Vite’s `/api/property-lookup` proxy. Native builds load static `dist/` and must call your **Supabase Edge** `property-lookup` (or another HTTPS API). Ensure `VITE_SUPABASE_URL` / anon key are set for release builds and that Edge secrets include `ATTOM_API_KEY` + `GOOGLE_MAPS_API_KEY`.
+Dev web (`npm run dev`) uses Vite’s `/api/property-lookup` proxy with local `ATTOM_API_KEY`.
+
+Native builds load static `dist/` — **there is no Vite proxy**. They must call your deployed **Supabase Edge** `property-lookup`.
+
+Checklist for live county data on emulator/device:
+
+1. `bfi-app/.env.local` has real `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
+2. Edge function deployed: `supabase functions deploy property-lookup`
+3. Secrets set: `supabase secrets set ATTOM_API_KEY=…` (and Maps key if used)
+4. Rebuild after env changes: `npm run cap:sync` then Run ▶ again  
+   (Vite bakes `VITE_*` in at **build** time)
+
+## System bars (white strips on Android 16)
+
+Android 15/16 forces edge-to-edge. This project uses `@capawesome/capacitor-android-edge-to-edge-support` so status/nav bars match brand night `#2a1f20`.
+
+GPS **permission sheets** are Android system UI — they stay light-themed; the app cannot recolor them.
 
 ## Commands cheat sheet
 

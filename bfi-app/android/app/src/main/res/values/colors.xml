@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#2a1f20</color>
+    <color name="colorPrimaryDark">#1f1617</color>
+    <color name="colorAccent">#e8913a</color>
+    <color name="bfi_night">#2a1f20</color>
+</resources>

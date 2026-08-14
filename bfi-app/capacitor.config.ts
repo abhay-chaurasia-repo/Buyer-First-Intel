@@ -1,3 +1,4 @@
+/// <reference types="@capawesome/capacitor-android-edge-to-edge-support" />
 import type { CapacitorConfig } from '@capacitor/cli'
 
 /**
@@ -13,6 +14,15 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
   },
   plugins: {
+    // Capawesome owns inset padding; disable Capacitor core auto-insets to avoid double padding.
+    SystemBars: {
+      insetsHandling: 'disable',
+    },
+    EdgeToEdge: {
+      backgroundColor: '#2a1f20',
+      statusBarColor: '#2a1f20',
+      navigationBarColor: '#2a1f20',
+    },
     SplashScreen: {
       launchAutoHide: true,
       backgroundColor: '#2a1f20',

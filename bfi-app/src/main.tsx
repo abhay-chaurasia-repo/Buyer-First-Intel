@@ -1,8 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, HashRouter } from 'react-router-dom'
-import { Capacitor } from '@capacitor/core'
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
 import { StatusBar, Style } from '@capacitor/status-bar'
+import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './auth/AuthProvider'
@@ -10,10 +11,17 @@ import { AuthProvider } from './auth/AuthProvider'
 async function bootstrapNativeShell() {
   if (!Capacitor.isNativePlatform()) return
   try {
+    await SystemBars.setStyle({ style: SystemBarsStyle.Dark })
     await StatusBar.setStyle({ style: Style.Dark })
-    await StatusBar.setBackgroundColor({ color: '#2a1f20' })
+    // Android 15+/16: StatusBar.setBackgroundColor is a no-op; EdgeToEdge paints the bars.
+    if (Capacitor.getPlatform() === 'android') {
+      await EdgeToEdge.setStatusBarColor({ color: '#2a1f20' })
+      await EdgeToEdge.setNavigationBarColor({ color: '#2a1f20' })
+    } else {
+      await StatusBar.setBackgroundColor({ color: '#2a1f20' })
+    }
   } catch {
-    // Status bar plugin may be unavailable in some simulators.
+    // Native chrome plugins may be unavailable in some simulators.
   }
 }
 
