@@ -288,6 +288,22 @@
   transform-origin: center;
 }
 
+@keyframes bfi-verify-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(232 145 58 / 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgb(232 145 58 / 0);
+    transform: scale(1.06);
+  }
+}
+
+.animate-bfi-verify-pulse {
+  animation: bfi-verify-pulse 1.4s ease-out infinite;
+}
+
 .animate-bfi-rise {
   animation: bfi-rise 0.45s ease-out both;
 }
@@ -325,6 +341,10 @@
   }
 
   .animate-bfi-share-blow {
+    animation: none;
+  }
+
+  .animate-bfi-verify-pulse {
     animation: none;
   }
 }

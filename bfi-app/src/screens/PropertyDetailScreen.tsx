@@ -28,10 +28,16 @@ import {
   type MockProperty,
 } from '@/data/mockProperty'
 import { loadGpsVerified, persistGpsVerified } from '@/data/ownerScope'
+import {
+  loadNearbyNudgeEnabled,
+  persistNearbyNudgeEnabled,
+} from '@/data/gpsSettings'
 import { isOnWatchlist, toggleWatchlist } from '@/data/watchlistStorage'
 import {
   attemptGpsVerify,
+  GPS_NEARBY_NUDGE_METERS,
   GPS_VERIFY_RADIUS_METERS,
+  watchNearbyProperty,
 } from '@/lib/gpsVerify'
 import {
   loadPropertyFromQuery,
@@ -89,6 +95,11 @@ export function PropertyDetailScreen() {
     tone: 'ok' | 'warn'
     text: string
   } | null>(null)
+  const [nearbyNudgeEnabled, setNearbyNudgeEnabled] = useState(() =>
+    loadNearbyNudgeEnabled(),
+  )
+  const [nearby, setNearby] = useState(false)
+  const [nearbyDistanceM, setNearbyDistanceM] = useState<number | null>(null)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -113,9 +124,33 @@ export function PropertyDetailScreen() {
   useEffect(() => {
     setStarred(isOnWatchlist(property.id) || property.starred)
     setVerified(loadGpsVerified(property.id))
+    setNearbyNudgeEnabled(loadNearbyNudgeEnabled())
+    setNearby(false)
+    setNearbyDistanceM(null)
     setVerifyMessage(null)
     setVerifyBusy(false)
   }, [propertyKey, property.id, property.starred, ownerId])
+
+  useEffect(() => {
+    if (!nearbyNudgeEnabled || verified || activeSurface) {
+      setNearby(false)
+      setNearbyDistanceM(null)
+      return
+    }
+    if (property.lat == null || property.lng == null) return
+
+    return watchNearbyProperty(property, (update) => {
+      setNearby(update.nearby)
+      setNearbyDistanceM(update.distanceMeters)
+    })
+  }, [
+    nearbyNudgeEnabled,
+    verified,
+    activeSurface,
+    property.lat,
+    property.lng,
+    property.id,
+  ])
 
   useEffect(() => {
     const catchup = searchParams.get('catchup')
@@ -138,10 +173,23 @@ export function PropertyDetailScreen() {
 
   const metrics = useMemo(() => getMetricCards(property), [property])
   const truncated = truncateAddress(property.address)
+  const nudgeVerify = nearbyNudgeEnabled && nearby && !verified && !verifyBusy
 
   function handleToggleStar() {
     const result = toggleWatchlist(property)
     setStarred(result.starred)
+  }
+
+  function handleToggleNearbyNudge() {
+    setNearbyNudgeEnabled((prev) => {
+      const next = !prev
+      persistNearbyNudgeEnabled(next)
+      if (!next) {
+        setNearby(false)
+        setNearbyDistanceM(null)
+      }
+      return next
+    })
   }
 
   async function handleToggleVerify() {
@@ -244,24 +292,35 @@ export function PropertyDetailScreen() {
                 onClick={() => void handleToggleVerify()}
                 disabled={verifyBusy}
                 className={cn(
-                  'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color] touch-manipulation',
-                  'hover:border-white/35 hover:bg-white/8 focus-visible:border-white/35 focus-visible:bg-white/8 active:border-white/35',
-                  verified ? 'text-saffron-glow' : 'text-night-ink',
+                  'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color,box-shadow,transform] touch-manipulation',
+                  nudgeVerify
+                    ? 'animate-bfi-verify-pulse border-saffron/70 bg-saffron/25 text-saffron-glow'
+                    : 'border-transparent hover:border-white/35 hover:bg-white/8 focus-visible:border-white/35 focus-visible:bg-white/8 active:border-white/35',
+                  verified ? 'text-saffron-glow' : !nudgeVerify && 'text-night-ink',
                   verifyBusy && 'opacity-60',
                 )}
-                aria-label={verified ? 'Clear GPS verification' : 'GPS Verify on site'}
+                aria-label={
+                  verified
+                    ? 'Clear GPS verification'
+                    : nudgeVerify
+                      ? 'You are near this home — GPS Verify now'
+                      : 'GPS Verify on site'
+                }
                 aria-pressed={verified}
                 aria-busy={verifyBusy}
                 data-testid="badge-gps-verify"
+                data-nearby={nudgeVerify ? 'true' : 'false'}
               >
                 <Crosshair className="h-4 w-4" strokeWidth={2.25} />
-                <span>{verifyBusy ? '…' : verified ? 'Verified' : 'Verify'}</span>
+                <span>
+                  {verifyBusy ? '…' : verified ? 'Verified' : nudgeVerify ? 'Tap Verify' : 'Verify'}
+                </span>
               </button>
             </div>
           </header>
 
           <div className="flex-1 overflow-y-auto pb-4">
-            {lookupBusy || lookupStatus?.warning || verifyMessage ? (
+            {lookupBusy || lookupStatus?.warning || verifyMessage || nudgeVerify ? (
               <div className="space-y-2 px-3 pt-2" data-testid="property-status-banners">
                 {lookupBusy || lookupStatus?.warning ? (
                   <div data-testid="property-lookup-status">
@@ -276,6 +335,29 @@ export function PropertyDetailScreen() {
                       {lookupBusy ? 'Matching address…' : lookupStatus?.warning}
                     </p>
                   </div>
+                ) : null}
+                {nudgeVerify ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleVerify()}
+                    className="flex w-full items-start gap-2 rounded-xl border border-saffron/50 bg-saffron/15 px-3 py-2.5 text-left touch-manipulation"
+                    data-testid="gps-nearby-nudge"
+                  >
+                    <Crosshair
+                      className="mt-0.5 h-4 w-4 shrink-0 animate-bfi-verify-pulse text-saffron-glow"
+                      strokeWidth={2.25}
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[12px] font-semibold text-saffron-glow">
+                        You&apos;re near this home
+                        {nearbyDistanceM != null ? ` · ~${nearbyDistanceM}m` : ''}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] leading-snug text-night-ink">
+                        Tap Verify (within {GPS_VERIFY_RADIUS_METERS}m) to unlock on-site Buyer
+                        Community labels. Nudge zone is {GPS_NEARBY_NUDGE_METERS}m.
+                      </span>
+                    </span>
+                  </button>
                 ) : null}
                 {verifyMessage ? (
                   <p
@@ -392,6 +474,28 @@ export function PropertyDetailScreen() {
                       Verify on this header while at the home to unlock on-site community upvotes.
                     </span>
                   </p>
+
+                  <label
+                    className="mt-3 flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-white/15 bg-black/15 px-3 py-2.5 touch-manipulation"
+                    data-testid="setting-nearby-nudge"
+                  >
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-saffron)]"
+                      checked={nearbyNudgeEnabled}
+                      onChange={handleToggleNearbyNudge}
+                      data-testid="checkbox-nearby-nudge"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[12px] font-semibold text-night-ink">
+                        Nudge me when I&apos;m near this home
+                      </span>
+                      <span className="mt-0.5 block text-[11px] leading-snug text-night-faint">
+                        Within ~{GPS_NEARBY_NUDGE_METERS}m, Verify pulses so you remember to confirm
+                        presence. Uses location only while this property page is open.
+                      </span>
+                    </span>
+                  </label>
 
                   <div
                     className="mt-3 space-y-2 rounded-xl border border-white/12 bg-black/20 px-3 py-2.5"

@@ -6,6 +6,8 @@
 export const GPS_VERIFY_RADIUS_METERS = 100
 /** Reject fixes that are too imprecise to trust a 100m gate. */
 export const GPS_VERIFY_MAX_ACCURACY_METERS = 80
+/** Soft “you’re near — tap Verify” zone (wider than the pass radius). */
+export const GPS_NEARBY_NUDGE_METERS = 300
 /** Verification expires so presence stays visit-scoped. */
 export const GPS_VERIFY_TTL_MS = 48 * 60 * 60 * 1000
 
@@ -147,5 +149,73 @@ export async function attemptGpsVerify(property: {
       reason: 'unavailable',
       message: 'Could not read your location. Check Location Services and try again on site.',
     }
+  }
+}
+
+export type NearbyWatchUpdate = {
+  nearby: boolean
+  distanceMeters: number | null
+  accuracyMeters: number | null
+  error?: string
+}
+
+/**
+ * Watch device position while the property page is open.
+ * Used for the soft Verify nudge (not the pass/fail gate).
+ */
+export function watchNearbyProperty(
+  property: { lat?: number; lng?: number },
+  onUpdate: (update: NearbyWatchUpdate) => void,
+  options?: { nudgeMeters?: number },
+): () => void {
+  const pinLat = property.lat
+  const pinLng = property.lng
+  const nudgeMeters = options?.nudgeMeters ?? GPS_NEARBY_NUDGE_METERS
+
+  if (
+    pinLat == null ||
+    pinLng == null ||
+    !Number.isFinite(pinLat) ||
+    !Number.isFinite(pinLng) ||
+    typeof navigator === 'undefined' ||
+    !navigator.geolocation
+  ) {
+    onUpdate({
+      nearby: false,
+      distanceMeters: null,
+      accuracyMeters: null,
+      error: 'no_pin',
+    })
+    return () => undefined
+  }
+
+  const handle = navigator.geolocation.watchPosition(
+    (position) => {
+      const { latitude, longitude, accuracy } = position.coords
+      const distance = distanceMeters(latitude, longitude, pinLat, pinLng)
+      const accuracyMeters = Number.isFinite(accuracy) ? accuracy : null
+      onUpdate({
+        nearby: distance <= nudgeMeters,
+        distanceMeters: Math.round(distance),
+        accuracyMeters: accuracyMeters != null ? Math.round(accuracyMeters) : null,
+      })
+    },
+    (error) => {
+      onUpdate({
+        nearby: false,
+        distanceMeters: null,
+        accuracyMeters: null,
+        error: error.code === 1 ? 'denied' : 'unavailable',
+      })
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 15_000,
+      timeout: 25_000,
+    },
+  )
+
+  return () => {
+    navigator.geolocation.clearWatch(handle)
   }
 }

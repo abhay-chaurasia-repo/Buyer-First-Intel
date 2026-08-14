@@ -18,6 +18,7 @@ export const OWNED_STORAGE_BASES = [
   'bfi.buyer-community-verified',
   'bfi.visit-reminders-fired',
   'bfi.search-quota',
+  'bfi.gps-nearby-nudge',
 ] as const
 
 const LEGACY_ALIASES: Record<string, string[]> = {

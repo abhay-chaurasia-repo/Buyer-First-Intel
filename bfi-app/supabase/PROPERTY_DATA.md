@@ -70,5 +70,6 @@ Some residential streets may return `SuccessWithoutResult` on the trial plan —
 - Pass when distance ≤ ~100m and accuracy ≤ ~80m
 - Persists owner-scoped presence for 48 hours (unlocks on-site Buyer Community votes)
 - Failures: no pin, permission denied, timeout, too far, poor accuracy
-- Mapper: `src/lib/gpsVerify.ts` · storage: `bfi.gpsVerified.{owner}.{propertyId}`
+- **Nearby nudge (setting, default on):** while the property page is open, watch location; within ~300m and not yet verified, pulse the Verify control + banner to push the tap
+- Mapper: `src/lib/gpsVerify.ts` · storage: `bfi.gpsVerified.{owner}.{propertyId}` · setting: `bfi.gps-nearby-nudge`
 - Later: log real Verified Visit rows (replace stub visit list)
