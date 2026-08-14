@@ -48,6 +48,7 @@ function blankCountyFacts(): Partial<MockProperty> {
     roomsTotal: undefined,
     garageType: undefined,
     garageSizeSqft: undefined,
+    parkingSpaces: undefined,
     coolingType: undefined,
     heatingType: undefined,
     heatingFuel: undefined,
@@ -55,7 +56,22 @@ function blankCountyFacts(): Partial<MockProperty> {
     constructionCondition: undefined,
     constructionType: undefined,
     frameType: undefined,
+    roofShape: undefined,
+    architecturalStyle: undefined,
+    majorImprovementsYear: undefined,
+    grossSizeSqft: undefined,
+    groundFloorSizeSqft: undefined,
     fireplaceCount: undefined,
+    municipalityName: undefined,
+    taxCodeArea: undefined,
+    lotNumber: undefined,
+    quitClaimFlag: undefined,
+    reoFlag: undefined,
+    lastSaleSellerName: undefined,
+    mortgageLender: undefined,
+    mortgageLoanType: undefined,
+    mortgageDate: undefined,
+    mortgageDueDate: undefined,
     locationAccuracy: undefined,
     factsLastModified: undefined,
     factsPubDate: undefined,
@@ -65,7 +81,7 @@ function blankCountyFacts(): Partial<MockProperty> {
   }
 }
 
-const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v11'
+const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v12'
 const SELECTED_ADDRESS_KEY = 'bfi.selectedAddress.v1'
 const RECENT_ADDRESSES_KEY = 'bfi.recentAddressSuggestions.v1'
 
@@ -80,6 +96,7 @@ try {
   sessionStorage.removeItem('bfi.propertyLookupCache.v8')
   sessionStorage.removeItem('bfi.propertyLookupCache.v9')
   sessionStorage.removeItem('bfi.propertyLookupCache.v10')
+  sessionStorage.removeItem('bfi.propertyLookupCache.v11')
 } catch {
   // ignore
 }

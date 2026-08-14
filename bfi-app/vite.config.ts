@@ -424,6 +424,63 @@ function mapAttomProperty(attom: Record<string, unknown>) {
   if (typeof construction.frameType === 'string' && construction.frameType.trim()) {
     fields.frameType = titleCaseStreet(construction.frameType)
   }
+  if (typeof construction.roofShape === 'string' && construction.roofShape.trim()) {
+    fields.roofShape = titleCaseStreet(construction.roofShape)
+  }
+  if (typeof construction.wallType === 'string' && construction.wallType.trim() && !fields.wallType) {
+    fields.wallType = titleCaseStreet(construction.wallType)
+  }
+  const majorImpr = num(construction.propertyStructureMajorImprovementsYear)
+  if (majorImpr != null) fields.majorImprovementsYear = Math.round(majorImpr)
+  if (typeof summary.archStyle === 'string' && summary.archStyle.trim()) {
+    fields.architecturalStyle = titleCaseStreet(summary.archStyle)
+  }
+  const grossSize = num(size.grossSize) ?? num(size.grosssize)
+  if (grossSize != null) fields.grossSizeSqft = Math.round(grossSize)
+  const groundFloor = num(size.groundFloorSize) ?? num(size.groundfloorsize)
+  if (groundFloor != null) fields.groundFloorSizeSqft = Math.round(groundFloor)
+  const parkingSpaces = num(parking.prkgSpaces)
+  if (parkingSpaces != null) fields.parkingSpaces = Math.round(parkingSpaces)
+  if (typeof area.munName === 'string' && area.munName.trim()) {
+    fields.municipalityName = titleCaseStreet(area.munName)
+  }
+  if (area.taxCodeArea != null && String(area.taxCodeArea).trim()) {
+    fields.taxCodeArea = String(area.taxCodeArea).trim()
+  }
+  if (lot.lotNum != null && String(lot.lotNum).trim()) {
+    fields.lotNumber = String(lot.lotNum).trim()
+  }
+  const quitRaw = summary.quitClaimFlag
+  if (quitRaw != null) {
+    const s = String(quitRaw).trim().toLowerCase()
+    if (s === 'true' || s === 'y' || s === '1') fields.quitClaimFlag = true
+    else if (s === 'false' || s === 'n' || s === '0') fields.quitClaimFlag = false
+  }
+  const reoRaw = summary.REOflag
+  if (reoRaw != null) {
+    const s = String(reoRaw).trim().toLowerCase()
+    if (s === 'true' || s === 'y' || s === '1') fields.reoFlag = true
+    else if (s === 'false' || s === 'n' || s === '0') fields.reoFlag = false
+  }
+  if (typeof sale.sellerName === 'string' && sale.sellerName.trim()) {
+    fields.lastSaleSellerName = titleCaseStreet(
+      sale.sellerName.replace(/,/g, ', ').replace(/\s+/g, ' ').trim(),
+    )
+  }
+  const mortgage = (assessment.mortgage || {}) as Record<string, unknown>
+  const firstMortgage = (mortgage.FirstConcurrent || {}) as Record<string, unknown>
+  if (typeof firstMortgage.lenderLastName === 'string' && firstMortgage.lenderLastName.trim()) {
+    fields.mortgageLender = titleCaseStreet(firstMortgage.lenderLastName)
+  }
+  if (typeof firstMortgage.loanTypeCode === 'string' && firstMortgage.loanTypeCode.trim()) {
+    fields.mortgageLoanType = String(firstMortgage.loanTypeCode).toUpperCase()
+  }
+  if (typeof firstMortgage.date === 'string' && firstMortgage.date.trim()) {
+    fields.mortgageDate = String(firstMortgage.date).slice(0, 10)
+  }
+  if (typeof firstMortgage.dueDate === 'string' && firstMortgage.dueDate.trim()) {
+    fields.mortgageDueDate = String(firstMortgage.dueDate).slice(0, 10)
+  }
   const fireplaces = num(interior.fplcCount) ?? num(interior.fplccount)
   if (fireplaces != null) fields.fireplaceCount = Math.round(fireplaces)
   if (typeof location.accuracy === 'string' && location.accuracy.trim()) {
@@ -593,37 +650,104 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
     }
   }
 
-  const [profile, assessment, sale, history, permits] = await Promise.all([
+  const [profile, expanded, assessment, sale, history, permits] = await Promise.all([
     load('property/basicprofile'),
+    load('property/expandedprofile'),
     load('assessment/detail'),
     load('sale/detail'),
     load('saleshistory/expandedhistory'),
     load('property/buildingpermits'),
   ])
 
-  if (!profile && !assessment && !sale && !history && !permits) {
+  if (!profile && !expanded && !assessment && !sale && !history && !permits) {
     return {
       ok: false as const,
-      error: 'No ATTOM match for basicprofile, assessment, sales, or permits',
+      error:
+        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, or permits',
     }
   }
 
   const merged: Record<string, unknown> = {
     ...(profile || {}),
+    ...(expanded || {}),
+  }
+  const baseBuilding = (profile?.building || {}) as Record<string, unknown>
+  const expandedBuilding = (expanded?.building || {}) as Record<string, unknown>
+  const permitBuilding = (permits?.building || {}) as Record<string, unknown>
+  merged.building = {
+    ...baseBuilding,
+    ...expandedBuilding,
+    ...permitBuilding,
+    size: {
+      ...((baseBuilding.size || {}) as object),
+      ...((expandedBuilding.size || {}) as object),
+      ...((permitBuilding.size || {}) as object),
+    },
+    rooms: {
+      ...((baseBuilding.rooms || {}) as object),
+      ...((expandedBuilding.rooms || {}) as object),
+    },
+    construction: {
+      ...((baseBuilding.construction || {}) as object),
+      ...((expandedBuilding.construction || {}) as object),
+    },
+    parking: {
+      ...((baseBuilding.parking || {}) as object),
+      ...((expandedBuilding.parking || {}) as object),
+    },
+    interior: {
+      ...((baseBuilding.interior || {}) as object),
+      ...((expandedBuilding.interior || {}) as object),
+    },
+    summary: {
+      ...((baseBuilding.summary || {}) as object),
+      ...((expandedBuilding.summary || {}) as object),
+    },
+  }
+  merged.summary = {
+    ...((profile?.summary || {}) as object),
+    ...((expanded?.summary || {}) as object),
+    ...((permits?.summary || {}) as object),
+  }
+  merged.area = {
+    ...((profile?.area || {}) as object),
+    ...((expanded?.area || {}) as object),
+  }
+  merged.lot = {
+    ...((profile?.lot || {}) as object),
+    ...((expanded?.lot || {}) as object),
+    ...((permits?.lot || {}) as object),
+  }
+  merged.utilities = {
+    ...((profile?.utilities || {}) as object),
+    ...((expanded?.utilities || {}) as object),
   }
   const baseAssessment = (profile?.assessment || {}) as Record<string, unknown>
+  const expandedAssessment = (expanded?.assessment || {}) as Record<string, unknown>
   const nextAssessment = (assessment?.assessment || {}) as Record<string, unknown>
-  if (Object.keys(baseAssessment).length || Object.keys(nextAssessment).length) {
+  if (
+    Object.keys(baseAssessment).length ||
+    Object.keys(expandedAssessment).length ||
+    Object.keys(nextAssessment).length
+  ) {
     merged.assessment = {
       ...baseAssessment,
+      ...expandedAssessment,
       ...nextAssessment,
-      owner: nextAssessment.owner || baseAssessment.owner,
-      assessed: nextAssessment.assessed || baseAssessment.assessed,
-      market: nextAssessment.market || baseAssessment.market,
-      tax: nextAssessment.tax || baseAssessment.tax,
+      owner: nextAssessment.owner || expandedAssessment.owner || baseAssessment.owner,
+      assessed: nextAssessment.assessed || expandedAssessment.assessed || baseAssessment.assessed,
+      market: nextAssessment.market || expandedAssessment.market || baseAssessment.market,
+      tax: nextAssessment.tax || expandedAssessment.tax || baseAssessment.tax,
+      mortgage: nextAssessment.mortgage || expandedAssessment.mortgage || baseAssessment.mortgage,
     }
   }
-  if (sale?.sale || profile?.sale) merged.sale = sale?.sale || profile?.sale
+  if (sale?.sale || expanded?.sale || profile?.sale) {
+    merged.sale = {
+      ...((profile?.sale || {}) as object),
+      ...((expanded?.sale || {}) as object),
+      ...((sale?.sale || {}) as object),
+    }
+  }
   if (history?.saleHistory || history?.salehistory) {
     merged.saleHistory = history.saleHistory ?? history.salehistory
   }
@@ -639,6 +763,7 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   if (!merged.identifier) {
     merged.identifier =
       profile?.identifier ||
+      expanded?.identifier ||
       assessment?.identifier ||
       sale?.identifier ||
       history?.identifier ||
@@ -647,6 +772,7 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   if (!merged.address) {
     merged.address =
       profile?.address ||
+      expanded?.address ||
       assessment?.address ||
       sale?.address ||
       history?.address ||
@@ -655,22 +781,11 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   if (!merged.location) {
     merged.location =
       profile?.location ||
+      expanded?.location ||
       assessment?.location ||
       sale?.location ||
       history?.location ||
       permits?.location
-  }
-  if (!merged.building) {
-    merged.building =
-      profile?.building || assessment?.building || sale?.building || permits?.building
-  }
-  if (!merged.summary) {
-    merged.summary =
-      profile?.summary ||
-      assessment?.summary ||
-      sale?.summary ||
-      history?.summary ||
-      permits?.summary
   }
 
   return { ok: true as const, property: mapAttomProperty(merged) }

@@ -42,10 +42,15 @@ type AttomProperty = {
     propertyType?: string
     propType?: string
     legal1?: string
+    archStyle?: string
+    quitClaimFlag?: string | boolean
+    REOflag?: string | boolean
   }
   area?: {
     countrySecSubd?: string
     subdName?: string
+    munName?: string
+    taxCodeArea?: string | number
   }
   utilities?: {
     coolingType?: string
@@ -64,6 +69,10 @@ type AttomProperty = {
       /** Preferred living area from basicprofile */
       grossSizeAdjusted?: number
       grosssizeadjusted?: number
+      grossSize?: number
+      grosssize?: number
+      groundFloorSize?: number
+      groundfloorsize?: number
     }
     rooms?: {
       beds?: number
@@ -84,12 +93,16 @@ type AttomProperty = {
       condition?: string
       constructionType?: string
       frameType?: string
+      wallType?: string
+      roofShape?: string
+      propertyStructureMajorImprovementsYear?: string | number
     }
     parking?: {
       garageType?: string
       prkgSize?: number
       prkgsize?: number
       prkgType?: string
+      prkgSpaces?: string | number
     }
     summary?: {
       levels?: number
@@ -101,6 +114,7 @@ type AttomProperty = {
     lotSize2?: number
     lotsize1?: number
     lotSize1?: number
+    lotNum?: string | number
     siteZoningIdent?: string
     zoningType?: string
   }
@@ -121,11 +135,17 @@ type AttomProperty = {
     assessed?: Record<string, unknown>
     market?: Record<string, unknown>
     tax?: Record<string, unknown>
+    mortgage?: {
+      FirstConcurrent?: Record<string, unknown>
+      SecondConcurrent?: Record<string, unknown>
+      title?: Record<string, unknown>
+    }
   }
   sale?: {
     saleTransDate?: string
     saleSearchDate?: string
     salesearchdate?: string
+    sellerName?: string
     amount?: Record<string, unknown>
     /** basicprofile nests sale dollars under saleAmountData */
     saleAmountData?: Record<string, unknown>
@@ -148,6 +168,60 @@ type AttomBuildingPermitRow = {
   fees?: number
   homeOwnerName?: string
   classifiers?: string[]
+}
+
+function flagBool(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') return value
+  if (value == null) return undefined
+  const s = String(value).trim().toLowerCase()
+  if (s === 'true' || s === 'y' || s === 'yes' || s === '1') return true
+  if (s === 'false' || s === 'n' || s === 'no' || s === '0') return false
+  return undefined
+}
+
+function mergeAttomObjects<T extends Record<string, unknown>>(
+  base?: T | null,
+  overlay?: T | null,
+): T | undefined {
+  if (!base && !overlay) return undefined
+  return { ...(base || {}), ...(overlay || {}) } as T
+}
+
+function mergeAttomBuilding(
+  base?: AttomProperty['building'],
+  overlay?: AttomProperty['building'],
+): AttomProperty['building'] | undefined {
+  if (!base && !overlay) return undefined
+  return {
+    ...(base || {}),
+    ...(overlay || {}),
+    size: mergeAttomObjects(base?.size as Record<string, unknown>, overlay?.size as Record<string, unknown>) as AttomProperty['building'] extends {
+      size?: infer S
+    }
+      ? S
+      : never,
+    rooms: mergeAttomObjects(base?.rooms as Record<string, unknown>, overlay?.rooms as Record<string, unknown>) as AttomProperty['building'] extends {
+      rooms?: infer R
+    }
+      ? R
+      : never,
+    interior: mergeAttomObjects(
+      base?.interior as Record<string, unknown>,
+      overlay?.interior as Record<string, unknown>,
+    ) as AttomProperty['building'] extends { interior?: infer I } ? I : never,
+    construction: mergeAttomObjects(
+      base?.construction as Record<string, unknown>,
+      overlay?.construction as Record<string, unknown>,
+    ) as AttomProperty['building'] extends { construction?: infer C } ? C : never,
+    parking: mergeAttomObjects(
+      base?.parking as Record<string, unknown>,
+      overlay?.parking as Record<string, unknown>,
+    ) as AttomProperty['building'] extends { parking?: infer P } ? P : never,
+    summary: mergeAttomObjects(
+      base?.summary as Record<string, unknown>,
+      overlay?.summary as Record<string, unknown>,
+    ) as AttomProperty['building'] extends { summary?: infer S } ? S : never,
+  }
 }
 
 function num(value: unknown): number | undefined {
@@ -390,6 +464,62 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   if (attom.building?.construction?.frameType) {
     fields.frameType = titleCaseStreet(attom.building.construction.frameType)
   }
+  if (attom.building?.construction?.roofShape) {
+    fields.roofShape = titleCaseStreet(attom.building.construction.roofShape)
+  }
+  if (attom.building?.construction?.wallType && !fields.wallType) {
+    fields.wallType = titleCaseStreet(attom.building.construction.wallType)
+  }
+  const majorImpr = num(attom.building?.construction?.propertyStructureMajorImprovementsYear)
+  if (majorImpr != null) fields.majorImprovementsYear = Math.round(majorImpr)
+
+  if (attom.summary?.archStyle?.trim()) {
+    fields.architecturalStyle = titleCaseStreet(attom.summary.archStyle.trim())
+  }
+
+  const grossSize =
+    num(attom.building?.size?.grossSize) ?? num(attom.building?.size?.grosssize)
+  if (grossSize != null) fields.grossSizeSqft = Math.round(grossSize)
+  const groundFloor =
+    num(attom.building?.size?.groundFloorSize) ?? num(attom.building?.size?.groundfloorsize)
+  if (groundFloor != null) fields.groundFloorSizeSqft = Math.round(groundFloor)
+
+  const parkingSpaces = num(attom.building?.parking?.prkgSpaces)
+  if (parkingSpaces != null) fields.parkingSpaces = Math.round(parkingSpaces)
+
+  if (attom.area?.munName?.trim()) {
+    fields.municipalityName = titleCaseStreet(attom.area.munName.trim())
+  }
+  if (attom.area?.taxCodeArea != null && String(attom.area.taxCodeArea).trim()) {
+    fields.taxCodeArea = String(attom.area.taxCodeArea).trim()
+  }
+  if (attom.lot?.lotNum != null && String(attom.lot.lotNum).trim()) {
+    fields.lotNumber = String(attom.lot.lotNum).trim()
+  }
+
+  const quitClaim = flagBool(attom.summary?.quitClaimFlag)
+  if (quitClaim != null) fields.quitClaimFlag = quitClaim
+  const reo = flagBool(attom.summary?.REOflag)
+  if (reo != null) fields.reoFlag = reo
+
+  if (typeof attom.sale?.sellerName === 'string' && attom.sale.sellerName.trim()) {
+    fields.lastSaleSellerName = titleCaseStreet(
+      attom.sale.sellerName.replace(/,/g, ', ').replace(/\s+/g, ' ').trim(),
+    )
+  }
+
+  const mortgage = attom.assessment?.mortgage?.FirstConcurrent
+  if (mortgage) {
+    const lender = stringFromRecord(mortgage, 'lenderLastName', 'lenderlastname')
+    if (lender) fields.mortgageLender = titleCaseStreet(lender)
+    const loanType = stringFromRecord(mortgage, 'loanTypeCode', 'loantypecode')
+    if (loanType) fields.mortgageLoanType = loanType.toUpperCase()
+    const mDate = stringFromRecord(mortgage, 'date')
+    if (mDate) fields.mortgageDate = mDate.slice(0, 10)
+    const due = stringFromRecord(mortgage, 'dueDate', 'duedate')
+    if (due) fields.mortgageDueDate = due.slice(0, 10)
+  }
+
   const fireplaces =
     num(attom.building?.interior?.fplcCount) ?? num(attom.building?.interior?.fplccount)
   if (fireplaces != null) fields.fireplaceCount = Math.round(fireplaces)
@@ -662,6 +792,7 @@ export async function fetchAttomPropertyDetail(params: {
  * County facts + tax assessment + sale / sales history.
  * Parallel ATTOM packages per interactive docs:
  * - /property/basicprofile  (County’s Fact: yearBuilt, grossSizeAdjusted, beds/baths, owner)
+ * - /property/expandedprofile (style, roof, parking spaces, title flags, mortgage meta)
  * - /property/buildingpermits (County’s Fact permits)
  * - /assessment/detail
  * - /sale/detail
@@ -693,42 +824,68 @@ export async function fetchAttomCountyFacts(params: {
     zipCode: params.zipCode,
   }
 
-  const [profile, assessment, sale, history, permits] = await Promise.all([
+  const [profile, expanded, assessment, sale, history, permits] = await Promise.all([
     fetchAttomPackage('property/basicprofile', lookup),
+    fetchAttomPackage('property/expandedprofile', lookup),
     fetchAttomPackage('assessment/detail', lookup),
     fetchAttomPackage('sale/detail', lookup),
     fetchAttomPackage('saleshistory/expandedhistory', lookup),
     fetchAttomPackage('property/buildingpermits', lookup),
   ])
 
-  if (!profile && !assessment && !sale && !history && !permits) {
-    return { ok: false, error: 'No ATTOM match for basicprofile, assessment, sales, or permits' }
+  if (!profile && !expanded && !assessment && !sale && !history && !permits) {
+    return {
+      ok: false,
+      error: 'No ATTOM match for basicprofile, expandedprofile, assessment, sales, or permits',
+    }
   }
 
   const merged: AttomProperty = {
     ...(profile || {}),
+    ...(expanded || {}),
     address:
       profile?.address ||
+      expanded?.address ||
       assessment?.address ||
       sale?.address ||
       history?.address ||
       permits?.address,
     location:
       profile?.location ||
+      expanded?.location ||
       assessment?.location ||
       sale?.location ||
       history?.location ||
       permits?.location,
-    building: profile?.building || assessment?.building || sale?.building || permits?.building,
-    lot: profile?.lot || assessment?.lot || sale?.lot || permits?.lot,
-    summary:
-      profile?.summary ||
-      assessment?.summary ||
-      sale?.summary ||
-      history?.summary ||
-      permits?.summary,
+    building: mergeAttomBuilding(
+      profile?.building,
+      mergeAttomBuilding(expanded?.building, permits?.building),
+    ),
+    lot: mergeAttomObjects(
+      profile?.lot as Record<string, unknown>,
+      mergeAttomObjects(
+        expanded?.lot as Record<string, unknown>,
+        permits?.lot as Record<string, unknown>,
+      ),
+    ) as AttomProperty['lot'],
+    area: mergeAttomObjects(
+      profile?.area as Record<string, unknown>,
+      expanded?.area as Record<string, unknown>,
+    ) as AttomProperty['area'],
+    summary: mergeAttomObjects(
+      profile?.summary as Record<string, unknown>,
+      mergeAttomObjects(
+        expanded?.summary as Record<string, unknown>,
+        permits?.summary as Record<string, unknown>,
+      ),
+    ) as AttomProperty['summary'],
+    utilities: mergeAttomObjects(
+      profile?.utilities as Record<string, unknown>,
+      expanded?.utilities as Record<string, unknown>,
+    ) as AttomProperty['utilities'],
     identifier:
       profile?.identifier ||
+      expanded?.identifier ||
       assessment?.identifier ||
       sale?.identifier ||
       history?.identifier ||
@@ -736,23 +893,34 @@ export async function fetchAttomCountyFacts(params: {
   }
 
   // Deep-merge assessment so basicprofile owner is kept when assessment/detail lacks it
-  if (profile?.assessment || assessment?.assessment) {
-    const baseAssessment = (profile?.assessment || {}) as NonNullable<AttomProperty['assessment']>
+  if (profile?.assessment || expanded?.assessment || assessment?.assessment) {
+    const baseAssessment = (profile?.assessment ||
+      expanded?.assessment ||
+      {}) as NonNullable<AttomProperty['assessment']>
+    const expandedAssessment = (expanded?.assessment || {}) as NonNullable<
+      AttomProperty['assessment']
+    >
     const nextAssessment = (assessment?.assessment || {}) as NonNullable<
       AttomProperty['assessment']
     >
     merged.assessment = {
       ...baseAssessment,
+      ...expandedAssessment,
       ...nextAssessment,
-      owner: nextAssessment.owner || baseAssessment.owner,
-      assessed: nextAssessment.assessed || baseAssessment.assessed,
-      market: nextAssessment.market || baseAssessment.market,
-      tax: nextAssessment.tax || baseAssessment.tax,
+      owner: nextAssessment.owner || expandedAssessment.owner || baseAssessment.owner,
+      assessed: nextAssessment.assessed || expandedAssessment.assessed || baseAssessment.assessed,
+      market: nextAssessment.market || expandedAssessment.market || baseAssessment.market,
+      tax: nextAssessment.tax || expandedAssessment.tax || baseAssessment.tax,
+      mortgage: nextAssessment.mortgage || expandedAssessment.mortgage || baseAssessment.mortgage,
     }
   }
 
-  if (sale?.sale || profile?.sale) {
-    merged.sale = sale?.sale || profile?.sale
+  if (sale?.sale || expanded?.sale || profile?.sale) {
+    merged.sale = {
+      ...(profile?.sale || {}),
+      ...(expanded?.sale || {}),
+      ...(sale?.sale || {}),
+    }
   }
 
   if (history) {
@@ -776,6 +944,7 @@ export async function fetchAttomCountyFacts(params: {
   const fields = mapAttomToPropertyFields(merged)
   const warnings: string[] = []
   if (!profile) warnings.push('property/basicprofile unavailable')
+  if (!expanded) warnings.push('property/expandedprofile unavailable')
   if (!assessment) warnings.push('assessment/detail unavailable')
   if (!sale && !history) warnings.push('sale/saleshistory unavailable')
   if (!permits) warnings.push('property/buildingpermits unavailable')

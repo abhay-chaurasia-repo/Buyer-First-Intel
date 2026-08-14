@@ -167,6 +167,8 @@ export type MockProperty = {
   roomsTotal?: number
   garageType?: string
   garageSizeSqft?: number
+  /** ATTOM building.parking.prkgSpaces */
+  parkingSpaces?: number
   coolingType?: string
   heatingType?: string
   heatingFuel?: string
@@ -174,7 +176,34 @@ export type MockProperty = {
   constructionCondition?: string
   constructionType?: string
   frameType?: string
+  /** ATTOM building.construction.roofShape */
+  roofShape?: string
+  /** ATTOM summary.archStyle */
+  architecturalStyle?: string
+  /** ATTOM building.construction.propertyStructureMajorImprovementsYear */
+  majorImprovementsYear?: number
+  /** ATTOM building.size.grossSize (total building, may differ from living) */
+  grossSizeSqft?: number
+  /** ATTOM building.size.groundFloorSize */
+  groundFloorSizeSqft?: number
   fireplaceCount?: number
+  /** area.munName */
+  municipalityName?: string
+  /** area.taxCodeArea */
+  taxCodeArea?: string
+  /** lot.lotNum */
+  lotNumber?: string
+  /** summary.quitClaimFlag */
+  quitClaimFlag?: boolean
+  /** summary.REOflag */
+  reoFlag?: boolean
+  /** sale.sellerName from expanded profile / sale detail */
+  lastSaleSellerName?: string
+  /** Mortgage metadata only — amounts stay hidden (buyer-first) */
+  mortgageLender?: string
+  mortgageLoanType?: string
+  mortgageDate?: string
+  mortgageDueDate?: string
   /** location.accuracy e.g. Rooftop */
   locationAccuracy?: string
   /** vintage.lastModified */
