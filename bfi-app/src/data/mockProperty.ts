@@ -88,6 +88,21 @@ export type PropertySaleEvent = {
   amountLabel: string
 }
 
+/** ATTOM /property/buildingpermits row */
+export type BuildingPermit = {
+  id: string
+  effectiveDate?: string
+  permitNumber?: string
+  status?: string
+  type?: string
+  subType?: string
+  description?: string
+  projectName?: string
+  feesLabel?: string
+  homeOwnerName?: string
+  classifiers?: string[]
+}
+
 export type MockProperty = {
   id: string
   address: string
@@ -112,6 +127,8 @@ export type MockProperty = {
   marketValueLabel?: string
   /** Recorded transfers for Sales History (prices hidden) */
   salesHistory?: PropertySaleEvent[]
+  /** Building permits from ATTOM /property/buildingpermits */
+  buildingPermits?: BuildingPermit[]
   sqft: number
   bedrooms: number
   bathrooms: number

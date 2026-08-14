@@ -3,7 +3,7 @@
  * Shared by the Vite /api proxy (dev) — Edge Function keeps a Deno copy in sync.
  */
 
-import type { MockProperty, PropertySaleEvent } from '@/data/mockProperty'
+import type { BuildingPermit, MockProperty, PropertySaleEvent } from '@/data/mockProperty'
 import { titleCaseStreet } from '@/lib/addressSearch'
 
 type AttomOwner = {
@@ -133,6 +133,21 @@ type AttomProperty = {
   }
   salehistory?: unknown
   saleHistory?: unknown
+  buildingPermits?: AttomBuildingPermitRow[]
+  buildingpermits?: AttomBuildingPermitRow[]
+}
+
+type AttomBuildingPermitRow = {
+  effectiveDate?: string
+  permitNumber?: string
+  status?: string
+  type?: string
+  subType?: string
+  description?: string
+  projectName?: string
+  fees?: number
+  homeOwnerName?: string
+  classifiers?: string[]
 }
 
 function num(value: unknown): number | undefined {
@@ -425,6 +440,9 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   const history = mapAttomSalesHistory(attom)
   if (history.length > 0) fields.salesHistory = history
 
+  const permits = mapAttomBuildingPermits(attom)
+  if (permits.length > 0) fields.buildingPermits = permits
+
   return fields
 }
 
@@ -469,6 +487,56 @@ export function mapAttomSalesHistory(attom: AttomProperty | Record<string, unkno
   return events
 }
 
+export function mapAttomBuildingPermits(
+  attom: AttomProperty | Record<string, unknown>,
+): BuildingPermit[] {
+  const root = attom as AttomProperty & Record<string, unknown>
+  const raw = root.buildingPermits ?? root.buildingpermits
+  if (!Array.isArray(raw)) return []
+
+  const permits: BuildingPermit[] = []
+  for (const [index, row] of (raw as AttomBuildingPermitRow[]).entries()) {
+    if (!row || typeof row !== 'object') continue
+    const effectiveDate = row.effectiveDate ? String(row.effectiveDate).slice(0, 10) : undefined
+    const permitNumber = row.permitNumber ? String(row.permitNumber).trim() : undefined
+    const status = row.status ? titleCaseStreet(String(row.status)) : undefined
+    const type = row.type ? titleCaseStreet(String(row.type)) : undefined
+    const subType = row.subType ? titleCaseStreet(String(row.subType)) : undefined
+    const description = row.description ? String(row.description).trim() : undefined
+    const projectName = row.projectName ? titleCaseStreet(String(row.projectName)) : undefined
+    const homeOwnerName = row.homeOwnerName
+      ? titleCaseStreet(String(row.homeOwnerName))
+      : undefined
+    const fees =
+      typeof row.fees === 'number' && Number.isFinite(row.fees)
+        ? moneyLabel(row.fees, '')
+        : undefined
+    const classifiers = Array.isArray(row.classifiers)
+      ? row.classifiers.map((c) => String(c).trim()).filter(Boolean)
+      : undefined
+    if (!effectiveDate && !permitNumber && !type && !description) continue
+    permits.push({
+      id: `permit-${permitNumber || index}-${effectiveDate || index}`,
+      effectiveDate,
+      permitNumber,
+      status,
+      type,
+      subType,
+      description,
+      projectName,
+      feesLabel: fees || undefined,
+      homeOwnerName,
+      classifiers,
+    })
+  }
+
+  return permits.sort((a, b) => {
+    const da = a.effectiveDate || ''
+    const db = b.effectiveDate || ''
+    return db.localeCompare(da)
+  })
+}
+
 async function fetchAttomPackage(
   packagePath: string,
   params: {
@@ -498,7 +566,10 @@ async function fetchAttomPackage(
       headers: { Accept: 'application/json', apikey: params.apiKey },
     })
     const raw = await res.json().catch(() => null)
-    if (!res.ok) return null
+    const status = (raw as { status?: { code?: number | string; msg?: string } } | null)?.status
+    const okEmpty =
+      status?.msg === 'SuccessWithoutResult' || status?.code === 400 || status?.code === '400'
+    if (!res.ok && !okEmpty) return null
     return pickAttomProperty(raw)
   } catch {
     return null
@@ -591,6 +662,7 @@ export async function fetchAttomPropertyDetail(params: {
  * County facts + tax assessment + sale / sales history.
  * Parallel ATTOM packages per interactive docs:
  * - /property/basicprofile  (County’s Fact: yearBuilt, grossSizeAdjusted, beds/baths, owner)
+ * - /property/buildingpermits (County’s Fact permits)
  * - /assessment/detail
  * - /sale/detail
  * - /saleshistory/expandedhistory
@@ -621,29 +693,46 @@ export async function fetchAttomCountyFacts(params: {
     zipCode: params.zipCode,
   }
 
-  const [profile, assessment, sale, history] = await Promise.all([
+  const [profile, assessment, sale, history, permits] = await Promise.all([
     fetchAttomPackage('property/basicprofile', lookup),
     fetchAttomPackage('assessment/detail', lookup),
     fetchAttomPackage('sale/detail', lookup),
     fetchAttomPackage('saleshistory/expandedhistory', lookup),
+    fetchAttomPackage('property/buildingpermits', lookup),
   ])
 
-  if (!profile && !assessment && !sale && !history) {
-    return { ok: false, error: 'No ATTOM match for basicprofile, assessment, or sales' }
+  if (!profile && !assessment && !sale && !history && !permits) {
+    return { ok: false, error: 'No ATTOM match for basicprofile, assessment, sales, or permits' }
   }
 
   const merged: AttomProperty = {
     ...(profile || {}),
-    address: profile?.address || assessment?.address || sale?.address || history?.address,
-    location: profile?.location || assessment?.location || sale?.location || history?.location,
-    building: profile?.building || assessment?.building || sale?.building,
-    lot: profile?.lot || assessment?.lot || sale?.lot,
-    summary: profile?.summary || assessment?.summary || sale?.summary || history?.summary,
+    address:
+      profile?.address ||
+      assessment?.address ||
+      sale?.address ||
+      history?.address ||
+      permits?.address,
+    location:
+      profile?.location ||
+      assessment?.location ||
+      sale?.location ||
+      history?.location ||
+      permits?.location,
+    building: profile?.building || assessment?.building || sale?.building || permits?.building,
+    lot: profile?.lot || assessment?.lot || sale?.lot || permits?.lot,
+    summary:
+      profile?.summary ||
+      assessment?.summary ||
+      sale?.summary ||
+      history?.summary ||
+      permits?.summary,
     identifier:
       profile?.identifier ||
       assessment?.identifier ||
       sale?.identifier ||
-      history?.identifier,
+      history?.identifier ||
+      permits?.identifier,
   }
 
   // Deep-merge assessment so basicprofile owner is kept when assessment/detail lacks it
@@ -670,6 +759,10 @@ export async function fetchAttomCountyFacts(params: {
     merged.saleHistory = history.saleHistory ?? history.salehistory
   }
 
+  if (permits?.buildingPermits || permits?.buildingpermits) {
+    merged.buildingPermits = permits.buildingPermits ?? permits.buildingpermits
+  }
+
   // Prefer owner names from expanded sales history only when assessment has none
   const historyOwner = (history as { owner?: NonNullable<AttomProperty['assessment']>['owner'] } | null)
     ?.owner
@@ -685,6 +778,7 @@ export async function fetchAttomCountyFacts(params: {
   if (!profile) warnings.push('property/basicprofile unavailable')
   if (!assessment) warnings.push('assessment/detail unavailable')
   if (!sale && !history) warnings.push('sale/saleshistory unavailable')
+  if (!permits) warnings.push('property/buildingpermits unavailable')
 
   const attomId = merged.identifier?.attomId ?? merged.identifier?.Id
   return {

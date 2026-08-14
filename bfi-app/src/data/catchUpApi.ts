@@ -271,6 +271,64 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       ],
     },
     {
+      id: 'cf-permits',
+      type: 'spec',
+      channel: 'building-permits',
+      unreadCount: live && (property.buildingPermits?.length ?? 0) > 0 ? 1 : 0,
+      headline: 'Building permits',
+      preview: live
+        ? property.buildingPermits?.length
+          ? `${property.buildingPermits.length} permit${property.buildingPermits.length === 1 ? '' : 's'} from ATTOM buildingpermits.`
+          : 'No building permits published for this parcel.'
+        : 'Demo shell — bind ATTOM /property/buildingpermits.',
+      timestamp: isoMinutesAgo(100),
+      source: live ? 'ATTOM /property/buildingpermits' : 'Demo county shell',
+      fields: live
+        ? property.buildingPermits?.length
+          ? property.buildingPermits.flatMap((permit) => {
+              const headline = [
+                permit.effectiveDate,
+                permit.permitNumber ? `#${permit.permitNumber}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+              const detail = [
+                permit.type,
+                permit.subType,
+                permit.status,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+              const rows: Array<{ label: string; value: string }> = [
+                {
+                  label: headline || 'Permit',
+                  value: detail || 'On file',
+                },
+              ]
+              if (permit.description) {
+                rows.push({ label: 'Description', value: permit.description })
+              }
+              if (permit.projectName) {
+                rows.push({ label: 'Project', value: permit.projectName })
+              }
+              if (permit.feesLabel) {
+                rows.push({ label: 'Fees', value: permit.feesLabel })
+              }
+              if (permit.homeOwnerName) {
+                rows.push({ label: 'Applicant', value: permit.homeOwnerName })
+              }
+              if (permit.classifiers?.length) {
+                rows.push({ label: 'Classifiers', value: permit.classifiers.join(', ') })
+              }
+              return rows
+            })
+          : [{ label: 'Status', value: 'None on file' }]
+        : [
+            { label: 'Status', value: 'Demo — search a live address' },
+            { label: 'Source', value: 'ATTOM /property/buildingpermits' },
+          ],
+    },
+    {
       id: 'cf-freshness',
       type: 'record_update',
       channel: 'county-freshness',

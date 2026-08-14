@@ -493,6 +493,54 @@ function mapAttomProperty(attom: Record<string, unknown>) {
       .filter(Boolean)
   }
 
+  const permitsRaw = attom.buildingPermits ?? attom.buildingpermits
+  if (Array.isArray(permitsRaw) && permitsRaw.length > 0) {
+    fields.buildingPermits = permitsRaw
+      .map((row: unknown, index: number) => {
+        if (!row || typeof row !== 'object') return null
+        const item = row as Record<string, unknown>
+        const effectiveDate = item.effectiveDate
+          ? String(item.effectiveDate).slice(0, 10)
+          : undefined
+        const permitNumber = item.permitNumber ? String(item.permitNumber).trim() : undefined
+        const status = item.status ? titleCaseStreet(String(item.status)) : undefined
+        const type = item.type ? titleCaseStreet(String(item.type)) : undefined
+        const subType = item.subType ? titleCaseStreet(String(item.subType)) : undefined
+        const description = item.description ? String(item.description).trim() : undefined
+        const projectName = item.projectName
+          ? titleCaseStreet(String(item.projectName))
+          : undefined
+        const homeOwnerName = item.homeOwnerName
+          ? titleCaseStreet(String(item.homeOwnerName))
+          : undefined
+        const feesNum = num(item.fees)
+        const feesLabel = feesNum != null ? moneyLabel(feesNum) : undefined
+        const classifiers = Array.isArray(item.classifiers)
+          ? item.classifiers.map((c) => String(c).trim()).filter(Boolean)
+          : undefined
+        if (!effectiveDate && !permitNumber && !type && !description) return null
+        return {
+          id: `permit-${permitNumber || index}-${effectiveDate || index}`,
+          effectiveDate,
+          permitNumber,
+          status,
+          type,
+          subType,
+          description,
+          projectName,
+          feesLabel: feesLabel || undefined,
+          homeOwnerName,
+          classifiers,
+        }
+      })
+      .filter(Boolean)
+      .sort((a: { effectiveDate?: string } | null, b: { effectiveDate?: string } | null) => {
+        const left = a?.effectiveDate || ''
+        const right = b?.effectiveDate || ''
+        return right.localeCompare(left)
+      })
+  }
+
   return fields
 }
 
@@ -517,24 +565,28 @@ async function fetchAttomFacts(match: ResolvedAddress): Promise<{
         headers: { Accept: 'application/json', apikey: key },
       })
       const raw = await res.json().catch(() => null)
-      if (!res.ok) return null
+      const code = raw?.status?.code
+      const okEmpty =
+        raw?.status?.msg === 'SuccessWithoutResult' || code === 400 || code === '400'
+      if (!res.ok && !okEmpty) return null
       return Array.isArray(raw?.property) ? raw.property[0] ?? null : null
     } catch {
       return null
     }
   }
 
-  const [profile, assessment, sale, history] = await Promise.all([
+  const [profile, assessment, sale, history, permits] = await Promise.all([
     load('property/basicprofile'),
     load('assessment/detail'),
     load('sale/detail'),
     load('saleshistory/expandedhistory'),
+    load('property/buildingpermits'),
   ])
 
-  if (!profile && !assessment && !sale && !history) {
+  if (!profile && !assessment && !sale && !history && !permits) {
     return {
       factsStatus: 'pending',
-      attomError: 'No ATTOM match for basicprofile, assessment, or sales',
+      attomError: 'No ATTOM match for basicprofile, assessment, sales, or permits',
     }
   }
 
@@ -555,6 +607,9 @@ async function fetchAttomFacts(match: ResolvedAddress): Promise<{
   if (history?.saleHistory || history?.salehistory) {
     merged.saleHistory = history.saleHistory ?? history.salehistory
   }
+  if (permits?.buildingPermits || permits?.buildingpermits) {
+    merged.buildingPermits = permits.buildingPermits ?? permits.buildingpermits
+  }
   if (history?.owner && !(merged.assessment as { owner?: unknown } | undefined)?.owner) {
     merged.assessment = {
       ...((merged.assessment as Record<string, unknown> | undefined) || {}),
@@ -563,20 +618,39 @@ async function fetchAttomFacts(match: ResolvedAddress): Promise<{
   }
   if (!merged.identifier) {
     merged.identifier =
-      profile?.identifier || assessment?.identifier || sale?.identifier || history?.identifier
+      profile?.identifier ||
+      assessment?.identifier ||
+      sale?.identifier ||
+      history?.identifier ||
+      permits?.identifier
   }
   if (!merged.address) {
-    merged.address = profile?.address || assessment?.address || sale?.address || history?.address
+    merged.address =
+      profile?.address ||
+      assessment?.address ||
+      sale?.address ||
+      history?.address ||
+      permits?.address
   }
   if (!merged.location) {
     merged.location =
-      profile?.location || assessment?.location || sale?.location || history?.location
+      profile?.location ||
+      assessment?.location ||
+      sale?.location ||
+      history?.location ||
+      permits?.location
   }
   if (!merged.building) {
-    merged.building = profile?.building || assessment?.building || sale?.building
+    merged.building =
+      profile?.building || assessment?.building || sale?.building || permits?.building
   }
   if (!merged.summary) {
-    merged.summary = profile?.summary || assessment?.summary || sale?.summary || history?.summary
+    merged.summary =
+      profile?.summary ||
+      assessment?.summary ||
+      sale?.summary ||
+      history?.summary ||
+      permits?.summary
   }
 
   return {

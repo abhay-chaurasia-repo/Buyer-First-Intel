@@ -16,6 +16,8 @@
     - Core: `yearBuilt`, `grossSizeAdjusted`, `beds`, `bathsFull` / `bathsPartial` / `bathsTotal`, `assessment.owner`
     - High-value: property type, legal/subdivision/county, lot acres+sqft, levels/rooms/fireplace, garage, utilities, construction, geo accuracy, vintage dates
     - Sale **amounts** and mortgage **amounts** stay hidden (buyer-first)
+  - [`GET /property/buildingpermits`](https://api.developer.attomdata.com/docs) — Building permits on County’s Fact
+    - `effectiveDate`, `permitNumber`, `status`, `type` / `subType`, `description`, `projectName`, `fees`, `homeOwnerName`, `classifiers`
   - `GET /assessment/detail` — Tax History (tax year, assessed, land, improvement, annual tax, market value)
   - `GET /sale/detail` — latest transfer (date, deed type, document #; **sale amount hidden**)
   - `GET /saleshistory/expandedhistory` — Sales History deed chain (buyer/seller/doc; **amounts hidden**)
