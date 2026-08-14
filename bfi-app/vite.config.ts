@@ -537,35 +537,88 @@ function mapAttomProperty(attom: Record<string, unknown>) {
         if (!row || typeof row !== 'object') return null
         const item = row as Record<string, unknown>
         const amount = (item.amount || {}) as Record<string, unknown>
+        const mortgageBlock = (item.mortgage || {}) as Record<string, unknown>
+        const firstMortgage = (mortgageBlock.FirstConcurrent || {}) as Record<string, unknown>
+        const title = (item.title || {}) as Record<string, unknown>
         const date =
           item.saleTransDate ||
           amount.saleRecDate ||
           amount.salerecdate ||
           item.saleSearchDate
         if (!date) return null
+        const transferType = String(
+          amount.saleTransType || amount.saletranstype || 'Recorded transfer',
+        )
+        const deedCode =
+          amount.deedType || amount.deedtype
+            ? String(amount.deedType || amount.deedtype)
+            : undefined
+        const cleanName = (raw: unknown) => {
+          if (typeof raw !== 'string' || !raw.trim()) return undefined
+          return titleCaseStreet(
+            raw
+              .replace(/,/g, ', ')
+              .replace(/\s+/g, ' ')
+              .replace(/,\s*$/g, '')
+              .trim(),
+          )
+        }
+        const flag = (raw: unknown) => {
+          if (raw == null) return undefined
+          const s = String(raw).trim().toLowerCase()
+          if (s === 'true' || s === 'y' || s === 'yes' || s === '1') return true
+          if (s === 'false' || s === 'n' || s === 'no' || s === '0') return false
+          return undefined
+        }
+        const lender = [
+          firstMortgage.lenderFirstName || firstMortgage.lenderfirstname,
+          firstMortgage.lenderLastName || firstMortgage.lenderlastname,
+        ]
+          .filter((part) => typeof part === 'string' && part.trim())
+          .join(' ')
+        const titleCompany =
+          typeof title.companyName === 'string' &&
+          title.companyName.trim() &&
+          title.companyName.toUpperCase() !== 'NONE AVAILABLE'
+            ? titleCaseStreet(title.companyName)
+            : undefined
         return {
           id: `sale-${item.sequence ?? index}-${String(date).slice(0, 10)}`,
           date: String(date).slice(0, 10),
           recordedDate: amount.saleRecDate || amount.salerecdate
             ? String(amount.saleRecDate || amount.salerecdate).slice(0, 10)
             : undefined,
-          deedType: String(
-            amount.saleTransType ||
-              amount.saletranstype ||
-              amount.deedType ||
-              'Recorded transfer',
-          ),
+          deedType: transferType,
+          deedCode,
           documentNumber:
             amount.saleDocNum || amount.saledocnum
               ? String(amount.saleDocNum || amount.saledocnum)
               : undefined,
-          buyerName:
-            typeof item.buyerName === 'string'
-              ? item.buyerName.replace(/,/g, ', ').replace(/\s+/g, ' ').trim()
+          documentType:
+            amount.saleDocType || amount.saledoctype
+              ? String(amount.saleDocType || amount.saledoctype)
               : undefined,
-          sellerName:
-            typeof item.sellerName === 'string'
-              ? item.sellerName.replace(/,/g, ', ').replace(/\s+/g, ' ').trim()
+          buyerName: cleanName(item.buyerName),
+          sellerName: cleanName(item.sellerName),
+          deedInLieu: flag(item.deedInLieuOfIndicator),
+          sellerCarryBack: flag(item.sellerCarryBack),
+          titleCompany,
+          lenderName: lender ? titleCaseStreet(lender) : undefined,
+          loanType:
+            typeof firstMortgage.loanTypeCode === 'string' && firstMortgage.loanTypeCode.trim()
+              ? String(firstMortgage.loanTypeCode).toUpperCase()
+              : undefined,
+          loanTermMonths:
+            firstMortgage.term != null && String(firstMortgage.term).trim()
+              ? String(firstMortgage.term)
+              : undefined,
+          loanDueDate:
+            typeof firstMortgage.dueDate === 'string' && firstMortgage.dueDate.trim()
+              ? String(firstMortgage.dueDate).slice(0, 10)
+              : undefined,
+          loanDocumentNumber:
+            firstMortgage.trustDeedDocumentNumber || firstMortgage.ident
+              ? String(firstMortgage.trustDeedDocumentNumber || firstMortgage.ident)
               : undefined,
           amountLabel: 'Not shown (buyer-first)',
         }

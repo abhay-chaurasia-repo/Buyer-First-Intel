@@ -24,7 +24,9 @@
     - `effectiveDate`, `permitNumber`, `status`, `type` / `subType`, `description`, `projectName`, `fees`, `homeOwnerName`, `classifiers`
   - `GET /assessment/detail` — Tax History (tax year, assessed, land, improvement, annual tax, market value)
   - `GET /sale/detail` — latest transfer (date, deed type, document #; **sale amount hidden**)
-  - `GET /saleshistory/expandedhistory` — Sales History deed chain (buyer/seller/doc; **amounts hidden**)
+  - `GET /saleshistory/expandedhistory` — Sales History deed chain
+    - Transfer type, deed code (LW/QC/GD), buyer/seller, doc #, deed-in-lieu, seller carry-back
+    - Title company + per-event lender / loan type / term / due date / loan doc # (**amounts hidden**)
 - Query: `address1` + `address2` (or `attomid`) — e.g. `address1=3147 SWALLOW DR&address2=Marietta, GA`
 - Headers: `apikey`, `Accept: application/json`
 - Dev proxy: Vite `POST /api/property-lookup` + `.env.local` `ATTOM_API_KEY`

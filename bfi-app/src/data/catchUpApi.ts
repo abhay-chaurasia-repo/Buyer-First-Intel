@@ -505,17 +505,26 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
   ]
 
   if (history.length > 0) {
-    for (const [index, event] of history.slice(0, 6).entries()) {
+    for (const [index, event] of history.slice(0, 8).entries()) {
+      const headlineBits = [
+        event.deedType,
+        event.deedCode ? `(${event.deedCode})` : null,
+      ]
+        .filter(Boolean)
+        .join(' ')
       items.push({
         id: event.id || `sh-event-${index}`,
         type: 'legal',
         channel: 'prior-transfers',
-        unreadCount: 0,
-        headline: event.deedType,
+        unreadCount: index === 0 ? 1 : 0,
+        headline: headlineBits,
         preview: [
           event.date,
           event.documentNumber ? `Doc ${event.documentNumber}` : null,
-          event.buyerName ? `Buyer ${event.buyerName}` : null,
+          event.sellerName ? `Seller ${event.sellerName}` : null,
+          event.deedInLieu ? 'Deed-in-lieu' : null,
+          event.sellerCarryBack ? 'Seller carry-back' : null,
+          event.lenderName ? `Lender ${event.lenderName}` : null,
         ]
           .filter(Boolean)
           .join(' · '),
@@ -526,7 +535,11 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
           ...(event.recordedDate
             ? [{ label: 'Recorded', value: event.recordedDate }]
             : []),
-          { label: 'Deed / type', value: event.deedType },
+          { label: 'Transfer type', value: event.deedType },
+          ...(event.deedCode ? [{ label: 'Deed code', value: event.deedCode }] : []),
+          ...(event.documentType
+            ? [{ label: 'Document type', value: event.documentType }]
+            : []),
           {
             label: 'Document #',
             value: event.documentNumber || 'Not on file',
@@ -534,6 +547,26 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
           { label: 'Amount', value: event.amountLabel },
           ...(event.buyerName ? [{ label: 'Buyer', value: event.buyerName }] : []),
           ...(event.sellerName ? [{ label: 'Seller', value: event.sellerName }] : []),
+          ...(event.deedInLieu != null
+            ? [{ label: 'Deed in lieu', value: event.deedInLieu ? 'Yes' : 'No' }]
+            : []),
+          ...(event.sellerCarryBack != null
+            ? [{ label: 'Seller carry-back', value: event.sellerCarryBack ? 'Yes' : 'No' }]
+            : []),
+          ...(event.titleCompany
+            ? [{ label: 'Title company', value: event.titleCompany }]
+            : []),
+          ...(event.lenderName ? [{ label: 'Lender', value: event.lenderName }] : []),
+          ...(event.loanType ? [{ label: 'Loan type', value: event.loanType }] : []),
+          ...(event.loanTermMonths
+            ? [{ label: 'Loan term (months)', value: event.loanTermMonths }]
+            : []),
+          ...(event.loanDueDate
+            ? [{ label: 'Loan due', value: event.loanDueDate }]
+            : []),
+          ...(event.loanDocumentNumber
+            ? [{ label: 'Loan document #', value: event.loanDocumentNumber }]
+            : []),
         ],
       })
     }

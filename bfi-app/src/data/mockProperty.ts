@@ -80,10 +80,25 @@ export type PropertySaleEvent = {
   /** Transaction / transfer date */
   date: string
   recordedDate?: string
+  /** Human transfer type, e.g. Resale / Nominal/Quit Claim */
   deedType: string
+  /** ATTOM deed code when published, e.g. LW / QC / GD / TR */
+  deedCode?: string
   documentNumber?: string
+  documentType?: string
   buyerName?: string
   sellerName?: string
+  /** deedInLieuOfIndicator */
+  deedInLieu?: boolean
+  /** sellerCarryBack */
+  sellerCarryBack?: boolean
+  titleCompany?: string
+  /** Concurrent mortgage metadata — amounts never stored */
+  lenderName?: string
+  loanType?: string
+  loanTermMonths?: string
+  loanDueDate?: string
+  loanDocumentNumber?: string
   /** Buyer-first: never show raw sale amount */
   amountLabel: string
 }

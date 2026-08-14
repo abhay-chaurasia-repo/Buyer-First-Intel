@@ -582,7 +582,28 @@ type AttomSaleHistoryRow = {
   saleSearchDate?: string
   buyerName?: string
   sellerName?: string
+  deedInLieuOfIndicator?: string
+  sellerCarryBack?: string
   amount?: Record<string, unknown>
+  mortgage?: {
+    FirstConcurrent?: Record<string, unknown>
+    SecondConcurrent?: Record<string, unknown>
+  }
+  title?: {
+    companyName?: string
+    companyCode?: string
+  }
+}
+
+function cleanPartyName(raw?: string) {
+  if (!raw?.trim()) return undefined
+  return titleCaseStreet(
+    raw
+      .replace(/,/g, ', ')
+      .replace(/\s+/g, ' ')
+      .replace(/,\s*$/g, '')
+      .trim(),
+  )
 }
 
 export function mapAttomSalesHistory(attom: AttomProperty | Record<string, unknown>): PropertySaleEvent[] {
@@ -599,18 +620,47 @@ export function mapAttomSalesHistory(attom: AttomProperty | Record<string, unkno
       stringFromRecord(amount, 'saleRecDate', 'salerecdate') ||
       row.saleSearchDate
     if (!date) continue
-    const deedType =
-      stringFromRecord(amount, 'saleTransType', 'saletranstype', 'deedType', 'deedtype') ||
-      'Recorded transfer'
+    const transferType =
+      stringFromRecord(amount, 'saleTransType', 'saletranstype') || 'Recorded transfer'
+    const deedCode = stringFromRecord(amount, 'deedType', 'deedtype')
     const documentNumber = stringFromRecord(amount, 'saleDocNum', 'saledocnum')
+    const documentType = stringFromRecord(amount, 'saleDocType', 'saledoctype')
+    const mortgage = row.mortgage?.FirstConcurrent || {}
+    const lenderLast = stringFromRecord(mortgage, 'lenderLastName', 'lenderlastname')
+    const lenderFirst = stringFromRecord(mortgage, 'lenderFirstName', 'lenderfirstname')
+    const lender = [lenderFirst, lenderLast].filter(Boolean).join(' ') || undefined
+    const loanType = stringFromRecord(mortgage, 'loanTypeCode', 'loantypecode')
+    const loanTerm = stringFromRecord(mortgage, 'term')
+    const loanDue = stringFromRecord(mortgage, 'dueDate', 'duedate')
+    const loanDoc =
+      stringFromRecord(mortgage, 'trustDeedDocumentNumber', 'trustdeeddocumentnumber') ||
+      stringFromRecord(mortgage, 'ident')
+    const titleCompany = row.title?.companyName?.trim()
+    const deedInLieu = flagBool(row.deedInLieuOfIndicator)
+    const sellerCarryBack = flagBool(row.sellerCarryBack)
+
     events.push({
       id: `sale-${row.sequence ?? index}-${String(date).slice(0, 10)}`,
       date: String(date).slice(0, 10),
       recordedDate: stringFromRecord(amount, 'saleRecDate', 'salerecdate')?.slice(0, 10),
-      deedType,
+      deedType: transferType,
+      deedCode: deedCode || undefined,
       documentNumber,
-      buyerName: row.buyerName?.replace(/,/g, ', ').replace(/\s+/g, ' ').trim(),
-      sellerName: row.sellerName?.replace(/,/g, ', ').replace(/\s+/g, ' ').trim(),
+      documentType: documentType || undefined,
+      buyerName: cleanPartyName(row.buyerName),
+      sellerName: cleanPartyName(row.sellerName),
+      deedInLieu: deedInLieu === true ? true : deedInLieu === false ? false : undefined,
+      sellerCarryBack:
+        sellerCarryBack === true ? true : sellerCarryBack === false ? false : undefined,
+      titleCompany:
+        titleCompany && titleCompany.toUpperCase() !== 'NONE AVAILABLE'
+          ? titleCaseStreet(titleCompany)
+          : undefined,
+      lenderName: lender ? titleCaseStreet(lender) : undefined,
+      loanType: loanType ? loanType.toUpperCase() : undefined,
+      loanTermMonths: loanTerm || undefined,
+      loanDueDate: loanDue ? loanDue.slice(0, 10) : undefined,
+      loanDocumentNumber: loanDoc || undefined,
       amountLabel: 'Not shown (buyer-first)',
     })
   }
