@@ -65,5 +65,10 @@ Some residential streets may return `SuccessWithoutResult` on the trial plan —
 - CatchUp surface uses assigned ES/MS/HS + district; verify boundaries with the district before deciding
 - GreatSchools numeric (`GSTestRating`) may be empty on trial — letter `schoolRating` is preferred when present
 
-## Step 4 — Real GPS Verify
-- Compare device geolocation to `property.lat` / `property.lng` within ~100m
+## Step 4 — Real GPS Verify (v1 done)
+- Property page **Verify** uses `navigator.geolocation` vs `property.lat` / `property.lng`
+- Pass when distance ≤ ~100m and accuracy ≤ ~80m
+- Persists owner-scoped presence for 48 hours (unlocks on-site Buyer Community votes)
+- Failures: no pin, permission denied, timeout, too far, poor accuracy
+- Mapper: `src/lib/gpsVerify.ts` · storage: `bfi.gpsVerified.{owner}.{propertyId}`
+- Later: log real Verified Visit rows (replace stub visit list)

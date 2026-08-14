@@ -162,26 +162,91 @@ export function gpsVerifiedKey(propertyId: string, ownerId = currentOwnerId()) {
   return `bfi.gpsVerified.${ownerId}.${propertyId}`
 }
 
-export function loadGpsVerified(propertyId: string, ownerId = currentOwnerId()): boolean {
+export type GpsVerifyRecord = {
+  verified: true
+  verifiedAt: string
+  distanceMeters?: number
+  accuracyMeters?: number
+}
+
+/** 48h visit-scoped presence — matches GPS_VERIFY_TTL_MS in gpsVerify.ts */
+const GPS_VERIFY_TTL_MS = 48 * 60 * 60 * 1000
+
+function parseGpsRecord(raw: string | null): GpsVerifyRecord | null {
+  if (raw == null || raw === '0' || raw === '' || raw === '1') {
+    // Legacy boolean '1' was a manual toggle — require a real GPS pass.
+    return null
+  }
+  try {
+    const parsed = JSON.parse(raw) as Partial<GpsVerifyRecord>
+    if (parsed && parsed.verified === true && typeof parsed.verifiedAt === 'string') {
+      return {
+        verified: true,
+        verifiedAt: parsed.verifiedAt,
+        distanceMeters:
+          typeof parsed.distanceMeters === 'number' ? parsed.distanceMeters : undefined,
+        accuracyMeters:
+          typeof parsed.accuracyMeters === 'number' ? parsed.accuracyMeters : undefined,
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
+function isGpsRecordFresh(record: GpsVerifyRecord): boolean {
+  const at = Date.parse(record.verifiedAt)
+  if (!Number.isFinite(at)) return false
+  return Date.now() - at <= GPS_VERIFY_TTL_MS
+}
+
+export function loadGpsVerifyRecord(
+  propertyId: string,
+  ownerId = currentOwnerId(),
+): GpsVerifyRecord | null {
   try {
     const scoped = gpsVerifiedKey(propertyId, ownerId)
-    const existing = readRaw(scoped)
-    if (existing != null) return existing === '1'
-
-    const legacy = readRaw(`bfi.gpsVerified.${propertyId}`)
-    if (legacy == null) return false
-    writeRaw(scoped, legacy)
-    removeRaw(`bfi.gpsVerified.${propertyId}`)
-    return legacy === '1'
+    let raw = readRaw(scoped)
+    if (raw == null) {
+      const legacy = readRaw(`bfi.gpsVerified.${propertyId}`)
+      if (legacy == null) return null
+      writeRaw(scoped, legacy)
+      removeRaw(`bfi.gpsVerified.${propertyId}`)
+      raw = legacy
+    }
+    const record = parseGpsRecord(raw)
+    if (!record) return null
+    if (!isGpsRecordFresh(record)) {
+      removeRaw(scoped)
+      return null
+    }
+    return record
   } catch {
-    return false
+    return null
   }
+}
+
+export function loadGpsVerified(propertyId: string, ownerId = currentOwnerId()): boolean {
+  return loadGpsVerifyRecord(propertyId, ownerId) != null
 }
 
 export function persistGpsVerified(
   propertyId: string,
   verified: boolean,
   ownerId = currentOwnerId(),
+  meta?: { distanceMeters?: number; accuracyMeters?: number },
 ) {
-  writeRaw(gpsVerifiedKey(propertyId, ownerId), verified ? '1' : '0')
+  const key = gpsVerifiedKey(propertyId, ownerId)
+  if (!verified) {
+    writeRaw(key, '0')
+    return
+  }
+  const record: GpsVerifyRecord = {
+    verified: true,
+    verifiedAt: new Date().toISOString(),
+    distanceMeters: meta?.distanceMeters,
+    accuracyMeters: meta?.accuracyMeters,
+  }
+  writeRaw(key, JSON.stringify(record))
 }

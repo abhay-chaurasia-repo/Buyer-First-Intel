@@ -30,6 +30,10 @@ import {
 import { loadGpsVerified, persistGpsVerified } from '@/data/ownerScope'
 import { isOnWatchlist, toggleWatchlist } from '@/data/watchlistStorage'
 import {
+  attemptGpsVerify,
+  GPS_VERIFY_RADIUS_METERS,
+} from '@/lib/gpsVerify'
+import {
   loadPropertyFromQuery,
   type PropertyLookupStatus,
 } from '@/lib/propertyLookup'
@@ -80,6 +84,11 @@ export function PropertyDetailScreen() {
 
   const [starred, setStarred] = useState(() => isOnWatchlist(property.id) || property.starred)
   const [verified, setVerified] = useState(() => loadGpsVerified(property.id))
+  const [verifyBusy, setVerifyBusy] = useState(false)
+  const [verifyMessage, setVerifyMessage] = useState<{
+    tone: 'ok' | 'warn'
+    text: string
+  } | null>(null)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -104,6 +113,8 @@ export function PropertyDetailScreen() {
   useEffect(() => {
     setStarred(isOnWatchlist(property.id) || property.starred)
     setVerified(loadGpsVerified(property.id))
+    setVerifyMessage(null)
+    setVerifyBusy(false)
   }, [propertyKey, property.id, property.starred, ownerId])
 
   useEffect(() => {
@@ -133,12 +144,41 @@ export function PropertyDetailScreen() {
     setStarred(result.starred)
   }
 
-  function handleToggleVerify() {
-    setVerified((prev) => {
-      const next = !prev
-      persistGpsVerified(property.id, next)
-      return next
+  async function handleToggleVerify() {
+    if (verifyBusy) return
+
+    if (verified) {
+      persistGpsVerified(property.id, false)
+      setVerified(false)
+      setVerifyMessage({
+        tone: 'ok',
+        text: 'GPS verification cleared. On-site Buyer Community votes are locked again.',
+      })
+      return
+    }
+
+    setVerifyBusy(true)
+    setVerifyMessage({
+      tone: 'ok',
+      text: 'Checking your location… allow location if prompted.',
     })
+
+    const result = await attemptGpsVerify(property)
+    if (result.ok) {
+      persistGpsVerified(property.id, true, undefined, {
+        distanceMeters: result.distanceMeters,
+        accuracyMeters: result.accuracyMeters,
+      })
+      setVerified(true)
+      setVerifyMessage({
+        tone: 'ok',
+        text: `Verified within ${GPS_VERIFY_RADIUS_METERS}m (${result.distanceMeters}m away, ±${result.accuracyMeters}m). On-site labels unlocked for 48 hours.`,
+      })
+    } else {
+      setVerified(false)
+      setVerifyMessage({ tone: 'warn', text: result.message })
+    }
+    setVerifyBusy(false)
   }
 
   const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
@@ -201,35 +241,56 @@ export function PropertyDetailScreen() {
 
               <button
                 type="button"
-                onClick={handleToggleVerify}
+                onClick={() => void handleToggleVerify()}
+                disabled={verifyBusy}
                 className={cn(
                   'inline-flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-2 py-1.5 text-[10px] font-bold tracking-wide transition-[border-color,background-color,color] touch-manipulation',
                   'hover:border-white/35 hover:bg-white/8 focus-visible:border-white/35 focus-visible:bg-white/8 active:border-white/35',
                   verified ? 'text-saffron-glow' : 'text-night-ink',
+                  verifyBusy && 'opacity-60',
                 )}
-                aria-label={verified ? 'Clear GPS verification' : 'GPS Verify'}
+                aria-label={verified ? 'Clear GPS verification' : 'GPS Verify on site'}
                 aria-pressed={verified}
+                aria-busy={verifyBusy}
                 data-testid="badge-gps-verify"
               >
                 <Crosshair className="h-4 w-4" strokeWidth={2.25} />
-                <span>{verified ? 'Verified' : 'Verify'}</span>
+                <span>{verifyBusy ? '…' : verified ? 'Verified' : 'Verify'}</span>
               </button>
             </div>
           </header>
 
           <div className="flex-1 overflow-y-auto pb-4">
-            {lookupBusy || lookupStatus?.warning ? (
-              <div className="px-3 pt-2" data-testid="property-lookup-status">
-                <p
-                  className={cn(
-                    'rounded-xl border px-3 py-2 text-[11px] leading-snug',
-                    lookupStatus?.warning
-                      ? 'border-watch/40 bg-watch-soft text-watch-glow'
-                      : 'border-white/20 bg-night/25 text-night-faint',
-                  )}
-                >
-                  {lookupBusy ? 'Matching address…' : lookupStatus?.warning}
-                </p>
+            {lookupBusy || lookupStatus?.warning || verifyMessage ? (
+              <div className="space-y-2 px-3 pt-2" data-testid="property-status-banners">
+                {lookupBusy || lookupStatus?.warning ? (
+                  <div data-testid="property-lookup-status">
+                    <p
+                      className={cn(
+                        'rounded-xl border px-3 py-2 text-[11px] leading-snug',
+                        lookupStatus?.warning
+                          ? 'border-watch/40 bg-watch-soft text-watch-glow'
+                          : 'border-white/20 bg-night/25 text-night-faint',
+                      )}
+                    >
+                      {lookupBusy ? 'Matching address…' : lookupStatus?.warning}
+                    </p>
+                  </div>
+                ) : null}
+                {verifyMessage ? (
+                  <p
+                    className={cn(
+                      'rounded-xl border px-3 py-2 text-[11px] leading-snug',
+                      verifyMessage.tone === 'warn'
+                        ? 'border-watch/40 bg-watch-soft text-watch-glow'
+                        : 'border-saffron/35 bg-saffron/10 text-saffron-glow',
+                    )}
+                    data-testid="gps-verify-status"
+                    role="status"
+                  >
+                    {verifyMessage.text}
+                  </p>
+                ) : null}
               </div>
             ) : null}
 
