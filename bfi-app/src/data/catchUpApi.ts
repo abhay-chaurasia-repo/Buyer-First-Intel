@@ -597,8 +597,43 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
 /** GET /api/properties/:id/tax-history */
 export function fetchTaxHistoryApi(property: MockProperty): CatchUpApiResponse {
   const live = property.factsStatus === 'live'
-  const items: CatchUpCard[] = [
-    {
+  const history = property.taxHistory || []
+  const items: CatchUpCard[] = []
+
+  if (history.length > 0) {
+    for (const [index, row] of history.slice(0, 12).entries()) {
+      items.push({
+        id: row.id || `th-year-${row.taxYear}`,
+        type: 'tax',
+        channel: 'tax-assessment',
+        unreadCount: index === 0 ? 1 : 0,
+        headline: `${row.taxYear} tax year`,
+        preview: [
+          row.taxAmountLabel ? `Tax ${row.taxAmountLabel}` : null,
+          row.assessedLabel ? `Assessed ${row.assessedLabel}` : null,
+          row.marketLabel ? `Market ${row.marketLabel}` : null,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        timestamp: isoMinutesAgo(25 + index * 4),
+        source: 'ATTOM /assessmenthistory/detail',
+        fields: [
+          { label: 'Tax year', value: String(row.taxYear) },
+          { label: 'Property taxes', value: row.taxAmountLabel || '—' },
+          { label: 'Assessment', value: row.assessedLabel || '—' },
+          ...(row.marketLabel ? [{ label: 'Market value', value: row.marketLabel }] : []),
+          ...(row.landLabel ? [{ label: 'Land', value: row.landLabel }] : []),
+          ...(row.improvementLabel
+            ? [{ label: 'Improvement', value: row.improvementLabel }]
+            : []),
+          ...(row.assessorYear
+            ? [{ label: 'Assessor year', value: String(row.assessorYear) }]
+            : []),
+        ],
+      })
+    }
+  } else {
+    items.push({
       id: 'th-assessment',
       type: 'tax',
       channel: 'tax-assessment',
@@ -633,26 +668,8 @@ export function fetchTaxHistoryApi(property: MockProperty): CatchUpApiResponse {
             (live ? '—' : 'Stub — bind ATTOM improvement value'),
         },
       ],
-    },
-    {
-      id: 'th-prior-year',
-      type: 'tax',
-      channel: 'prior-tax-year',
-      unreadCount: live ? 0 : 1,
-      headline: live ? 'Assessment note' : 'Prior-year roll (stub)',
-      preview: live
-        ? 'Current assessor roll from ATTOM assessment/detail. Multi-year tax history can be added if your ATTOM plan includes historical rolls.'
-        : `${property.taxYear - 1} assessment retained for year-over-year diligence comparison.`,
-      timestamp: isoMinutesAgo(200),
-      source: live ? 'ATTOM /assessment/detail' : 'Assessor stub',
-      fields: live
-        ? [{ label: 'Source', value: 'Current roll only' }]
-        : [
-            { label: 'Prior year', value: String(property.taxYear - 1) },
-            { label: 'Exemptions', value: 'Homestead (stub)' },
-          ],
-    },
-  ]
+    })
+  }
 
   return wrapResponse(property.id, `/api/properties/${property.id}/tax-history`, items)
 }

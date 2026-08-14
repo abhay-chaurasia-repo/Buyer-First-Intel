@@ -23,6 +23,7 @@
   - [`GET /property/buildingpermits`](https://api.developer.attomdata.com/docs) — Building permits on County’s Fact
     - `effectiveDate`, `permitNumber`, `status`, `type` / `subType`, `description`, `projectName`, `fees`, `homeOwnerName`, `classifiers`
   - `GET /assessment/detail` — Tax History (tax year, assessed, land, improvement, annual tax, market value)
+  - `GET /assessmenthistory/detail` — multi-year Tax History table (year / tax / assessment + land/improvement/market)
   - `GET /sale/detail` — latest transfer (date, deed type, document #; **sale amount hidden**)
   - `GET /saleshistory/expandedhistory` — Sales History deed chain
     - Transfer type, deed code (LW/QC/GD), buyer/seller, doc #, deed-in-lieu, seller carry-back

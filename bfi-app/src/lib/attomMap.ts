@@ -9,6 +9,7 @@ import type {
   PropertySaleEvent,
   PropertySchool,
   PropertySchoolDistrict,
+  PropertyTaxYear,
 } from '@/data/mockProperty'
 import { titleCaseStreet } from '@/lib/addressSearch'
 
@@ -163,6 +164,8 @@ type AttomProperty = {
   buildingpermits?: AttomBuildingPermitRow[]
   school?: AttomSchoolRow[]
   schoolDistrict?: AttomSchoolDistrict
+  assessmenthistory?: AttomAssessmentHistoryRow[]
+  assessmentHistory?: AttomAssessmentHistoryRow[]
 }
 
 type AttomBuildingPermitRow = {
@@ -201,6 +204,14 @@ type AttomSchoolDistrict = {
   districtname?: string
   districtlatitude?: string | number
   districtlongitude?: string | number
+}
+
+type AttomAssessmentHistoryRow = {
+  assessed?: Record<string, unknown>
+  market?: Record<string, unknown>
+  tax?: Record<string, unknown>
+  calculations?: Record<string, unknown>
+  lastModified?: string
 }
 
 function flagBool(value: unknown): boolean | undefined {
@@ -612,6 +623,9 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   const district = mapAttomSchoolDistrict(attom)
   if (district) fields.schoolDistrict = district
 
+  const taxHistory = mapAttomTaxHistory(attom)
+  if (taxHistory.length > 0) fields.taxHistory = taxHistory
+
   return fields
 }
 
@@ -863,6 +877,47 @@ export function mapAttomSchools(attom: AttomProperty | Record<string, unknown>):
   })
 }
 
+export function mapAttomTaxHistory(
+  attom: AttomProperty | Record<string, unknown>,
+): PropertyTaxYear[] {
+  const root = attom as AttomProperty & Record<string, unknown>
+  const raw = root.assessmentHistory ?? root.assessmenthistory
+  if (!Array.isArray(raw)) return []
+
+  const rows: PropertyTaxYear[] = []
+  for (const [index, row] of (raw as AttomAssessmentHistoryRow[]).entries()) {
+    if (!row || typeof row !== 'object') continue
+    const tax = (row.tax || {}) as Record<string, unknown>
+    const assessed = (row.assessed || {}) as Record<string, unknown>
+    const market = (row.market || {}) as Record<string, unknown>
+    const yearRaw = tax.taxYear ?? tax.taxyear ?? tax.assessorYear ?? tax.assessoryear
+    const year = yearRaw != null ? Number(yearRaw) : NaN
+    if (!Number.isFinite(year) || year <= 0) continue
+    const assessorRaw = tax.assessorYear ?? tax.assessoryear
+    const assessorYear =
+      assessorRaw != null && Number.isFinite(Number(assessorRaw))
+        ? Number(assessorRaw)
+        : undefined
+    const taxAmt = num(tax.taxAmt ?? tax.taxamt)
+    const assessedTotal = num(assessed.assdTtlValue ?? assessed.assdttlvalue)
+    const land = num(assessed.assdLandValue ?? assessed.assdlandvalue)
+    const impr = num(assessed.assdImprValue ?? assessed.assdimprvalue)
+    const marketTotal = num(market.mktTtlValue ?? market.mktttlvalue)
+    rows.push({
+      id: `tax-${year}-${index}`,
+      taxYear: year,
+      assessorYear: assessorYear !== year ? assessorYear : undefined,
+      taxAmountLabel: taxAmt != null ? moneyLabel(taxAmt, '—') : undefined,
+      assessedLabel: assessedTotal != null ? moneyLabel(assessedTotal, '—') : undefined,
+      landLabel: land != null ? moneyLabel(land, '—') : undefined,
+      improvementLabel: impr != null ? moneyLabel(impr, '—') : undefined,
+      marketLabel: marketTotal != null ? moneyLabel(marketTotal, '—') : undefined,
+    })
+  }
+
+  return rows.sort((a, b) => b.taxYear - a.taxYear)
+}
+
 async function fetchAttomPackage(
   packagePath: string,
   params: {
@@ -1021,21 +1076,32 @@ export async function fetchAttomCountyFacts(params: {
     zipCode: params.zipCode,
   }
 
-  const [profile, expanded, assessment, sale, history, permits, schools] = await Promise.all([
-    fetchAttomPackage('property/basicprofile', lookup),
-    fetchAttomPackage('property/expandedprofile', lookup),
-    fetchAttomPackage('assessment/detail', lookup),
-    fetchAttomPackage('sale/detail', lookup),
-    fetchAttomPackage('saleshistory/expandedhistory', lookup),
-    fetchAttomPackage('property/buildingpermits', lookup),
-    fetchAttomPackage('property/detailwithschools', lookup, 'v4'),
-  ])
+  const [profile, expanded, assessment, sale, history, permits, schools, assessmentHistory] =
+    await Promise.all([
+      fetchAttomPackage('property/basicprofile', lookup),
+      fetchAttomPackage('property/expandedprofile', lookup),
+      fetchAttomPackage('assessment/detail', lookup),
+      fetchAttomPackage('sale/detail', lookup),
+      fetchAttomPackage('saleshistory/expandedhistory', lookup),
+      fetchAttomPackage('property/buildingpermits', lookup),
+      fetchAttomPackage('property/detailwithschools', lookup, 'v4'),
+      fetchAttomPackage('assessmenthistory/detail', lookup),
+    ])
 
-  if (!profile && !expanded && !assessment && !sale && !history && !permits && !schools) {
+  if (
+    !profile &&
+    !expanded &&
+    !assessment &&
+    !sale &&
+    !history &&
+    !permits &&
+    !schools &&
+    !assessmentHistory
+  ) {
     return {
       ok: false,
       error:
-        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, or schools',
+        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, schools, or tax history',
     }
   }
 
@@ -1140,6 +1206,11 @@ export async function fetchAttomCountyFacts(params: {
     merged.schoolDistrict = schools.schoolDistrict
   }
 
+  if (assessmentHistory?.assessmentHistory || assessmentHistory?.assessmenthistory) {
+    merged.assessmentHistory =
+      assessmentHistory.assessmentHistory ?? assessmentHistory.assessmenthistory
+  }
+
   // Prefer owner names from expanded sales history only when assessment has none
   const historyOwner = (history as { owner?: NonNullable<AttomProperty['assessment']>['owner'] } | null)
     ?.owner
@@ -1158,6 +1229,7 @@ export async function fetchAttomCountyFacts(params: {
   if (!sale && !history) warnings.push('sale/saleshistory unavailable')
   if (!permits) warnings.push('property/buildingpermits unavailable')
   if (!schools) warnings.push('property/detailwithschools unavailable')
+  if (!assessmentHistory) warnings.push('assessmenthistory/detail unavailable')
 
   const attomId = merged.identifier?.attomId ?? merged.identifier?.Id
   return {

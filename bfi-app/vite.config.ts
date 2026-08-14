@@ -780,6 +780,47 @@ function mapAttomProperty(attom: Record<string, unknown>) {
     }
   }
 
+  const taxHistoryRaw = attom.assessmentHistory ?? attom.assessmenthistory
+  if (Array.isArray(taxHistoryRaw) && taxHistoryRaw.length > 0) {
+    fields.taxHistory = taxHistoryRaw
+      .map((row, index) => {
+        if (!row || typeof row !== 'object') return null
+        const item = row as Record<string, unknown>
+        const tax = (item.tax || {}) as Record<string, unknown>
+        const assessed = (item.assessed || {}) as Record<string, unknown>
+        const market = (item.market || {}) as Record<string, unknown>
+        const yearRaw = tax.taxYear ?? tax.taxyear ?? tax.assessorYear ?? tax.assessoryear
+        const year = yearRaw != null ? Number(yearRaw) : NaN
+        if (!Number.isFinite(year) || year <= 0) return null
+        const assessorRaw = tax.assessorYear ?? tax.assessoryear
+        const assessorYear =
+          assessorRaw != null && Number.isFinite(Number(assessorRaw))
+            ? Number(assessorRaw)
+            : undefined
+        const taxAmt = num(tax.taxAmt ?? tax.taxamt)
+        const assessedTotal = num(assessed.assdTtlValue ?? assessed.assdttlvalue)
+        const land = num(assessed.assdLandValue ?? assessed.assdlandvalue)
+        const impr = num(assessed.assdImprValue ?? assessed.assdimprvalue)
+        const marketTotal = num(market.mktTtlValue ?? market.mktttlvalue)
+        return {
+          id: `tax-${year}-${index}`,
+          taxYear: year,
+          assessorYear: assessorYear !== year ? assessorYear : undefined,
+          taxAmountLabel: taxAmt != null ? moneyLabel(taxAmt) : undefined,
+          assessedLabel: assessedTotal != null ? moneyLabel(assessedTotal) : undefined,
+          landLabel: land != null ? moneyLabel(land) : undefined,
+          improvementLabel: impr != null ? moneyLabel(impr) : undefined,
+          marketLabel: marketTotal != null ? moneyLabel(marketTotal) : undefined,
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        const left = (a as { taxYear: number }).taxYear
+        const right = (b as { taxYear: number }).taxYear
+        return right - left
+      })
+  }
+
   return fields
 }
 
@@ -809,21 +850,32 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
     }
   }
 
-  const [profile, expanded, assessment, sale, history, permits, schools] = await Promise.all([
-    load('property/basicprofile'),
-    load('property/expandedprofile'),
-    load('assessment/detail'),
-    load('sale/detail'),
-    load('saleshistory/expandedhistory'),
-    load('property/buildingpermits'),
-    load('property/detailwithschools', 'v4'),
-  ])
+  const [profile, expanded, assessment, sale, history, permits, schools, assessmentHistory] =
+    await Promise.all([
+      load('property/basicprofile'),
+      load('property/expandedprofile'),
+      load('assessment/detail'),
+      load('sale/detail'),
+      load('saleshistory/expandedhistory'),
+      load('property/buildingpermits'),
+      load('property/detailwithschools', 'v4'),
+      load('assessmenthistory/detail'),
+    ])
 
-  if (!profile && !expanded && !assessment && !sale && !history && !permits && !schools) {
+  if (
+    !profile &&
+    !expanded &&
+    !assessment &&
+    !sale &&
+    !history &&
+    !permits &&
+    !schools &&
+    !assessmentHistory
+  ) {
     return {
       ok: false as const,
       error:
-        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, or schools',
+        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, schools, or tax history',
     }
   }
 
@@ -920,6 +972,10 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   if (schools?.schoolDistrict) {
     merged.schoolDistrict = schools.schoolDistrict
   }
+  if (assessmentHistory?.assessmentHistory || assessmentHistory?.assessmenthistory) {
+    merged.assessmentHistory =
+      assessmentHistory.assessmentHistory ?? assessmentHistory.assessmenthistory
+  }
   if (history?.owner && !(merged.assessment as { owner?: unknown } | undefined)?.owner) {
     merged.assessment = {
       ...((merged.assessment as Record<string, unknown> | undefined) || {}),
@@ -934,7 +990,8 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
       sale?.identifier ||
       history?.identifier ||
       permits?.identifier ||
-      schools?.identifier
+      schools?.identifier ||
+      assessmentHistory?.identifier
   }
   if (!merged.address) {
     merged.address =
@@ -944,7 +1001,8 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
       sale?.address ||
       history?.address ||
       permits?.address ||
-      schools?.address
+      schools?.address ||
+      assessmentHistory?.address
   }
   if (!merged.location) {
     merged.location =
@@ -954,7 +1012,8 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
       sale?.location ||
       history?.location ||
       permits?.location ||
-      schools?.location
+      schools?.location ||
+      assessmentHistory?.location
   }
 
   return { ok: true as const, property: mapAttomProperty(merged) }

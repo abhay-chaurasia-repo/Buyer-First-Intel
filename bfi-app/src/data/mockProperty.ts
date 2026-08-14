@@ -145,6 +145,19 @@ export type PropertySchoolDistrict = {
   lng?: number
 }
 
+/** ATTOM /assessmenthistory/detail roll year */
+export type PropertyTaxYear = {
+  id: string
+  taxYear: number
+  /** Assessor year when distinct from tax year */
+  assessorYear?: number
+  taxAmountLabel?: string
+  assessedLabel?: string
+  landLabel?: string
+  improvementLabel?: string
+  marketLabel?: string
+}
+
 export type MockProperty = {
   id: string
   address: string
@@ -174,6 +187,8 @@ export type MockProperty = {
   /** Assigned schools from ATTOM /property/detailwithschools */
   schools?: PropertySchool[]
   schoolDistrict?: PropertySchoolDistrict
+  /** Multi-year tax rolls from ATTOM /assessmenthistory/detail */
+  taxHistory?: PropertyTaxYear[]
   sqft: number
   bedrooms: number
   bathrooms: number
@@ -475,7 +490,12 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
       id: 'sales-history',
       title: 'Sales History',
       subtitle: 'Deed transfers',
-      badge: live ? '2' : undefined,
+      badge:
+        property.salesHistory && property.salesHistory.length > 0
+          ? String(property.salesHistory.length)
+          : live
+            ? '1'
+            : undefined,
       detail: live
         ? `${property.deedType} · ${property.lastSaleDate}`
         : property.factsStatus === 'demo'
@@ -487,9 +507,16 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
       id: 'tax-history',
       title: 'Tax History',
       subtitle: 'Assessments',
-      badge: live ? '2' : undefined,
+      badge:
+        property.taxHistory && property.taxHistory.length > 0
+          ? String(property.taxHistory.length)
+          : live && !isMissingCountyNumber(property.taxYear)
+            ? '1'
+            : undefined,
       detail: live
-        ? `${property.taxYear} · ${property.taxAssessedValueLabel}`
+        ? property.taxHistory && property.taxHistory.length > 1
+          ? `${property.taxHistory.length} years · ${property.taxAssessedValueLabel}`
+          : `${property.taxYear} · ${property.taxAssessedValueLabel}`
         : property.factsStatus === 'demo'
           ? `${property.taxYear} · ${property.taxAssessedValueLabel}`
           : 'Pending assessor roll',

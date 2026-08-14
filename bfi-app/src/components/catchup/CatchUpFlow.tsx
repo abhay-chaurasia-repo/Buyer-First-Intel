@@ -17,6 +17,7 @@ import {
 } from '@/data/catchUpApi'
 import { BuyerCommunityPanel } from '@/components/catchup/BuyerCommunityPanel'
 import { RemoteInsightVote } from '@/components/catchup/RemoteInsightVote'
+import { SalesTaxHistoryPanel } from '@/components/catchup/SalesTaxHistoryPanel'
 import { VerifiedVisitsPanel } from '@/components/catchup/VerifiedVisitsPanel'
 import type { MockProperty } from '@/data/mockProperty'
 import { getVerifiedVisitsBundle } from '@/data/verifiedVisits'
@@ -35,16 +36,16 @@ const surfaceMeta: Record<
     blurb: 'County records and living-area facts for this address',
   },
   'sales-history': {
-    title: 'Sales History',
+    title: 'Sales & tax history',
     Icon: History,
     iconWrap: 'bg-saffron-bright/25 text-saffron-glow',
-    blurb: 'Recorded transfers and sale comps for this address',
+    blurb: 'Recorded transfers and assessor rolls for this address',
   },
   'tax-history': {
-    title: 'Tax History',
+    title: 'Sales & tax history',
     Icon: Receipt,
     iconWrap: 'bg-saffron/20 text-saffron-glow',
-    blurb: 'Assessed value and tax bill history',
+    blurb: 'Recorded transfers and assessor rolls for this address',
   },
   'verified-visits': {
     title: 'Verified Visits',
@@ -187,9 +188,12 @@ export function CatchUpFlow({
   const isBuyerCommunity = surface === 'buyer-insights'
   const isVerifiedVisits = surface === 'verified-visits'
   const isCountyFacts = surface === 'county-facts'
+  const isSalesTaxHistory = surface === 'sales-history' || surface === 'tax-history'
   const headerCount = isVerifiedVisits
     ? getVerifiedVisitsBundle(property).visits.length
-    : items.length
+    : isSalesTaxHistory
+      ? (property.salesHistory?.length || 0) + (property.taxHistory?.length || 0) || items.length
+      : items.length
 
   return (
     <div
@@ -228,8 +232,8 @@ export function CatchUpFlow({
       </header>
 
       <div className="flex-1 overflow-y-auto overscroll-contain pb-4">
-        {/* County’s Fact / Buyer Community: skip redundant chrome — content speaks for itself */}
-        {!isCountyFacts && !isBuyerCommunity ? (
+        {/* County’s Fact / Buyer Community / Sales-tax table: skip redundant chrome */}
+        {!isCountyFacts && !isBuyerCommunity && !isSalesTaxHistory ? (
           <section className="px-3 pt-4" data-testid="tile-section-header">
             <div className="px-2 py-1.5 text-center">
               <p className="font-display text-[13px] font-extrabold tracking-tight">
@@ -249,6 +253,11 @@ export function CatchUpFlow({
           <BuyerCommunityPanel propertyId={propertyId} />
         ) : isVerifiedVisits ? (
           <VerifiedVisitsPanel property={property} />
+        ) : isSalesTaxHistory ? (
+          <SalesTaxHistoryPanel
+            property={property}
+            initialTab={surface === 'tax-history' ? 'tax' : 'sales'}
+          />
         ) : (
           <div className={cn('space-y-4 px-3', isCountyFacts ? 'mt-6 pt-1' : 'mt-3')}>
             {items.length > 0 ? (
