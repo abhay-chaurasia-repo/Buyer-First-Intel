@@ -3,7 +3,13 @@
  * Shared by the Vite /api proxy (dev) — Edge Function keeps a Deno copy in sync.
  */
 
-import type { BuildingPermit, MockProperty, PropertySaleEvent } from '@/data/mockProperty'
+import type {
+  BuildingPermit,
+  MockProperty,
+  PropertySaleEvent,
+  PropertySchool,
+  PropertySchoolDistrict,
+} from '@/data/mockProperty'
 import { titleCaseStreet } from '@/lib/addressSearch'
 
 type AttomOwner = {
@@ -155,6 +161,8 @@ type AttomProperty = {
   saleHistory?: unknown
   buildingPermits?: AttomBuildingPermitRow[]
   buildingpermits?: AttomBuildingPermitRow[]
+  school?: AttomSchoolRow[]
+  schoolDistrict?: AttomSchoolDistrict
 }
 
 type AttomBuildingPermitRow = {
@@ -168,6 +176,31 @@ type AttomBuildingPermitRow = {
   fees?: number
   homeOwnerName?: string
   classifiers?: string[]
+}
+
+type AttomSchoolRow = {
+  geoIdV4?: string
+  InstitutionName?: string
+  institutionName?: string
+  GSTestRating?: number | string
+  schoolRating?: string
+  gradelevel1lotext?: string
+  gradelevel1hitext?: string
+  lowAssignedGrade?: string
+  highAssignedGrade?: string
+  Filetypetext?: string
+  filetypetext?: string
+  geocodinglatitude?: string | number
+  geocodinglongitude?: string | number
+  distance?: number | string
+}
+
+type AttomSchoolDistrict = {
+  geoIdV4?: string
+  districttype?: string
+  districtname?: string
+  districtlatitude?: string | number
+  districtlongitude?: string | number
 }
 
 function flagBool(value: unknown): boolean | undefined {
@@ -573,6 +606,12 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   const permits = mapAttomBuildingPermits(attom)
   if (permits.length > 0) fields.buildingPermits = permits
 
+  const schools = mapAttomSchools(attom)
+  if (schools.length > 0) fields.schools = schools
+
+  const district = mapAttomSchoolDistrict(attom)
+  if (district) fields.schoolDistrict = district
+
   return fields
 }
 
@@ -717,6 +756,113 @@ export function mapAttomBuildingPermits(
   })
 }
 
+function parseGradeToken(raw?: string): number | null {
+  if (!raw) return null
+  const t = String(raw).trim().toUpperCase()
+  if (!t) return null
+  if (t === 'PK' || t === 'PREK' || t === 'PRE-K') return 0
+  if (t === 'KG' || t === 'K' || t === 'KINDERGARTEN') return 0
+  const n = Number.parseInt(t, 10)
+  return Number.isFinite(n) ? n : null
+}
+
+function inferSchoolLevel(gradeLow?: string, gradeHigh?: string): PropertySchool['level'] {
+  const low = parseGradeToken(gradeLow)
+  const high = parseGradeToken(gradeHigh)
+  if (low == null && high == null) return 'other'
+  const lo = low ?? high ?? 0
+  const hi = high ?? low ?? lo
+  if (hi <= 5) return 'elementary'
+  if (lo >= 9) return 'high'
+  if (lo >= 6 && hi <= 8) return 'middle'
+  if (lo <= 5 && hi >= 9) return 'other'
+  if (lo <= 5) return 'elementary'
+  if (hi >= 9) return 'high'
+  return 'middle'
+}
+
+export function mapAttomSchoolDistrict(
+  attom: AttomProperty | Record<string, unknown>,
+): PropertySchoolDistrict | undefined {
+  const root = attom as AttomProperty
+  const district = root.schoolDistrict
+  if (!district || typeof district !== 'object') return undefined
+  const name = district.districtname ? titleCaseStreet(String(district.districtname)) : undefined
+  if (!name) return undefined
+  const lat =
+    district.districtlatitude != null ? Number(district.districtlatitude) : undefined
+  const lng =
+    district.districtlongitude != null ? Number(district.districtlongitude) : undefined
+  return {
+    name,
+    type: district.districttype ? titleCaseStreet(String(district.districttype)) : undefined,
+    geoIdV4: district.geoIdV4 ? String(district.geoIdV4) : undefined,
+    lat: lat != null && Number.isFinite(lat) ? lat : undefined,
+    lng: lng != null && Number.isFinite(lng) ? lng : undefined,
+  }
+}
+
+export function mapAttomSchools(attom: AttomProperty | Record<string, unknown>): PropertySchool[] {
+  const root = attom as AttomProperty
+  const raw = root.school
+  if (!Array.isArray(raw)) return []
+
+  const levelRank: Record<NonNullable<PropertySchool['level']>, number> = {
+    elementary: 0,
+    middle: 1,
+    high: 2,
+    other: 3,
+  }
+
+  const schools: PropertySchool[] = []
+  for (const [index, row] of (raw as AttomSchoolRow[]).entries()) {
+    if (!row || typeof row !== 'object') continue
+    const nameRaw = row.InstitutionName || row.institutionName
+    if (!nameRaw || !String(nameRaw).trim()) continue
+    const name = titleCaseStreet(String(nameRaw))
+    const gradeLow = String(row.lowAssignedGrade || row.gradelevel1lotext || '')
+      .trim()
+      .replace(/\s+$/g, '')
+    const gradeHigh = String(row.highAssignedGrade || row.gradelevel1hitext || '')
+      .trim()
+      .replace(/\s+$/g, '')
+    const rating =
+      typeof row.schoolRating === 'string' && row.schoolRating.trim()
+        ? row.schoolRating.trim()
+        : undefined
+    const gsRaw = row.GSTestRating
+    const gsNum = gsRaw != null ? Number(gsRaw) : undefined
+    const gsTestRating =
+      gsNum != null && Number.isFinite(gsNum) && gsNum > 0 ? gsNum : undefined
+    const typeRaw = row.Filetypetext || row.filetypetext
+    const distanceRaw = row.distance != null ? Number(row.distance) : undefined
+    const lat = row.geocodinglatitude != null ? Number(row.geocodinglatitude) : undefined
+    const lng = row.geocodinglongitude != null ? Number(row.geocodinglongitude) : undefined
+    const level = inferSchoolLevel(gradeLow || undefined, gradeHigh || undefined)
+    schools.push({
+      id: `school-${row.geoIdV4 || index}`,
+      name,
+      rating,
+      gsTestRating,
+      gradeLow: gradeLow || undefined,
+      gradeHigh: gradeHigh || undefined,
+      level,
+      type: typeRaw ? titleCaseStreet(String(typeRaw)) : undefined,
+      distanceMiles:
+        distanceRaw != null && Number.isFinite(distanceRaw) ? distanceRaw : undefined,
+      lat: lat != null && Number.isFinite(lat) ? lat : undefined,
+      lng: lng != null && Number.isFinite(lng) ? lng : undefined,
+      geoIdV4: row.geoIdV4 ? String(row.geoIdV4) : undefined,
+    })
+  }
+
+  return schools.sort((a, b) => {
+    const rank = (levelRank[a.level || 'other'] ?? 3) - (levelRank[b.level || 'other'] ?? 3)
+    if (rank !== 0) return rank
+    return (a.distanceMiles ?? 99) - (b.distanceMiles ?? 99)
+  })
+}
+
 async function fetchAttomPackage(
   packagePath: string,
   params: {
@@ -727,8 +873,9 @@ async function fetchAttomPackage(
     state?: string
     zipCode?: string
   },
+  apiVersion: 'v1.0.0' | 'v4' = 'v1.0.0',
 ): Promise<AttomProperty | null> {
-  const url = new URL(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/${packagePath}`)
+  const url = new URL(`https://api.gateway.attomdata.com/propertyapi/${apiVersion}/${packagePath}`)
   if (params.attomId != null && String(params.attomId).trim()) {
     url.searchParams.set('attomid', String(params.attomId))
   } else if (params.street && params.city && params.state) {
@@ -874,19 +1021,21 @@ export async function fetchAttomCountyFacts(params: {
     zipCode: params.zipCode,
   }
 
-  const [profile, expanded, assessment, sale, history, permits] = await Promise.all([
+  const [profile, expanded, assessment, sale, history, permits, schools] = await Promise.all([
     fetchAttomPackage('property/basicprofile', lookup),
     fetchAttomPackage('property/expandedprofile', lookup),
     fetchAttomPackage('assessment/detail', lookup),
     fetchAttomPackage('sale/detail', lookup),
     fetchAttomPackage('saleshistory/expandedhistory', lookup),
     fetchAttomPackage('property/buildingpermits', lookup),
+    fetchAttomPackage('property/detailwithschools', lookup, 'v4'),
   ])
 
-  if (!profile && !expanded && !assessment && !sale && !history && !permits) {
+  if (!profile && !expanded && !assessment && !sale && !history && !permits && !schools) {
     return {
       ok: false,
-      error: 'No ATTOM match for basicprofile, expandedprofile, assessment, sales, or permits',
+      error:
+        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, or schools',
     }
   }
 
@@ -899,14 +1048,16 @@ export async function fetchAttomCountyFacts(params: {
       assessment?.address ||
       sale?.address ||
       history?.address ||
-      permits?.address,
+      permits?.address ||
+      schools?.address,
     location:
       profile?.location ||
       expanded?.location ||
       assessment?.location ||
       sale?.location ||
       history?.location ||
-      permits?.location,
+      permits?.location ||
+      schools?.location,
     building: mergeAttomBuilding(
       profile?.building,
       mergeAttomBuilding(expanded?.building, permits?.building),
@@ -939,7 +1090,8 @@ export async function fetchAttomCountyFacts(params: {
       assessment?.identifier ||
       sale?.identifier ||
       history?.identifier ||
-      permits?.identifier,
+      permits?.identifier ||
+      schools?.identifier,
   }
 
   // Deep-merge assessment so basicprofile owner is kept when assessment/detail lacks it
@@ -981,6 +1133,13 @@ export async function fetchAttomCountyFacts(params: {
     merged.buildingPermits = permits.buildingPermits ?? permits.buildingpermits
   }
 
+  if (schools?.school) {
+    merged.school = schools.school
+  }
+  if (schools?.schoolDistrict) {
+    merged.schoolDistrict = schools.schoolDistrict
+  }
+
   // Prefer owner names from expanded sales history only when assessment has none
   const historyOwner = (history as { owner?: NonNullable<AttomProperty['assessment']>['owner'] } | null)
     ?.owner
@@ -998,6 +1157,7 @@ export async function fetchAttomCountyFacts(params: {
   if (!assessment) warnings.push('assessment/detail unavailable')
   if (!sale && !history) warnings.push('sale/saleshistory unavailable')
   if (!permits) warnings.push('property/buildingpermits unavailable')
+  if (!schools) warnings.push('property/detailwithschools unavailable')
 
   const attomId = merged.identifier?.attomId ?? merged.identifier?.Id
   return {

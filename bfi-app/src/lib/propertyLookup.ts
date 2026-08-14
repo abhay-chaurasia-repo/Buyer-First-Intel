@@ -78,10 +78,12 @@ function blankCountyFacts(): Partial<MockProperty> {
     attomId: undefined,
     salesHistory: undefined,
     buildingPermits: undefined,
+    schools: undefined,
+    schoolDistrict: undefined,
   }
 }
 
-const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v13'
+const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v14'
 const SELECTED_ADDRESS_KEY = 'bfi.selectedAddress.v1'
 const RECENT_ADDRESSES_KEY = 'bfi.recentAddressSuggestions.v1'
 
@@ -98,6 +100,7 @@ try {
   sessionStorage.removeItem('bfi.propertyLookupCache.v10')
   sessionStorage.removeItem('bfi.propertyLookupCache.v11')
   sessionStorage.removeItem('bfi.propertyLookupCache.v12')
+  sessionStorage.removeItem('bfi.propertyLookupCache.v13')
 } catch {
   // ignore
 }

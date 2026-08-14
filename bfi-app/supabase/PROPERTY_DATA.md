@@ -27,6 +27,9 @@
   - `GET /saleshistory/expandedhistory` — Sales History deed chain
     - Transfer type, deed code (LW/QC/GD), buyer/seller, doc #, deed-in-lieu, seller carry-back
     - Title company + per-event lender / loan type / term / due date / loan doc # (**amounts hidden**)
+  - [`GET /property/detailwithschools`](https://api.developer.attomdata.com/docs) (v4) — Schools CatchUp
+    - District name/type + assigned campuses (name, letter rating, grades, public/private, distance, lat/lng)
+    - Property block overlaps basicprofile — used only for `school` + `schoolDistrict`
 - Query: `address1` + `address2` (or `attomid`) — e.g. `address1=3147 SWALLOW DR&address2=Marietta, GA`
 - Headers: `apikey`, `Accept: application/json`
 - Dev proxy: Vite `POST /api/property-lookup` + `.env.local` `ATTOM_API_KEY`
@@ -56,8 +59,10 @@ supabase secrets set GOOGLE_MAPS_API_KEY=your_maps_platform_key
 
 Some residential streets may return `SuccessWithoutResult` on the trial plan — address match still works; facts stay pending with a note.
 
-## Step 3 — GreatSchools (next)
-- Bind schools CatchUp surface using lat/lng from the resolved address
+## Step 3 — Schools (ATTOM detailwithschools)
+- Bound via `GET /property/detailwithschools` (v4) on property lookup
+- CatchUp surface uses assigned ES/MS/HS + district; verify boundaries with the district before deciding
+- GreatSchools numeric (`GSTestRating`) may be empty on trial — letter `schoolRating` is preferred when present
 
 ## Step 4 — Real GPS Verify
 - Compare device geolocation to `property.lat` / `property.lng` within ~100m

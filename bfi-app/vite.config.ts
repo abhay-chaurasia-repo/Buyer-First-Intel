@@ -674,14 +674,120 @@ function mapAttomProperty(attom: Record<string, unknown>) {
       })
   }
 
+  const schoolRaw = attom.school
+  if (Array.isArray(schoolRaw) && schoolRaw.length > 0) {
+    const parseGradeToken = (raw?: unknown) => {
+      if (raw == null) return null
+      const t = String(raw).trim().toUpperCase()
+      if (!t) return null
+      if (t === 'PK' || t === 'PREK' || t === 'PRE-K' || t === 'KG' || t === 'K') return 0
+      const n = Number.parseInt(t, 10)
+      return Number.isFinite(n) ? n : null
+    }
+    const inferLevel = (gradeLow?: string, gradeHigh?: string) => {
+      const low = parseGradeToken(gradeLow)
+      const high = parseGradeToken(gradeHigh)
+      if (low == null && high == null) return 'other'
+      const lo = low ?? high ?? 0
+      const hi = high ?? low ?? lo
+      if (hi <= 5) return 'elementary'
+      if (lo >= 9) return 'high'
+      if (lo >= 6 && hi <= 8) return 'middle'
+      if (lo <= 5) return 'elementary'
+      if (hi >= 9) return 'high'
+      return 'middle'
+    }
+    const levelRank: Record<string, number> = {
+      elementary: 0,
+      middle: 1,
+      high: 2,
+      other: 3,
+    }
+    fields.schools = schoolRaw
+      .map((row, index) => {
+        if (!row || typeof row !== 'object') return null
+        const item = row as Record<string, unknown>
+        const nameRaw = item.InstitutionName || item.institutionName
+        if (!nameRaw || !String(nameRaw).trim()) return null
+        const gradeLow = String(item.lowAssignedGrade || item.gradelevel1lotext || '')
+          .trim()
+          .replace(/\s+$/g, '')
+        const gradeHigh = String(item.highAssignedGrade || item.gradelevel1hitext || '')
+          .trim()
+          .replace(/\s+$/g, '')
+        const gsNum = item.GSTestRating != null ? Number(item.GSTestRating) : undefined
+        const distanceRaw = item.distance != null ? Number(item.distance) : undefined
+        const lat = item.geocodinglatitude != null ? Number(item.geocodinglatitude) : undefined
+        const lng = item.geocodinglongitude != null ? Number(item.geocodinglongitude) : undefined
+        const level = inferLevel(gradeLow || undefined, gradeHigh || undefined)
+        return {
+          id: `school-${item.geoIdV4 || index}`,
+          name: titleCaseStreet(String(nameRaw)),
+          rating:
+            typeof item.schoolRating === 'string' && item.schoolRating.trim()
+              ? item.schoolRating.trim()
+              : undefined,
+          gsTestRating:
+            gsNum != null && Number.isFinite(gsNum) && gsNum > 0 ? gsNum : undefined,
+          gradeLow: gradeLow || undefined,
+          gradeHigh: gradeHigh || undefined,
+          level,
+          type:
+            item.Filetypetext || item.filetypetext
+              ? titleCaseStreet(String(item.Filetypetext || item.filetypetext))
+              : undefined,
+          distanceMiles:
+            distanceRaw != null && Number.isFinite(distanceRaw) ? distanceRaw : undefined,
+          lat: lat != null && Number.isFinite(lat) ? lat : undefined,
+          lng: lng != null && Number.isFinite(lng) ? lng : undefined,
+          geoIdV4: item.geoIdV4 ? String(item.geoIdV4) : undefined,
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        const left = a as { level?: string; distanceMiles?: number }
+        const right = b as { level?: string; distanceMiles?: number }
+        const rank =
+          (levelRank[left.level || 'other'] ?? 3) - (levelRank[right.level || 'other'] ?? 3)
+        if (rank !== 0) return rank
+        return (left.distanceMiles ?? 99) - (right.distanceMiles ?? 99)
+      })
+  }
+
+  const schoolDistrict = attom.schoolDistrict as Record<string, unknown> | undefined
+  if (schoolDistrict && typeof schoolDistrict === 'object') {
+    const name = schoolDistrict.districtname
+      ? titleCaseStreet(String(schoolDistrict.districtname))
+      : undefined
+    if (name) {
+      const lat =
+        schoolDistrict.districtlatitude != null
+          ? Number(schoolDistrict.districtlatitude)
+          : undefined
+      const lng =
+        schoolDistrict.districtlongitude != null
+          ? Number(schoolDistrict.districtlongitude)
+          : undefined
+      fields.schoolDistrict = {
+        name,
+        type: schoolDistrict.districttype
+          ? titleCaseStreet(String(schoolDistrict.districttype))
+          : undefined,
+        geoIdV4: schoolDistrict.geoIdV4 ? String(schoolDistrict.geoIdV4) : undefined,
+        lat: lat != null && Number.isFinite(lat) ? lat : undefined,
+        lng: lng != null && Number.isFinite(lng) ? lng : undefined,
+      }
+    }
+  }
+
   return fields
 }
 
 async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   const address2 = [match.city, match.state, match.zipCode].filter(Boolean).join(', ')
 
-  async function load(packagePath: string) {
-    const url = new URL(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/${packagePath}`)
+  async function load(packagePath: string, apiVersion: 'v1.0.0' | 'v4' = 'v1.0.0') {
+    const url = new URL(`https://api.gateway.attomdata.com/propertyapi/${apiVersion}/${packagePath}`)
     url.searchParams.set('address1', match.street)
     url.searchParams.set('address2', address2)
     try {
@@ -703,20 +809,21 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
     }
   }
 
-  const [profile, expanded, assessment, sale, history, permits] = await Promise.all([
+  const [profile, expanded, assessment, sale, history, permits, schools] = await Promise.all([
     load('property/basicprofile'),
     load('property/expandedprofile'),
     load('assessment/detail'),
     load('sale/detail'),
     load('saleshistory/expandedhistory'),
     load('property/buildingpermits'),
+    load('property/detailwithschools', 'v4'),
   ])
 
-  if (!profile && !expanded && !assessment && !sale && !history && !permits) {
+  if (!profile && !expanded && !assessment && !sale && !history && !permits && !schools) {
     return {
       ok: false as const,
       error:
-        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, or permits',
+        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, or schools',
     }
   }
 
@@ -807,6 +914,12 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   if (permits?.buildingPermits || permits?.buildingpermits) {
     merged.buildingPermits = permits.buildingPermits ?? permits.buildingpermits
   }
+  if (Array.isArray(schools?.school)) {
+    merged.school = schools.school
+  }
+  if (schools?.schoolDistrict) {
+    merged.schoolDistrict = schools.schoolDistrict
+  }
   if (history?.owner && !(merged.assessment as { owner?: unknown } | undefined)?.owner) {
     merged.assessment = {
       ...((merged.assessment as Record<string, unknown> | undefined) || {}),
@@ -820,7 +933,8 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
       assessment?.identifier ||
       sale?.identifier ||
       history?.identifier ||
-      permits?.identifier
+      permits?.identifier ||
+      schools?.identifier
   }
   if (!merged.address) {
     merged.address =
@@ -829,7 +943,8 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
       assessment?.address ||
       sale?.address ||
       history?.address ||
-      permits?.address
+      permits?.address ||
+      schools?.address
   }
   if (!merged.location) {
     merged.location =
@@ -838,7 +953,8 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
       assessment?.location ||
       sale?.location ||
       history?.location ||
-      permits?.location
+      permits?.location ||
+      schools?.location
   }
 
   return { ok: true as const, property: mapAttomProperty(merged) }

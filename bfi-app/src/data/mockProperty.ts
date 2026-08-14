@@ -118,6 +118,33 @@ export type BuildingPermit = {
   classifiers?: string[]
 }
 
+/** ATTOM /property/detailwithschools assigned campus */
+export type PropertySchool = {
+  id: string
+  name: string
+  /** Letter rating when published, e.g. A+ / B+ */
+  rating?: string
+  /** GreatSchools numeric when published (often 0 on trial) */
+  gsTestRating?: number
+  gradeLow?: string
+  gradeHigh?: string
+  level?: 'elementary' | 'middle' | 'high' | 'other'
+  /** Public / Private / etc. */
+  type?: string
+  distanceMiles?: number
+  lat?: number
+  lng?: number
+  geoIdV4?: string
+}
+
+export type PropertySchoolDistrict = {
+  name: string
+  type?: string
+  geoIdV4?: string
+  lat?: number
+  lng?: number
+}
+
 export type MockProperty = {
   id: string
   address: string
@@ -144,6 +171,9 @@ export type MockProperty = {
   salesHistory?: PropertySaleEvent[]
   /** Building permits from ATTOM /property/buildingpermits */
   buildingPermits?: BuildingPermit[]
+  /** Assigned schools from ATTOM /property/detailwithschools */
+  schools?: PropertySchool[]
+  schoolDistrict?: PropertySchoolDistrict
   sqft: number
   bedrooms: number
   bathrooms: number
@@ -484,9 +514,20 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
     {
       id: 'schools',
       title: 'Schools',
-      subtitle: 'Associated',
-      badge: '2',
-      detail: 'Assigned campuses for this address',
+      subtitle: property.schoolDistrict?.name || 'Associated',
+      badge:
+        property.schools && property.schools.length > 0
+          ? String(property.schools.length)
+          : property.factsStatus === 'live'
+            ? '—'
+            : '2',
+      detail:
+        property.schools && property.schools.length > 0
+          ? property.schools
+              .slice(0, 3)
+              .map((s) => [s.name, s.rating].filter(Boolean).join(' '))
+              .join(' · ')
+          : 'Assigned campuses for this address',
       accent: 'schools',
     },
   ]
@@ -671,23 +712,63 @@ export function getChannelCanvas(
         { label: 'Exemptions', value: 'Homestead (stub)', source: 'Assessor' },
       ],
     },
-    '05-school-ratings': {
-      id: '05-school-ratings',
-      title: 'School Ratings',
-      subtitle: 'Assigned campuses for planning — verify boundaries directly',
-      apiStub: {
-        endpoint: '/api/properties/:id/schools',
-        method: 'GET',
-        resourceKey: 'property.schools',
-      },
-      fields: [
-        { label: 'Elementary', value: 'Oak Ridge Elementary', source: 'District stub' },
-        { label: 'Middle', value: 'South Austin Middle', source: 'District stub' },
-        { label: 'High', value: 'Austin High School', source: 'District stub' },
-        { label: 'District', value: 'Austin ISD', source: 'District stub' },
-      ],
-      notes: ['Ratings are contextual only — not a ranking marketplace.'],
-    },
+    '05-school-ratings': (() => {
+      const live = property.factsStatus === 'live'
+      const schools = property.schools || []
+      const source = live
+        ? 'ATTOM /property/detailwithschools'
+        : 'District stub'
+      const byLevel = (level: PropertySchool['level']) =>
+        schools.find((s) => s.level === level)
+      const elementary = byLevel('elementary')
+      const middle = byLevel('middle')
+      const high = byLevel('high')
+      const formatSchool = (school?: PropertySchool) => {
+        if (!school) return live ? '—' : undefined
+        return [school.name, school.rating].filter(Boolean).join(' · ')
+      }
+      return {
+        id: '05-school-ratings' as const,
+        title: 'School Ratings',
+        subtitle: 'Assigned campuses for planning — verify boundaries directly',
+        apiStub: {
+          endpoint: '/api/properties/:id/schools',
+          method: 'GET' as const,
+          resourceKey: 'property.schools',
+        },
+        fields:
+          schools.length > 0 || live
+            ? [
+                {
+                  label: 'Elementary',
+                  value: formatSchool(elementary) || '—',
+                  source,
+                },
+                {
+                  label: 'Middle',
+                  value: formatSchool(middle) || '—',
+                  source,
+                },
+                {
+                  label: 'High',
+                  value: formatSchool(high) || '—',
+                  source,
+                },
+                {
+                  label: 'District',
+                  value: property.schoolDistrict?.name || (live ? '—' : 'Austin ISD'),
+                  source,
+                },
+              ]
+            : [
+                { label: 'Elementary', value: 'Oak Ridge Elementary', source: 'District stub' },
+                { label: 'Middle', value: 'South Austin Middle', source: 'District stub' },
+                { label: 'High', value: 'Austin High School', source: 'District stub' },
+                { label: 'District', value: 'Austin ISD', source: 'District stub' },
+              ],
+        notes: ['Ratings are contextual only — not a ranking marketplace.'],
+      }
+    })(),
     '06-neighborhood-vibe': {
       id: '06-neighborhood-vibe',
       title: 'Neighborhood Vibe',

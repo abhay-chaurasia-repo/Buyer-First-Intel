@@ -742,36 +742,133 @@ export function fetchBuyerInsightsApi(property: MockProperty): CatchUpApiRespons
 
 /** GET /api/properties/:id/schools */
 export function fetchSchoolsApi(property: MockProperty): CatchUpApiResponse {
-  const items: CatchUpCard[] = [
-    {
-      id: 'sc-elementary',
+  const live = property.factsStatus === 'live'
+  const schools = property.schools || []
+  const district = property.schoolDistrict
+  const source = live
+    ? 'ATTOM /property/detailwithschools'
+    : 'GET /api/properties/:id/schools'
+
+  if (schools.length === 0) {
+    const items: CatchUpCard[] = live
+      ? [
+          {
+            id: 'sc-pending',
+            type: 'school',
+            channel: 'assigned',
+            unreadCount: 0,
+            headline: 'Assigned schools',
+            preview: district?.name
+              ? `District ${district.name}. Campus list not returned for this address.`
+              : 'ATTOM did not return assigned campuses for this address. Verify boundaries with the district.',
+            timestamp: isoMinutesAgo(20),
+            source,
+            fields: [
+              ...(district?.name
+                ? [{ label: 'District', value: district.name }]
+                : [{ label: 'District', value: '—' }]),
+            ],
+          },
+        ]
+      : [
+          {
+            id: 'sc-elementary',
+            type: 'school',
+            channel: 'elementary',
+            unreadCount: 1,
+            headline: 'Assigned elementary',
+            preview:
+              'Oak Ridge Elementary — verify current boundary with the district before deciding.',
+            timestamp: isoMinutesAgo(20),
+            source,
+            fields: [
+              { label: 'Campus', value: 'Oak Ridge Elementary' },
+              { label: 'District', value: 'Austin ISD' },
+            ],
+          },
+          {
+            id: 'sc-secondary',
+            type: 'school',
+            channel: 'secondary',
+            unreadCount: 1,
+            headline: 'Middle & high assignment',
+            preview:
+              'South Austin Middle → Austin High School. Ratings are contextual — not a rankings marketplace.',
+            timestamp: isoMinutesAgo(55),
+            source,
+            fields: [
+              { label: 'Middle', value: 'South Austin Middle' },
+              { label: 'High', value: 'Austin High School' },
+            ],
+          },
+        ]
+    return wrapResponse(property.id, `/api/properties/${property.id}/schools`, items)
+  }
+
+  const levelLabel: Record<string, string> = {
+    elementary: 'Elementary',
+    middle: 'Middle',
+    high: 'High',
+    other: 'Campus',
+  }
+
+  const items: CatchUpCard[] = []
+  if (district?.name) {
+    items.push({
+      id: 'sc-district',
       type: 'school',
-      channel: 'elementary',
+      channel: 'district',
       unreadCount: 1,
-      headline: 'Assigned elementary',
-      preview: 'Oak Ridge Elementary — verify current boundary with the district before deciding.',
-      timestamp: isoMinutesAgo(20),
-      source: 'GET /api/properties/:id/schools',
+      headline: district.name,
+      preview: [district.type, 'Assigned district for this address']
+        .filter(Boolean)
+        .join(' · '),
+      timestamp: isoMinutesAgo(12),
+      source,
       fields: [
-        { label: 'Campus', value: 'Oak Ridge Elementary' },
-        { label: 'District', value: 'Austin ISD' },
+        { label: 'District', value: district.name },
+        ...(district.type ? [{ label: 'Type', value: district.type }] : []),
       ],
-    },
-    {
-      id: 'sc-secondary',
+    })
+  }
+
+  for (const [index, school] of schools.entries()) {
+    const level = school.level || 'other'
+    const grades =
+      school.gradeLow || school.gradeHigh
+        ? [school.gradeLow, school.gradeHigh].filter(Boolean).join('–')
+        : null
+    items.push({
+      id: school.id || `sc-${index}`,
       type: 'school',
-      channel: 'secondary',
-      unreadCount: 1,
-      headline: 'Middle & high assignment',
-      preview: 'South Austin Middle → Austin High School. Ratings are contextual — not a rankings marketplace.',
-      timestamp: isoMinutesAgo(55),
-      source: 'GET /api/properties/:id/schools',
+      channel: level,
+      unreadCount: index === 0 ? 1 : 0,
+      headline: [levelLabel[level] || 'Campus', school.name].join(' · '),
+      preview: [
+        school.rating ? `Rating ${school.rating}` : null,
+        grades ? `Grades ${grades}` : null,
+        school.distanceMiles != null ? `${school.distanceMiles.toFixed(2)} mi` : null,
+        school.type,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      timestamp: isoMinutesAgo(18 + index * 6),
+      source,
       fields: [
-        { label: 'Middle', value: 'South Austin Middle' },
-        { label: 'High', value: 'Austin High School' },
+        { label: 'Campus', value: school.name },
+        ...(school.rating ? [{ label: 'Rating', value: school.rating }] : []),
+        ...(school.gsTestRating != null
+          ? [{ label: 'GreatSchools test', value: String(school.gsTestRating) }]
+          : []),
+        ...(grades ? [{ label: 'Grades', value: grades }] : []),
+        ...(school.type ? [{ label: 'Type', value: school.type }] : []),
+        ...(school.distanceMiles != null
+          ? [{ label: 'Distance', value: `${school.distanceMiles.toFixed(2)} mi` }]
+          : []),
+        ...(district?.name ? [{ label: 'District', value: district.name }] : []),
       ],
-    },
-  ]
+    })
+  }
 
   return wrapResponse(property.id, `/api/properties/${property.id}/schools`, items)
 }
