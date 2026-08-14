@@ -194,86 +194,46 @@ function TaxRow({ row }: { row: PropertyTaxYear }) {
 
 export function SalesTaxHistoryPanel({
   property,
-  initialTab,
+  mode,
 }: {
   property: MockProperty
-  initialTab: HistoryTab
+  mode: HistoryTab
 }) {
-  const [tab, setTab] = useState<HistoryTab>(initialTab)
-  const [showAllSales, setShowAllSales] = useState(false)
-  const [showAllTax, setShowAllTax] = useState(false)
-
+  const [showAll, setShowAll] = useState(false)
   const salesRows = useMemo(() => buildSalesRows(property), [property])
   const taxRows = useMemo(() => buildTaxRows(property), [property])
-
-  const visibleSales = showAllSales ? salesRows : salesRows.slice(0, INITIAL_ROWS)
-  const visibleTax = showAllTax ? taxRows : taxRows.slice(0, INITIAL_ROWS)
   const live = property.factsStatus === 'live'
+  const isSales = mode === 'sales'
+  const rows = isSales ? salesRows : taxRows
+  const visible = showAll ? rows : rows.slice(0, INITIAL_ROWS)
 
   return (
-    <div className="px-3 pt-2" data-testid="sales-tax-history-panel">
+    <div className="px-3 pt-2" data-testid="sales-tax-history-panel" data-mode={mode}>
       <section className="rounded-2xl border border-white/25 bg-transparent px-3 py-3.5">
         <h2 className="px-1 font-display text-[15px] font-bold tracking-tight text-night-ink">
-          Sales &amp; tax history
+          {isSales ? 'Sales history' : 'Tax history'}
         </h2>
         <p className="mt-0.5 px-1 text-[11px] text-night-muted">
-          {live
-            ? 'ATTOM deed chain + multi-year assessor rolls · sale amounts hidden'
-            : 'Demo shell — live ATTOM history appears after address resolve'}
+          {isSales
+            ? live
+              ? 'ATTOM deed chain · sale amounts hidden (buyer-first)'
+              : 'Demo shell — live ATTOM transfers appear after address resolve'
+            : live
+              ? 'Multi-year assessor rolls from ATTOM'
+              : 'Demo shell — live ATTOM tax years appear after address resolve'}
         </p>
 
-        <div
-          className="mt-3 grid grid-cols-2 gap-1 rounded-full border border-white/25 bg-night-ink/[0.04] p-1"
-          role="tablist"
-          aria-label="Sales and tax history"
-        >
-          {(
-            [
-              { id: 'sales' as const, label: 'Sales history', count: salesRows.length },
-              { id: 'tax' as const, label: 'Tax history', count: taxRows.length },
-            ] as const
-          ).map((item) => {
-            const active = tab === item.id
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(item.id)}
-                className={cn(
-                  'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full px-3 text-[12px] font-semibold touch-manipulation transition-colors',
-                  active
-                    ? 'bg-saffron text-white shadow-sm'
-                    : 'text-night-ink hover:bg-saffron/10',
-                )}
-                data-testid={`history-tab-${item.id}`}
-              >
-                {item.label}
-                {item.count > 0 ? (
-                  <span
-                    className={cn(
-                      'rounded-md px-1.5 py-0.5 text-[10px] font-bold',
-                      active ? 'bg-white/20 text-white' : 'bg-saffron/15 text-saffron-glow',
-                    )}
-                  >
-                    {item.count}
-                  </span>
-                ) : null}
-              </button>
-            )
-          })}
-        </div>
-
-        {tab === 'sales' ? (
-          <div className="mt-3" role="tabpanel" data-testid="sales-history-table">
+        {isSales ? (
+          <div className="mt-3" data-testid="sales-history-table">
             <div className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] gap-2 border-b border-white/20 px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-night-faint">
               <span>Date</span>
               <span>Event</span>
               <span className="text-right">Amount</span>
             </div>
-            {visibleSales.length > 0 ? (
-              visibleSales.map((event) => <SaleRow key={event.id} event={event} />)
+            {visible.length > 0 ? (
+              (visible as PropertySaleEvent[]).map((event) => (
+                <SaleRow key={event.id} event={event} />
+              ))
             ) : (
               <p className="px-1 py-6 text-center text-sm text-night-muted">
                 No recorded transfers yet for this address.
@@ -282,11 +242,11 @@ export function SalesTaxHistoryPanel({
             {salesRows.length > INITIAL_ROWS ? (
               <button
                 type="button"
-                onClick={() => setShowAllSales((v) => !v)}
+                onClick={() => setShowAll((v) => !v)}
                 className="mt-1 inline-flex min-h-10 items-center gap-1 px-1 text-[13px] font-semibold text-saffron-glow touch-manipulation"
                 data-testid="button-show-more-sales"
               >
-                {showAllSales ? 'Show less' : 'Show more'}
+                {showAll ? 'Show less' : 'Show more'}
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             ) : null}
@@ -296,15 +256,15 @@ export function SalesTaxHistoryPanel({
             </p>
           </div>
         ) : (
-          <div className="mt-3" role="tabpanel" data-testid="tax-history-table">
+          <div className="mt-3" data-testid="tax-history-table">
             <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 border-b border-white/20 px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-night-faint">
               <span>Year</span>
               <span>Property taxes</span>
               <span className="text-right">Assessment</span>
               <span className="w-3.5" aria-hidden />
             </div>
-            {visibleTax.length > 0 ? (
-              visibleTax.map((row) => <TaxRow key={row.id} row={row} />)
+            {visible.length > 0 ? (
+              (visible as PropertyTaxYear[]).map((row) => <TaxRow key={row.id} row={row} />)
             ) : (
               <p className="px-1 py-6 text-center text-sm text-night-muted">
                 No assessor tax years yet for this address.
@@ -313,11 +273,11 @@ export function SalesTaxHistoryPanel({
             {taxRows.length > INITIAL_ROWS ? (
               <button
                 type="button"
-                onClick={() => setShowAllTax((v) => !v)}
+                onClick={() => setShowAll((v) => !v)}
                 className="mt-1 inline-flex min-h-10 items-center gap-1 px-1 text-[13px] font-semibold text-saffron-glow touch-manipulation"
                 data-testid="button-show-more-tax"
               >
-                {showAllTax ? 'Show less' : 'Show more'}
+                {showAll ? 'Show less' : 'Show more'}
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             ) : null}
@@ -330,3 +290,4 @@ export function SalesTaxHistoryPanel({
     </div>
   )
 }
+

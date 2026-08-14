@@ -36,16 +36,16 @@ const surfaceMeta: Record<
     blurb: 'County records and living-area facts for this address',
   },
   'sales-history': {
-    title: 'Sales & tax history',
+    title: 'Sales History',
     Icon: History,
     iconWrap: 'bg-saffron-bright/25 text-saffron-glow',
-    blurb: 'Recorded transfers and assessor rolls for this address',
+    blurb: 'Recorded transfers for this address',
   },
   'tax-history': {
-    title: 'Sales & tax history',
+    title: 'Tax History',
     Icon: Receipt,
     iconWrap: 'bg-saffron/20 text-saffron-glow',
-    blurb: 'Recorded transfers and assessor rolls for this address',
+    blurb: 'Assessed value and tax bill history',
   },
   'verified-visits': {
     title: 'Verified Visits',
@@ -191,9 +191,11 @@ export function CatchUpFlow({
   const isSalesTaxHistory = surface === 'sales-history' || surface === 'tax-history'
   const headerCount = isVerifiedVisits
     ? getVerifiedVisitsBundle(property).visits.length
-    : isSalesTaxHistory
-      ? (property.salesHistory?.length || 0) + (property.taxHistory?.length || 0) || items.length
-      : items.length
+    : surface === 'sales-history'
+      ? property.salesHistory?.length || items.length
+      : surface === 'tax-history'
+        ? property.taxHistory?.length || items.length
+        : items.length
 
   return (
     <div
@@ -256,7 +258,7 @@ export function CatchUpFlow({
         ) : isSalesTaxHistory ? (
           <SalesTaxHistoryPanel
             property={property}
-            initialTab={surface === 'tax-history' ? 'tax' : 'sales'}
+            mode={surface === 'tax-history' ? 'tax' : 'sales'}
           />
         ) : (
           <div className={cn('space-y-4 px-3', isCountyFacts ? 'mt-6 pt-1' : 'mt-3')}>
