@@ -11,10 +11,12 @@ import { AuthProvider } from './auth/AuthProvider'
 async function bootstrapNativeShell() {
   if (!Capacitor.isNativePlatform()) return
   try {
+    // Light icons on dark bars
     await SystemBars.setStyle({ style: SystemBarsStyle.Dark })
     await StatusBar.setStyle({ style: Style.Dark })
-    // Android 15+/16: StatusBar.setBackgroundColor is a no-op; EdgeToEdge paints the bars.
     if (Capacitor.getPlatform() === 'android') {
+      await EdgeToEdge.enable()
+      await EdgeToEdge.setBackgroundColor({ color: '#2a1f20' })
       await EdgeToEdge.setStatusBarColor({ color: '#2a1f20' })
       await EdgeToEdge.setNavigationBarColor({ color: '#2a1f20' })
     } else {
