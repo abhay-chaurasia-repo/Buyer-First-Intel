@@ -8,8 +8,12 @@ import { Capacitor } from '@capacitor/core'
 import type { ResolvedAddress } from '@/data/addressTypes'
 import { DEMO_PROPERTY, type MockProperty } from '@/data/mockProperty'
 import { isHouseNumberOnlyQuery, resolveAddress, searchAddresses } from '@/lib/addressSearch'
-import { invokePropertyLookup, type PropertyLookupPayload } from '@/lib/propertyLookupClient'
-import { isSupabaseConfigured } from '@/lib/supabaseClient'
+import {
+  describeLookupDiagnostic,
+  getLastLookupDiagnostic,
+  invokePropertyLookup,
+  type PropertyLookupPayload,
+} from '@/lib/propertyLookupClient'
 
 /**
  * Demo county/tax/sale fields must never ride along on a real address shell.
@@ -349,10 +353,10 @@ function statusFor(property: MockProperty, warning?: string): PropertyLookupStat
 
 function nativePendingWarning() {
   if (!Capacitor.isNativePlatform()) return undefined
-  if (!isSupabaseConfigured()) {
-    return 'This iOS/Android build has no Supabase keys, so ATTOM cannot load. Rebuild with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local.'
-  }
-  return 'County records did not load on this device. Check your connection and search the address again.'
+  return (
+    describeLookupDiagnostic(getLastLookupDiagnostic()) ??
+    'County records did not load on this device. Check your connection and search the address again.'
+  )
 }
 
 function resultFromPayload(
