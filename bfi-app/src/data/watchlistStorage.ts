@@ -30,6 +30,36 @@ export function visitPlanStatus(item: WatchlistItem): VisitPlanStatus {
   return 'unplanned'
 }
 
+export function watchlistAddressKey(parts: { address: string; city?: string; state?: string }) {
+  return [parts.address, parts.city, parts.state]
+    .map((part) => (part || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim())
+    .filter(Boolean)
+    .join(' ')
+}
+
+export function findWatchlistMatch(property: {
+  id: string
+  address: string
+  city: string
+  state: string
+}): WatchlistItem | undefined {
+  const items = loadWatchlist()
+  const byId = items.find((item) => item.id === property.id)
+  if (byId) return byId
+  const key = watchlistAddressKey(property)
+  if (!key) return undefined
+  return items.find((item) => watchlistAddressKey(item) === key)
+}
+
+export function isPropertyOnWatchlist(property: {
+  id: string
+  address: string
+  city: string
+  state: string
+}) {
+  return Boolean(findWatchlistMatch(property))
+}
+
 function normalizeItem(raw: WatchlistItem): WatchlistItem {
   const plannedVisitAt = raw.plannedVisitAt || null
   return {
@@ -86,7 +116,10 @@ export function isOnWatchlist(propertyId: string): boolean {
 
 export function addToWatchlist(property: MockProperty): WatchlistItem[] {
   const current = loadWatchlist()
-  if (current.some((item) => item.id === property.id)) return current
+  const existing = findWatchlistMatch(property)
+  if (existing) {
+    return alignWatchlistWithProperty(property)
+  }
 
   const visitedAt = loadBuyerVerified(property.id) ? new Date().toISOString() : null
 
@@ -135,6 +168,37 @@ export function markWatchlistVisited(propertyId: string, visited = true): Watchl
   })
 }
 
+/** Point a saved home at the live property id after address lookup. */
+export function alignWatchlistWithProperty(property: MockProperty): WatchlistItem[] {
+  const match = findWatchlistMatch(property)
+  if (!match) return loadWatchlist()
+  const next = loadWatchlist().map((item) => {
+    if (item.id !== match.id) return item
+    return {
+      ...item,
+      id: property.id,
+      address: property.address,
+      city: property.city,
+      state: property.state,
+      zipCode: property.zipCode || item.zipCode,
+      bedrooms: property.bedrooms || item.bedrooms,
+      bathrooms: property.bathrooms || item.bathrooms,
+      sqft: property.sqft || item.sqft,
+    }
+  })
+  persistWatchlist(sortWatchlist(next))
+  return next
+}
+
+/** GPS Verify counts as a visit on Homes in Diligence (matched by id or address). */
+export function recordWatchlistVisitFromVerify(property: MockProperty): WatchlistItem[] {
+  alignWatchlistWithProperty(property)
+  const match = findWatchlistMatch(property)
+  if (!match) return loadWatchlist()
+  if (match.visitedAt) return loadWatchlist()
+  return markWatchlistVisited(match.id, true)
+}
+
 export function setWatchlistPlannedVisit(
   propertyId: string,
   plannedVisitAt: string | null,
@@ -147,8 +211,9 @@ export function setWatchlistPlannedVisit(
 }
 
 export function toggleWatchlist(property: MockProperty): { starred: boolean; items: WatchlistItem[] } {
-  if (isOnWatchlist(property.id)) {
-    return { starred: false, items: removeFromWatchlist(property.id) }
+  const match = findWatchlistMatch(property)
+  if (match) {
+    return { starred: false, items: removeFromWatchlist(match.id) }
   }
   return { starred: true, items: addToWatchlist(property) }
 }

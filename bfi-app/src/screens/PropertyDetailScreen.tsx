@@ -37,7 +37,12 @@ import {
   loadNearbyNudgeEnabled,
   persistNearbyNudgeEnabled,
 } from '@/data/gpsSettings'
-import { isOnWatchlist, toggleWatchlist } from '@/data/watchlistStorage'
+import {
+  alignWatchlistWithProperty,
+  isPropertyOnWatchlist,
+  recordWatchlistVisitFromVerify,
+  toggleWatchlist,
+} from '@/data/watchlistStorage'
 import {
   attemptGpsVerify,
   GPS_NEARBY_NUDGE_METERS,
@@ -95,7 +100,7 @@ export function PropertyDetailScreen() {
   const [lookupBusy, setLookupBusy] = useState(true)
   const propertyKey = property.id
 
-  const [starred, setStarred] = useState(() => isOnWatchlist(property.id) || property.starred)
+  const [starred, setStarred] = useState(() => isPropertyOnWatchlist(property) || property.starred)
   const [verified, setVerified] = useState(() => loadGpsVerified(property.id))
   const [verifyBusy, setVerifyBusy] = useState(false)
   const [verifyMessage, setVerifyMessage] = useState<{
@@ -122,6 +127,7 @@ export function PropertyDetailScreen() {
       setProperty(result.property)
       setLookupStatus(result.status)
       setLookupBusy(false)
+      alignWatchlistWithProperty(result.property)
     })
 
     return () => {
@@ -130,7 +136,7 @@ export function PropertyDetailScreen() {
   }, [query, ownerId])
 
   useEffect(() => {
-    setStarred(isOnWatchlist(property.id) || property.starred)
+    setStarred(isPropertyOnWatchlist(property) || property.starred)
     setVerified(loadGpsVerified(property.id))
     setNearbyNudgeEnabled(loadNearbyNudgeEnabled())
     setNearby(false)
@@ -221,6 +227,7 @@ export function PropertyDetailScreen() {
         distanceMeters: result.distanceMeters,
         accuracyMeters: result.accuracyMeters,
       })
+      recordWatchlistVisitFromVerify(property)
       setVerified(true)
       setVerifyMessage({
         tone: 'ok',
