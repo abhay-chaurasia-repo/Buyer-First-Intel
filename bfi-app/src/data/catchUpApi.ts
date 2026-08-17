@@ -125,7 +125,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       type: 'discrepancy',
       channel: 'county-living-area',
       unreadCount: 1,
-      headline: 'County living-area fact',
+      headline: 'Gross living area',
       preview: live
         ? isMissingCountyNumber(property.sqft)
           ? 'Gross living area is not published in county records for this parcel. Compare listing size on Zillow or Redfin when available.'
