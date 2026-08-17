@@ -1,12 +1,14 @@
 # Property data plan (address → ATTOM → schools → GPS)
 
-## Step 1 — Address search (Google Places + fallbacks)
+## Step 1 — Address search (Google Places New + fallbacks)
 - Client: `src/lib/addressSearch.ts`, `src/lib/propertyLookup.ts`
 - **Primary:** Google Places API (New) Autocomplete + Place Details via Vite `/api/property-lookup` or Edge Function
   - Env: `GOOGLE_MAPS_API_KEY` (server-only, never `VITE_*`)
-  - Key must allow server calls: Application restriction **None** (or IP), API restriction **Places API (New)**
+  - Then Geocoding API, then Address Validation API, for complete typed addresses the Autocomplete miss
+  - Key must allow server calls: Application restriction **None** (or IP), **not Websites**
+  - Enable: **Places API (New)**, **Geocoding API**, **Address Validation API**
   - Billing required on the Google Cloud project
-- Fallbacks: Census Geocoder, then browser Photon/Nominatim
+- Fallbacks: Census Geocoder, ATTOM address, then a typed US street + city + state
 - After an address is chosen, Step 2 (ATTOM) still loads County’s Fact / tax / sales
 
 ## Step 2 — ATTOM county facts + tax + sales (done in code)

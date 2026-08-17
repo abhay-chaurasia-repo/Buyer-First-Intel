@@ -128,6 +128,92 @@ function componentByType(components: GoogleAddressComponent[], type: string) {
   return components.find((c) => Array.isArray(c.types) && c.types.includes(type))
 }
 
+const US_STATE_ABBR: Record<string, string> = {
+  alabama: 'AL',
+  alaska: 'AK',
+  arizona: 'AZ',
+  arkansas: 'AR',
+  california: 'CA',
+  colorado: 'CO',
+  connecticut: 'CT',
+  delaware: 'DE',
+  florida: 'FL',
+  georgia: 'GA',
+  hawaii: 'HI',
+  idaho: 'ID',
+  illinois: 'IL',
+  indiana: 'IN',
+  iowa: 'IA',
+  kansas: 'KS',
+  kentucky: 'KY',
+  louisiana: 'LA',
+  maine: 'ME',
+  maryland: 'MD',
+  massachusetts: 'MA',
+  michigan: 'MI',
+  minnesota: 'MN',
+  mississippi: 'MS',
+  missouri: 'MO',
+  montana: 'MT',
+  nebraska: 'NE',
+  nevada: 'NV',
+  'new hampshire': 'NH',
+  'new jersey': 'NJ',
+  'new mexico': 'NM',
+  'new york': 'NY',
+  'north carolina': 'NC',
+  'north dakota': 'ND',
+  ohio: 'OH',
+  oklahoma: 'OK',
+  oregon: 'OR',
+  pennsylvania: 'PA',
+  'rhode island': 'RI',
+  'south carolina': 'SC',
+  'south dakota': 'SD',
+  tennessee: 'TN',
+  texas: 'TX',
+  utah: 'UT',
+  vermont: 'VT',
+  virginia: 'VA',
+  washington: 'WA',
+  'west virginia': 'WV',
+  wisconsin: 'WI',
+  wyoming: 'WY',
+  'district of columbia': 'DC',
+}
+
+function normalizeUsState(raw: string): string {
+  const trimmed = raw.trim()
+  if (/^[A-Za-z]{2}$/.test(trimmed)) return trimmed.toUpperCase()
+  return US_STATE_ABBR[trimmed.toLowerCase()] || ''
+}
+
+function parseFormattedUsAddress(formatted?: string): {
+  street: string
+  city: string
+  state: string
+  zipCode: string
+} | null {
+  if (!formatted) return null
+  const parts = formatted
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part && !/^(USA|United States)$/i.test(part))
+  if (parts.length < 3) return null
+  const street = parts[0]!
+  const city = parts[1]!
+  const stateZip = parts[2]!.match(/^(.+?)(?:\s+(\d{5})(?:-\d{4})?)?$/)
+  if (!/^\d+[A-Za-z]?\s+\S+/.test(street) || !city || !stateZip) return null
+  const state = normalizeUsState(stateZip[1]!)
+  if (!state) return null
+  return {
+    street: titleCaseStreet(street),
+    city: titleCaseStreet(city),
+    state,
+    zipCode: stateZip[2] || '',
+  }
+}
+
 function googlePlaceToResolved(
   placeId: string,
   place: {
@@ -137,38 +223,45 @@ function googlePlaceToResolved(
   },
 ): ResolvedAddress | null {
   const components = place.addressComponents || []
+  const parsed = parseFormattedUsAddress(place.formattedAddress)
   const streetNumber = componentByType(components, 'street_number')?.longText || ''
   const route = componentByType(components, 'route')?.longText || ''
-  const street = titleCaseStreet([streetNumber, route].filter(Boolean).join(' '))
+  const street =
+    titleCaseStreet([streetNumber, route].filter(Boolean).join(' ')) || parsed?.street || ''
   if (!street) return null
 
-  const city =
+  const city = titleCaseStreet(
     componentByType(components, 'locality')?.longText ||
-    componentByType(components, 'sublocality')?.longText ||
-    componentByType(components, 'neighborhood')?.longText ||
-    componentByType(components, 'administrative_area_level_3')?.longText ||
-    ''
-  const state =
+      componentByType(components, 'sublocality')?.longText ||
+      componentByType(components, 'sublocality_level_1')?.longText ||
+      componentByType(components, 'neighborhood')?.longText ||
+      componentByType(components, 'administrative_area_level_3')?.longText ||
+      parsed?.city ||
+      '',
+  )
+  const state = normalizeUsState(
     componentByType(components, 'administrative_area_level_1')?.shortText ||
-    componentByType(components, 'administrative_area_level_1')?.longText ||
+      componentByType(components, 'administrative_area_level_1')?.longText ||
+      parsed?.state ||
+      '',
+  )
+  const zipCode = (
+    componentByType(components, 'postal_code')?.longText ||
+    parsed?.zipCode ||
     ''
-  const zipCode = (componentByType(components, 'postal_code')?.longText || '').trim()
+  ).trim()
   if (!city || !state) return null
 
   const lat = num(place.location?.latitude) ?? 0
   const lng = num(place.location?.longitude) ?? 0
-  const stateAbbr = state.toUpperCase().slice(0, 2)
-  const cityTitle = titleCaseStreet(city)
-  const formatted = zipCode
-    ? `${street}, ${cityTitle}, ${stateAbbr} ${zipCode}`
-    : `${street}, ${cityTitle}, ${stateAbbr}`
+  const formatted = zipCode ? `${street}, ${city}, ${state} ${zipCode}` : `${street}, ${city}, ${state}`
 
   return {
-    id: stableAddressId({ street, city: cityTitle, state: stateAbbr, zipCode }),
+    id: stableAddressId({ street, city, state, zipCode }),
     formatted,
     street,
-    city: cityTitle,
-    state: stateAbbr,
+    city,
+    state,
     zipCode,
     lat,
     lng,
@@ -178,20 +271,43 @@ function googlePlaceToResolved(
   }
 }
 
-async function searchGooglePlaces(query: string, apiKey: string): Promise<ResolvedAddress[]> {
+function googleHttpError(status: number, body: string, api: string) {
+  if (status === 403) {
+    return `${api} HTTP 403 — enable Places API (New), Geocoding, and Address Validation. Do not restrict this server key to websites.`
+  }
+  return `${api} HTTP ${status}${body ? `: ${body.slice(0, 120)}` : ''}`
+}
+
+async function searchGooglePlaces(query: string, apiKey: string): Promise<{
+  matches: ResolvedAddress[]
+  error?: string
+}> {
   const autoRes = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask':
+        'suggestions.placePrediction.place,suggestions.placePrediction.placeId,suggestions.placePrediction.text',
     },
     body: JSON.stringify({
       input: query,
-      includedRegionCodes: ['us'],
+      includedRegionCodes: ['US'],
+      regionCode: 'US',
       languageCode: 'en',
+      // Edge IPs are not the buyer’s phone — don’t let server IP bias hide GA homes.
+      locationBias: {
+        rectangle: {
+          low: { latitude: 24.2, longitude: -125.0 },
+          high: { latitude: 49.6, longitude: -66.5 },
+        },
+      },
     }),
   })
-  if (!autoRes.ok) return []
+  if (!autoRes.ok) {
+    const body = await autoRes.text().catch(() => '')
+    return { matches: [], error: googleHttpError(autoRes.status, body, 'Places Autocomplete') }
+  }
   const autoJson = await autoRes.json().catch(() => null)
   const placeIds: string[] = []
   for (const suggestion of autoJson?.suggestions || []) {
@@ -202,7 +318,7 @@ async function searchGooglePlaces(query: string, apiKey: string): Promise<Resolv
     placeIds.push(id)
     if (placeIds.length >= 5) break
   }
-  if (placeIds.length === 0) return []
+  if (placeIds.length === 0) return { matches: [] }
 
   const details = await Promise.all(
     placeIds.map(async (placeId) => {
@@ -224,7 +340,112 @@ async function searchGooglePlaces(query: string, apiKey: string): Promise<Resolv
     }),
   )
 
-  return details.filter(Boolean) as ResolvedAddress[]
+  return { matches: details.filter(Boolean) as ResolvedAddress[] }
+}
+
+async function searchGoogleGeocode(query: string, apiKey: string): Promise<{
+  matches: ResolvedAddress[]
+  error?: string
+}> {
+  const url = new URL('https://maps.googleapis.com/maps/api/geocode/json')
+  url.searchParams.set('address', query)
+  url.searchParams.set('components', 'country:US')
+  url.searchParams.set('key', apiKey)
+  const res = await fetch(url.toString())
+  const json = await res.json().catch(() => null)
+  if (!res.ok) {
+    return { matches: [], error: googleHttpError(res.status, JSON.stringify(json || {}), 'Geocoding') }
+  }
+  if (json?.status && json.status !== 'OK' && json.status !== 'ZERO_RESULTS') {
+    return { matches: [], error: `Geocoding ${json.status}${json.error_message ? `: ${json.error_message}` : ''}` }
+  }
+  const matches: ResolvedAddress[] = []
+  for (const result of json?.results || []) {
+    const components = (result.address_components || []).map((c: {
+      long_name?: string
+      short_name?: string
+      types?: string[]
+    }) => ({
+      longText: c.long_name,
+      shortText: c.short_name,
+      types: c.types,
+    }))
+    const resolved = googlePlaceToResolved('geocode', {
+      formattedAddress: result.formatted_address,
+      addressComponents: components,
+      location: {
+        latitude: result.geometry?.location?.lat,
+        longitude: result.geometry?.location?.lng,
+      },
+    })
+    if (resolved) matches.push(resolved)
+    if (matches.length >= 5) break
+  }
+  return { matches }
+}
+
+async function searchGoogleAddressValidation(query: string, apiKey: string): Promise<{
+  matches: ResolvedAddress[]
+  error?: string
+}> {
+  const res = await fetch(
+    `https://addressvalidation.googleapis.com/v1:validateAddress?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address: {
+          regionCode: 'US',
+          addressLines: [query],
+        },
+      }),
+    },
+  )
+  const json = await res.json().catch(() => null)
+  if (!res.ok) {
+    return {
+      matches: [],
+      error: googleHttpError(res.status, JSON.stringify(json || {}), 'Address Validation'),
+    }
+  }
+  const address = json?.result?.address
+  const geocode = json?.result?.geocode
+  const components = (address?.addressComponents || []).map((c: {
+    componentType?: string
+    componentName?: { text?: string }
+  }) => ({
+    longText: c.componentName?.text,
+    shortText: c.componentName?.text,
+    types: c.componentType ? [c.componentType] : [],
+  }))
+  const resolved = googlePlaceToResolved('address-validation', {
+    formattedAddress: address?.formattedAddress,
+    addressComponents: components,
+    location: {
+      latitude: geocode?.location?.latitude,
+      longitude: geocode?.location?.longitude,
+    },
+  })
+  return { matches: resolved ? [resolved] : [] }
+}
+
+async function searchGoogleAddresses(query: string, apiKey: string): Promise<{
+  matches: ResolvedAddress[]
+  error?: string
+}> {
+  const places = await searchGooglePlaces(query, apiKey)
+  if (places.matches.length > 0) return places
+
+  const geocode = await searchGoogleGeocode(query, apiKey)
+  if (geocode.matches.length > 0) return geocode
+
+  const validated = await searchGoogleAddressValidation(query, apiKey)
+  if (validated.matches.length > 0) return validated
+
+  return {
+    matches: [],
+    error: places.error || geocode.error || validated.error,
+  }
 }
 
 const STREET_TOKEN_EXPAND: Record<string, string> = {
@@ -444,25 +665,38 @@ async function typedAddressMatch(query: string): Promise<ResolvedAddress | null>
   }
 }
 
-async function searchAddressesForQuery(query: string): Promise<ResolvedAddress[]> {
-  const googleKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
+async function searchAddressesForQuery(query: string): Promise<{
+  matches: ResolvedAddress[]
+  googleConfigured: boolean
+  googleError?: string
+}> {
+  const googleKey = Deno.env.get('GOOGLE_MAPS_API_KEY')?.trim()
   const variants = addressQueryVariants(query)
+  let googleError: string | undefined
 
   if (googleKey) {
     for (const variant of variants) {
       try {
-        const google = await searchGooglePlaces(variant, googleKey)
-        if (google.length > 0) return google
-      } catch {
-        // try next variant / Census / ATTOM
+        const google = await searchGoogleAddresses(variant, googleKey)
+        if (google.matches.length > 0) {
+          return { matches: google.matches, googleConfigured: true }
+        }
+        googleError = google.error || googleError
+      } catch (error) {
+        googleError = error instanceof Error ? error.message : 'Google address search failed'
       }
     }
+  } else {
+    googleError =
+      'Google Maps key is not set on the Edge Function. Set GOOGLE_MAPS_API_KEY and redeploy property-lookup.'
   }
 
   for (const variant of variants) {
     try {
       const census = await searchCensus(variant)
-      if (census.length > 0) return census
+      if (census.length > 0) {
+        return { matches: census, googleConfigured: Boolean(googleKey), googleError }
+      }
     } catch {
       // try ATTOM — newer streets are often missing from Census
     }
@@ -470,11 +704,17 @@ async function searchAddressesForQuery(query: string): Promise<ResolvedAddress[]
 
   for (const variant of variants) {
     const attom = await searchAttomAddress(variant)
-    if (attom.length > 0) return attom
+    if (attom.length > 0) {
+      return { matches: attom, googleConfigured: Boolean(googleKey), googleError }
+    }
   }
 
   const typed = await typedAddressMatch(query)
-  return typed ? [typed] : []
+  return {
+    matches: typed ? [typed] : [],
+    googleConfigured: Boolean(googleKey),
+    googleError,
+  }
 }
 
 function num(value: unknown): number | undefined {
@@ -1287,11 +1527,19 @@ Deno.serve(async (req) => {
       })
     }
 
-    const matches = await searchAddressesForQuery(query)
+    const search = await searchAddressesForQuery(query)
+    const matches = search.matches
     if (mode === 'search') {
-      return new Response(JSON.stringify({ matches }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({
+          matches,
+          googleConfigured: search.googleConfigured,
+          googleError: search.googleError,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     let match = matches[0] ?? (await typedAddressMatch(query))

@@ -20,5 +20,5 @@ export type ResolvedAddress = {
 }
 
 export type AddressSearchResult =
-  | { ok: true; matches: ResolvedAddress[] }
+  | { ok: true; matches: ResolvedAddress[]; googleHint?: string }
   | { ok: false; error: string; matches: [] }

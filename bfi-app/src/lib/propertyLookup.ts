@@ -543,6 +543,22 @@ function dedupeMatches(matches: ResolvedAddress[]) {
   return out
 }
 
+function googleHintFromPayload(payload: LookupPayload | null | undefined): string | undefined {
+  if (!payload) return undefined
+  if (payload.googleConfigured === false) {
+    return Capacitor.isNativePlatform()
+      ? 'Google address search is not set on the server. Set GOOGLE_MAPS_API_KEY and redeploy property-lookup.'
+      : 'Google address search is not set. Add GOOGLE_MAPS_API_KEY to bfi-app/.env.local and restart the dev server.'
+  }
+  return payload.googleError
+}
+
+function hintIfNoGoogleMatch(matches: ResolvedAddress[], hint?: string) {
+  if (!hint) return undefined
+  if (matches.some((match) => match.source === 'google')) return undefined
+  return hint
+}
+
 export async function suggestAddresses(query: string) {
   const trimmed = query.trim()
   const recent = recentAddressesMatching(trimmed).map((m) => lockHouseNumberToQuery(trimmed, m))
@@ -556,28 +572,36 @@ export async function suggestAddresses(query: string) {
     return { ok: true as const, matches: recent.slice(0, 6) }
   }
 
+  let googleHint: string | undefined
+
   for (const variant of addressQueryVariants(trimmed)) {
     const local = await lookupViaLocalApi(variant, 'search')
+    googleHint = googleHintFromPayload(local) ?? googleHint
     if (local?.matches && local.matches.length > 0) {
+      const matches = dedupeMatches([
+        ...recent,
+        ...local.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
+      ]).slice(0, 6)
       return {
         ok: true as const,
-        matches: dedupeMatches([
-          ...recent,
-          ...local.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
-        ]).slice(0, 6),
+        matches,
+        googleHint: hintIfNoGoogleMatch(matches, googleHint),
       }
     }
   }
 
   for (const variant of addressQueryVariants(trimmed)) {
     const edge = await lookupViaEdge(variant, 'search')
+    googleHint = googleHintFromPayload(edge) ?? googleHint
     if (edge?.matches && edge.matches.length > 0) {
+      const matches = dedupeMatches([
+        ...recent,
+        ...edge.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
+      ]).slice(0, 6)
       return {
         ok: true as const,
-        matches: dedupeMatches([
-          ...recent,
-          ...edge.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
-        ]).slice(0, 6),
+        matches,
+        googleHint: hintIfNoGoogleMatch(matches, googleHint),
       }
     }
   }
@@ -586,17 +610,25 @@ export async function suggestAddresses(query: string) {
   const typed = await typedAddressMatch(trimmed)
   if (!result.ok) {
     if (typed) {
-      return { ok: true as const, matches: dedupeMatches([...recent, typed]).slice(0, 6) }
+      return {
+        ok: true as const,
+        matches: dedupeMatches([...recent, typed]).slice(0, 6),
+        googleHint,
+      }
     }
-    if (recent.length > 0) return { ok: true as const, matches: recent.slice(0, 6) }
+    if (recent.length > 0) {
+      return { ok: true as const, matches: recent.slice(0, 6), googleHint }
+    }
     return result
   }
+  const matches = dedupeMatches([
+    ...recent,
+    ...(typed ? [typed] : []),
+    ...result.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
+  ]).slice(0, 6)
   return {
     ok: true as const,
-    matches: dedupeMatches([
-      ...recent,
-      ...(typed ? [typed] : []),
-      ...result.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
-    ]).slice(0, 6),
+    matches,
+    googleHint: hintIfNoGoogleMatch(matches, googleHint || result.googleHint),
   }
 }

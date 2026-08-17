@@ -21,6 +21,8 @@ export type PropertyLookupPayload = {
   factsStatus?: 'demo' | 'live' | 'pending'
   attomError?: string | null
   error?: string
+  googleConfigured?: boolean
+  googleError?: string
 }
 
 /**

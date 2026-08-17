@@ -42,6 +42,7 @@ export function HomeScreen() {
   const [suggestions, setSuggestions] = useState<ResolvedAddress[]>([])
   const [suggestBusy, setSuggestBusy] = useState(false)
   const [suggestError, setSuggestError] = useState<string | null>(null)
+  const [googleHint, setGoogleHint] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const paywallRef = useRef<HTMLDivElement>(null)
@@ -105,6 +106,7 @@ export function HomeScreen() {
     if (trimmed.length === 0) {
       setSuggestions([])
       setSuggestError(null)
+      setGoogleHint(null)
       setSuggestBusy(false)
       setShowSuggestions(false)
       return
@@ -120,10 +122,12 @@ export function HomeScreen() {
         setSuggestBusy(false)
         if (!result.ok) {
           setSuggestError(result.error)
+          setGoogleHint(null)
           setSuggestions([])
           return
         }
         setSuggestError(null)
+        setGoogleHint(result.googleHint ?? null)
         setSuggestions(result.matches)
       })
     }, houseOnly ? 80 : 160)
@@ -172,7 +176,8 @@ export function HomeScreen() {
     if (!match) {
       setQuotaBusy(false)
       setSearchError(
-        'No US address match found. Add city and state, and spell out the street (example: 2212 Fern Park Dr, Chamblee, GA).',
+        result.googleHint ||
+          'No US address match found. Add city and state, and spell out the street (example: 2212 Fern Park Dr, Chamblee, GA).',
       )
       setShowSuggestions(true)
       return
@@ -350,7 +355,10 @@ export function HomeScreen() {
                 {suggestError ? (
                   <p className="px-3 py-3 text-[12px] text-red-300">{suggestError}</p>
                 ) : null}
-                {!suggestBusy && !suggestError && visibleSuggestions.length === 0 ? (
+                {!suggestBusy && !suggestError && googleHint ? (
+                  <p className="px-3 py-3 text-[12px] text-saffron-glow">{googleHint}</p>
+                ) : null}
+                {!suggestBusy && !suggestError && !googleHint && visibleSuggestions.length === 0 ? (
                   <p className="px-3 py-3 text-[12px] text-night-faint">
                     {houseOnly
                       ? 'Keep going — type the street (e.g. 3147 Swallow) and options appear.'
