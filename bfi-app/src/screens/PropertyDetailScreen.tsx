@@ -229,9 +229,10 @@ export function PropertyDetailScreen() {
       })
       recordWatchlistVisitFromVerify(property)
       setVerified(true)
+      setStarred(true)
       setVerifyMessage({
         tone: 'ok',
-        text: `Verified within ${GPS_VERIFY_RADIUS_METERS}m (${result.distanceMeters}m away, ±${result.accuracyMeters}m). On-site labels unlocked for ${GPS_VERIFY_TTL_LABEL}. Add a Plus or Watch in Buyer Community.`,
+        text: `Verified within ${GPS_VERIFY_RADIUS_METERS}m (${result.distanceMeters}m away, ±${result.accuracyMeters}m). Saved to Homes in Diligence as visited. On-site labels unlocked for ${GPS_VERIFY_TTL_LABEL}.`,
       })
       notifyContributeAfterVerify(property.address)
     } else {

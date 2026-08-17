@@ -190,9 +190,13 @@ export function alignWatchlistWithProperty(property: MockProperty): WatchlistIte
   return next
 }
 
-/** GPS Verify counts as a visit on Homes in Diligence (matched by id or address). */
+/** GPS Verify saves the home to Homes in Diligence and marks it visited. */
 export function recordWatchlistVisitFromVerify(property: MockProperty): WatchlistItem[] {
-  alignWatchlistWithProperty(property)
+  if (!findWatchlistMatch(property)) {
+    addToWatchlist(property)
+  } else {
+    alignWatchlistWithProperty(property)
+  }
   const match = findWatchlistMatch(property)
   if (!match) return loadWatchlist()
   if (match.visitedAt) return loadWatchlist()
