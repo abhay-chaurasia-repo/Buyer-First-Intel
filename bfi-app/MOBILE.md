@@ -97,13 +97,45 @@ Checklist for live county data on emulator/device:
 
 Android 15/16 forces edge-to-edge. This project uses `@capawesome/capacitor-android-edge-to-edge-support` so status/nav bars match brand night `#2a1f20`.
 
-GPS **permission sheets** are Android system UI — they stay light-themed; the app cannot recolor them.
+GPS **permission sheets** are Android/iOS system UI — they stay system-themed; the app cannot recolor them.
+
+## iOS first run (Mac + Xcode)
+
+```bash
+cd bfi-app
+git pull origin cursor/create-bfi-app-vite-bd56
+npm install
+npm run cap:ios          # build + sync + open Xcode
+```
+
+In Xcode:
+1. Top device menu → **iPhone 16** (or any recent Simulator)
+2. Click **Run ▶** (or ⌘R)
+3. First run may ask to trust the Mac developer certificate — accept
+
+### Simulator GPS (for Verify testing)
+**Features → Location → Custom Location…**  
+Example near Marietta sample: lat `34.0`, lng `-84.5` (adjust to the property pin), or **City Run** then try Verify (expect “too far” unless near the pin).
+
+### Page checklist (same app as Android / web)
+
+| Screen | What to confirm |
+|---|---|
+| Search / home | Brand loads; address typeahead |
+| Property shell | `3147 Swallow Dr NE, Marietta, GA 30066` resolves |
+| County’s Fact | Live ATTOM fields when Edge + `VITE_SUPABASE_*` baked in |
+| Sales History | Deed rows / amounts when live |
+| Tax History | Multi-year assessments when live |
+| Schools | District/campuses or ATTOM empty state |
+| Verified Visits / Community | Copy + GPS gate messaging |
+| Verify | Location permission → distance pass/fail |
+| Homes in Diligence / Journey / Rules | Nav + pages open |
 
 ## Commands cheat sheet
 
 | Script | Purpose |
 |---|---|
-| `npm run cap:sync` | Web build + sync into native projects |
+| `npm run cap:sync` | Web build + sync into ios/ + android/ |
 | `npm run cap:android` | Sync + open Android Studio |
 | `npm run cap:ios` | Sync + open Xcode |
 | `npx cap doctor` | Check Capacitor health |
