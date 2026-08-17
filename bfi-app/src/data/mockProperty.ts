@@ -576,7 +576,7 @@ export function getChannelCanvas(
       },
       fields: [
         {
-          label: 'County living area',
+          label: 'Gross living area',
           value: formatCountySqft(property.sqft),
           source: 'ATTOM basicprofile',
         },
