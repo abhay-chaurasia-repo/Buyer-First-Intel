@@ -126,8 +126,11 @@ In Xcode:
 3. First run may ask to trust the Mac developer certificate — accept
 
 ### Simulator GPS (for Verify testing)
+
+The Simulator does **not** use your Mac’s location. Default Simulator GPS is usually Apple Park (California), so Verify on a Georgia home shows thousands of miles away.
+
 **Features → Location → Custom Location…**  
-Example near Marietta sample: lat `34.0`, lng `-84.5` (adjust to the property pin), or **City Run** then try Verify (expect “too far” unless near the pin).
+Paste the property’s latitude/longitude (from County’s Fact / the address pin), then tap Verify. Or test Verify on a physical iPhone at the house.
 
 ### Page checklist (same app as Android / web)
 

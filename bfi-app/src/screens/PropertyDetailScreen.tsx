@@ -348,7 +348,7 @@ export function PropertyDetailScreen() {
                           : 'border-white/20 bg-night/25 text-night-faint',
                       )}
                     >
-                      {lookupBusy ? 'Matching address…' : lookupStatus?.warning}
+                      {lookupBusy ? 'Looking up this address…' : lookupStatus?.warning}
                     </p>
                   </div>
                 ) : null}

@@ -16,6 +16,25 @@ export const GPS_NEARBY_NUDGE_METERS = 300
 export const GPS_VERIFY_TTL_MS = 48 * 60 * 60 * 1000
 
 const EARTH_RADIUS_M = 6371000
+/** Farther than a walk — usually Simulator GPS or a computer, not standing at the house. */
+const FAR_FROM_HOME_METERS = 5_000
+
+function formatDistanceFromPin(meters: number) {
+  if (meters < 1000) return `about ${Math.round(meters)}m`
+  const miles = meters / 1609.344
+  if (miles >= 10) return `about ${Math.round(miles).toLocaleString()} miles`
+  return `about ${miles.toFixed(1)} miles`
+}
+
+function tooFarMessage(distance: number) {
+  if (distance >= FAR_FROM_HOME_METERS && Capacitor.isNativePlatform()) {
+    return `This GPS reading is ${formatDistanceFromPin(distance)} from the home — not at the house. The iOS Simulator does not use your laptop’s location. In Simulator: Features → Location → Custom Location, enter this home’s coordinates. Or tap Verify on an iPhone while you are at the property.`
+  }
+  if (distance >= FAR_FROM_HOME_METERS) {
+    return `This GPS reading is ${formatDistanceFromPin(distance)} from the home. A computer’s location is not the house pin. Open the app on your phone at the property, then tap Verify.`
+  }
+  return `You are about ${Math.round(distance)}m from the home pin. Move within ${GPS_VERIFY_RADIUS_METERS}m and try again.`
+}
 
 export function distanceMeters(
   lat1: number,
@@ -170,7 +189,7 @@ export async function attemptGpsVerify(property: {
       return {
         ok: false,
         reason: 'too_far',
-        message: `You are about ${Math.round(distance)}m from the home pin. Move within ${GPS_VERIFY_RADIUS_METERS}m and try again.`,
+        message: tooFarMessage(distance),
         distanceMeters: Math.round(distance),
         accuracyMeters: Math.round(accuracyMeters),
       }
