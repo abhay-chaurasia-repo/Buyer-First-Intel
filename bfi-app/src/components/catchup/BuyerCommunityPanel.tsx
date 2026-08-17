@@ -22,6 +22,31 @@ function voteCount(label: BuyerCommunityLabel, state: BuyerVoteState) {
   return label.seedVotes + boost
 }
 
+function sortLabelsByVotes(labels: BuyerCommunityLabel[], voteState: BuyerVoteState) {
+  return [...labels].sort((a, b) => {
+    const voteDiff = voteCount(b, voteState) - voteCount(a, voteState)
+    if (voteDiff !== 0) return voteDiff
+    if (a.tone !== b.tone) return a.tone === 'positive' ? -1 : 1
+    return a.text.localeCompare(b.text)
+  })
+}
+
+function labelsInFrozenOrder(labels: BuyerCommunityLabel[], frozenIds: string[]) {
+  const byId = new Map(labels.map((label) => [label.id, label]))
+  const seen = new Set<string>()
+  const ordered: BuyerCommunityLabel[] = []
+  for (const id of frozenIds) {
+    const label = byId.get(id)
+    if (!label) continue
+    ordered.push(label)
+    seen.add(id)
+  }
+  for (const label of labels) {
+    if (!seen.has(label.id)) ordered.push(label)
+  }
+  return ordered
+}
+
 function CategoryBlock({
   categoryId,
   title,
@@ -40,17 +65,10 @@ function CategoryBlock({
   onToggleVote: (labelId: string) => void
 }) {
   const [open, setOpen] = useState(true)
-
-  const sorted = useMemo(
-    () =>
-      [...labels].sort((a, b) => {
-        const voteDiff = voteCount(b, voteState) - voteCount(a, voteState)
-        if (voteDiff !== 0) return voteDiff
-        // Prefer positive labels when votes tie — keeps the surface from reading all-caution
-        if (a.tone !== b.tone) return a.tone === 'positive' ? -1 : 1
-        return a.text.localeCompare(b.text)
-      }),
-    [labels, voteState],
+  const [frozenIds] = useState(() => sortLabelsByVotes(labels, voteState).map((label) => label.id))
+  const displayLabels = useMemo(
+    () => labelsInFrozenOrder(labels, frozenIds),
+    [labels, frozenIds],
   )
 
   return (
@@ -76,7 +94,7 @@ function CategoryBlock({
       {open ? (
         <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
           <p className="px-2 pb-1 text-[11px] text-night-faint">{blurb}</p>
-          {sorted.map((label) => {
+          {displayLabels.map((label) => {
             const count = voteCount(label, voteState)
             const voted = voteState.myVotes.includes(label.id)
             const needsVisit = labelRequiresVisit(label)
@@ -196,7 +214,7 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
 
       {BUYER_LABEL_CATEGORIES.map((category) => (
         <CategoryBlock
-          key={category.id}
+          key={`${propertyId}-${ownerId}-${category.id}`}
           categoryId={category.id}
           title={category.title}
           blurb={category.blurb}

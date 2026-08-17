@@ -15,6 +15,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/auth/AuthProvider'
 import { loadBuyerVoteState } from '@/data/buyerCommunityStorage'
+import { loadGpsVerified } from '@/data/ownerScope'
 import {
   loadNotePad,
   notesCount,
@@ -66,6 +67,7 @@ function WatchlistMetaRail({
   noteCount = 0,
   reminderEnabled = false,
   hasShared = false,
+  contributeAvailable = false,
   onContribute,
   onOpenNotes,
 }: {
@@ -74,13 +76,14 @@ function WatchlistMetaRail({
   noteCount?: number
   reminderEnabled?: boolean
   hasShared?: boolean
+  contributeAvailable?: boolean
   onContribute?: () => void
   onOpenNotes?: () => void
 }) {
   const hasPlanned = Boolean(plannedVisitAt)
   const hasVisited = Boolean(visitedAt)
   const hasNotes = noteCount > 0
-  const canContribute = hasVisited && Boolean(onContribute)
+  const canContribute = contributeAvailable && Boolean(onContribute)
   if (!hasPlanned && !hasVisited && !hasNotes && !canContribute) return null
 
   return (
@@ -332,6 +335,7 @@ function WatchlistRow({
   const [hasShared, setHasShared] = useState(
     () => loadBuyerVoteState(item.id).myVotes.length > 0,
   )
+  const [gpsVerified, setGpsVerified] = useState(() => loadGpsVerified(item.id))
   const rowRef = useRef<HTMLLIElement>(null)
 
   useEffect(() => {
@@ -342,6 +346,7 @@ function WatchlistRow({
   useEffect(() => {
     const refreshShared = () => {
       setHasShared(loadBuyerVoteState(item.id).myVotes.length > 0)
+      setGpsVerified(loadGpsVerified(item.id))
     }
     refreshShared()
     window.addEventListener('focus', refreshShared)
@@ -419,8 +424,9 @@ function WatchlistRow({
             noteCount={noteCount}
             reminderEnabled={Boolean(item.reminderEnabled)}
             hasShared={hasShared}
+            contributeAvailable={Boolean(item.visitedAt) || gpsVerified}
             onContribute={
-              item.visitedAt ? () => onContribute(item) : undefined
+              item.visitedAt || gpsVerified ? () => onContribute(item) : undefined
             }
             onOpenNotes={() => {
               setOpen(true)

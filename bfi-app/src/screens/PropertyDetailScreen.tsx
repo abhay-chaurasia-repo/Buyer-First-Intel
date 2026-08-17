@@ -30,6 +30,10 @@ import {
 } from '@/data/mockProperty'
 import { loadGpsVerified, persistGpsVerified } from '@/data/ownerScope'
 import {
+  notifyContributeAfterVerify,
+  shouldNudgeCommunityContribute,
+} from '@/data/communityReminders'
+import {
   loadNearbyNudgeEnabled,
   persistNearbyNudgeEnabled,
 } from '@/data/gpsSettings'
@@ -38,6 +42,7 @@ import {
   attemptGpsVerify,
   GPS_NEARBY_NUDGE_METERS,
   GPS_VERIFY_RADIUS_METERS,
+  GPS_VERIFY_TTL_LABEL,
   locationPermissionGranted,
   watchNearbyProperty,
 } from '@/lib/gpsVerify'
@@ -178,6 +183,13 @@ export function PropertyDetailScreen() {
   const metrics = useMemo(() => getMetricCards(property), [property])
   const truncated = truncateAddress(property.address)
   const nudgeVerify = nearbyNudgeEnabled && nearby && !verified && !verifyBusy
+  const [needsContribute, setNeedsContribute] = useState(() =>
+    shouldNudgeCommunityContribute(property.id),
+  )
+
+  useEffect(() => {
+    setNeedsContribute(shouldNudgeCommunityContribute(property.id))
+  }, [property.id, verified, activeSurface])
 
   function handleToggleStar() {
     const result = toggleWatchlist(property)
@@ -212,8 +224,9 @@ export function PropertyDetailScreen() {
       setVerified(true)
       setVerifyMessage({
         tone: 'ok',
-        text: `Verified within ${GPS_VERIFY_RADIUS_METERS}m (${result.distanceMeters}m away, ±${result.accuracyMeters}m). On-site labels unlocked for 48 hours.`,
+        text: `Verified within ${GPS_VERIFY_RADIUS_METERS}m (${result.distanceMeters}m away, ±${result.accuracyMeters}m). On-site labels unlocked for ${GPS_VERIFY_TTL_LABEL}. Add a Plus or Watch in Buyer Community.`,
       })
+      notifyContributeAfterVerify(property.address)
     } else {
       setVerified(false)
       setVerifyMessage({ tone: 'warn', text: result.message })
@@ -376,18 +389,30 @@ export function PropertyDetailScreen() {
                   </button>
                 ) : null}
                 {verifyMessage ? (
-                  <p
-                    className={cn(
-                      'rounded-xl border px-3 py-2 text-[11px] leading-snug',
-                      verifyMessage.tone === 'warn'
-                        ? 'border-watch/40 bg-watch-soft text-watch-glow'
-                        : 'border-saffron/35 bg-saffron/10 text-saffron-glow',
-                    )}
-                    data-testid="gps-verify-status"
-                    role="status"
-                  >
-                    {verifyMessage.text}
-                  </p>
+                  <div className="space-y-2" data-testid="gps-verify-status">
+                    <p
+                      className={cn(
+                        'rounded-xl border px-3 py-2 text-[11px] leading-snug',
+                        verifyMessage.tone === 'warn'
+                          ? 'border-watch/40 bg-watch-soft text-watch-glow'
+                          : 'border-saffron/35 bg-saffron/10 text-saffron-glow',
+                      )}
+                      role="status"
+                    >
+                      {verifyMessage.text}
+                    </p>
+                    {verified && needsContribute && verifyMessage.tone === 'ok' ? (
+                      <button
+                        type="button"
+                        onClick={() => setActiveSurface('buyer-insights')}
+                        className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-saffron/45 bg-saffron/15 px-3 text-[12px] font-semibold text-saffron-glow touch-manipulation"
+                        data-testid="button-contribute-after-verify"
+                      >
+                        <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
+                        Add Plus / Watch labels
+                      </button>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             ) : null}
@@ -486,8 +511,10 @@ export function PropertyDetailScreen() {
                       strokeWidth={2.25}
                     />
                     <span>
-                      <span className="font-semibold text-night-ink">GPS verification:</span> tap
-                      Verify on this header while at the home to unlock on-site community upvotes.
+                      <span className="font-semibold text-night-ink">GPS verification:</span>{' '}
+                      {verified
+                        ? `On-site labels are unlocked for ${GPS_VERIFY_TTL_LABEL}. Add a Plus or Watch while you are here.`
+                        : 'tap Verify on this header while at the home to unlock on-site community upvotes.'}
                     </span>
                   </p>
 

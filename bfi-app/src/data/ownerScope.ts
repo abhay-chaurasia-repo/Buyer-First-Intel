@@ -5,6 +5,7 @@
 
 import { GUEST_OWNER_ID } from './authPolicy'
 import { loadAuthSession } from './authSession'
+import { GPS_VERIFY_TTL_MS } from '@/lib/gpsVerify'
 
 export { GUEST_OWNER_ID }
 
@@ -170,8 +171,7 @@ export type GpsVerifyRecord = {
   accuracyMeters?: number
 }
 
-/** 48h visit-scoped presence — matches GPS_VERIFY_TTL_MS in gpsVerify.ts */
-const GPS_VERIFY_TTL_MS = 48 * 60 * 60 * 1000
+/** Visit-scoped GPS Verify window — keep in sync with GPS_VERIFY_TTL_MS. */
 
 function parseGpsRecord(raw: string | null): GpsVerifyRecord | null {
   if (raw == null || raw === '0' || raw === '' || raw === '1') {

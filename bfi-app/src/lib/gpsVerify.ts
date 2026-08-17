@@ -13,7 +13,9 @@ export const GPS_VERIFY_MAX_ACCURACY_METERS = 80
 /** Soft “you’re near — tap Verify” zone (wider than the pass radius). */
 export const GPS_NEARBY_NUDGE_METERS = 300
 /** Verification expires so presence stays visit-scoped. */
-export const GPS_VERIFY_TTL_MS = 48 * 60 * 60 * 1000
+export const GPS_VERIFY_TTL_DAYS = 14
+export const GPS_VERIFY_TTL_MS = GPS_VERIFY_TTL_DAYS * 24 * 60 * 60 * 1000
+export const GPS_VERIFY_TTL_LABEL = '2 weeks'
 
 const EARTH_RADIUS_M = 6371000
 /** Farther than a walk — usually Simulator GPS or a computer, not standing at the house. */
