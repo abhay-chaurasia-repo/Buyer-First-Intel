@@ -10,10 +10,14 @@ const config: CapacitorConfig = {
   appName: 'Due Diligence',
   webDir: 'dist',
   server: {
-    // Use https cleartext only for optional live-reload against a LAN Vite server.
     androidScheme: 'https',
+    // Match Android origin so Edge Function CORS treats iOS like a normal HTTPS client.
+    iosScheme: 'https',
   },
   plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
     // Capawesome owns inset padding; disable Capacitor core auto-insets to avoid double padding.
     SystemBars: {
       insetsHandling: 'disable',

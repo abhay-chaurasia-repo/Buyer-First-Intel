@@ -106,6 +106,20 @@ async function readPosition(): Promise<PositionFix> {
   }
 }
 
+/** True when native location is already granted (does not show the system sheet). */
+export async function locationPermissionGranted(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) {
+    return typeof navigator !== 'undefined' && Boolean(navigator.geolocation)
+  }
+  try {
+    const status = await Geolocation.checkPermissions()
+    const location = status.location || status.coarseLocation
+    return location === 'granted'
+  } catch {
+    return false
+  }
+}
+
 export async function attemptGpsVerify(property: {
   lat?: number
   lng?: number
@@ -249,7 +263,20 @@ export function watchNearbyProperty(
   if (Capacitor.isNativePlatform()) {
     void (async () => {
       try {
-        await Geolocation.requestPermissions()
+        const status = await Geolocation.checkPermissions()
+        const granted =
+          status.location === 'granted' || status.coarseLocation === 'granted'
+        if (!granted) {
+          if (!cancelled) {
+            onUpdate({
+              nearby: false,
+              distanceMeters: null,
+              accuracyMeters: null,
+              error: 'prompt',
+            })
+          }
+          return
+        }
         if (cancelled) return
         nativeWatchId = await Geolocation.watchPosition(
           {

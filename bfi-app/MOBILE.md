@@ -93,6 +93,10 @@ Checklist for live county data on emulator/device:
 4. Rebuild after env changes: `npm run cap:sync` then Run ▶ again  
    (Vite bakes `VITE_*` in at **build** time)
 
+iOS Simulator uses the same Edge path. If county facts stay pending on iOS but work on Android, rebuild after this native-HTTP lookup fix (`npm run cap:ios`). Delete the app from the Simulator first so stale pending cache is gone.
+
+The iOS/Android **Allow location** sheet is system UI and cannot use the app theme. Due Diligence shows a branded primer first; then the system sheet appears.
+
 ## System bars (white strips on Android 16)
 
 Android 15/16 forces edge-to-edge. This project uses `@capawesome/capacitor-android-edge-to-edge-support` so status/nav bars match brand night `#2a1f20`.

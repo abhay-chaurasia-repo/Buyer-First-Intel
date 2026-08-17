@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import {
@@ -37,6 +38,7 @@ import {
   attemptGpsVerify,
   GPS_NEARBY_NUDGE_METERS,
   GPS_VERIFY_RADIUS_METERS,
+  locationPermissionGranted,
   watchNearbyProperty,
 } from '@/lib/gpsVerify'
 import {
@@ -100,6 +102,7 @@ export function PropertyDetailScreen() {
   )
   const [nearby, setNearby] = useState(false)
   const [nearbyDistanceM, setNearbyDistanceM] = useState<number | null>(null)
+  const [locationPrimerOpen, setLocationPrimerOpen] = useState(false)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -129,6 +132,7 @@ export function PropertyDetailScreen() {
     setNearbyDistanceM(null)
     setVerifyMessage(null)
     setVerifyBusy(false)
+    setLocationPrimerOpen(false)
   }, [propertyKey, property.id, property.starred, ownerId])
 
   useEffect(() => {
@@ -192,19 +196,7 @@ export function PropertyDetailScreen() {
     })
   }
 
-  async function handleToggleVerify() {
-    if (verifyBusy) return
-
-    if (verified) {
-      persistGpsVerified(property.id, false)
-      setVerified(false)
-      setVerifyMessage({
-        tone: 'ok',
-        text: 'GPS verification cleared. On-site Buyer Community votes are locked again.',
-      })
-      return
-    }
-
+  async function runGpsVerify() {
     setVerifyBusy(true)
     setVerifyMessage({
       tone: 'ok',
@@ -227,6 +219,30 @@ export function PropertyDetailScreen() {
       setVerifyMessage({ tone: 'warn', text: result.message })
     }
     setVerifyBusy(false)
+  }
+
+  async function handleToggleVerify() {
+    if (verifyBusy) return
+
+    if (verified) {
+      persistGpsVerified(property.id, false)
+      setVerified(false)
+      setVerifyMessage({
+        tone: 'ok',
+        text: 'GPS verification cleared. On-site Buyer Community votes are locked again.',
+      })
+      return
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      const granted = await locationPermissionGranted()
+      if (!granted) {
+        setLocationPrimerOpen(true)
+        return
+      }
+    }
+
+    await runGpsVerify()
   }
 
   const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
@@ -536,6 +552,49 @@ export function PropertyDetailScreen() {
           </div>
         </>
       )}
+
+      {locationPrimerOpen ? (
+        <div
+          className="absolute inset-0 z-[80] flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:items-center"
+          data-testid="location-permission-primer"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-saffron/35 bg-[#2a1f20] p-4 shadow-[0_20px_48px_rgb(0_0_0/0.55)]">
+            <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+              On-site verify
+            </p>
+            <h2 className="mt-1.5 font-display text-[1.15rem] font-semibold text-night-ink">
+              Allow location for Due Diligence
+            </h2>
+            <p className="mt-2 text-[13px] leading-snug text-night-muted">
+              We compare your phone GPS to this home&apos;s pin so on-site Buyer Community labels stay
+              visit-backed. Location is used only while you Verify — not in the background.
+            </p>
+            <p className="mt-2 text-[11px] leading-snug text-night-faint">
+              The next sheet is from iOS/Android and cannot use this app&apos;s colors. Choose{' '}
+              <span className="font-semibold text-night-ink">Allow while using the app</span>.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setLocationPrimerOpen(false)}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/20 px-3 text-[13px] font-semibold text-night-ink touch-manipulation"
+              >
+                Not now
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLocationPrimerOpen(false)
+                  void runGpsVerify()
+                }}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-saffron/50 bg-saffron/20 px-3 text-[13px] font-semibold text-saffron-glow touch-manipulation"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AppShell>
   )
 }

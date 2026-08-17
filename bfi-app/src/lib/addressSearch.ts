@@ -8,7 +8,7 @@
  */
 
 import type { AddressSearchResult, ResolvedAddress } from '@/data/addressTypes'
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
+import { invokePropertyLookup } from '@/lib/propertyLookupClient'
 
 const CENSUS_BASE = 'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress'
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org/search'
@@ -404,20 +404,8 @@ async function searchPhotonSafe(query: string, limit = 5): Promise<ResolvedAddre
 }
 
 async function searchViaEdge(query: string): Promise<ResolvedAddress[] | null> {
-  if (!isSupabaseConfigured()) return null
-  const supabase = getSupabase()
-  if (!supabase) return null
-
   try {
-    const { data, error } = await supabase.functions.invoke('property-lookup', {
-      method: 'POST',
-      body: { query, mode: 'search' },
-    })
-    if (error) return null
-    const payload = data as {
-      error?: string
-      matches?: ResolvedAddress[]
-    } | null
+    const payload = await invokePropertyLookup(query, 'search')
     if (!payload || payload.error || !Array.isArray(payload.matches)) return null
     return payload.matches.map((m) => ({ ...m, source: 'edge' as const }))
   } catch {

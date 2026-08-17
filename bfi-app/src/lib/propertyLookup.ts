@@ -8,7 +8,8 @@ import { Capacitor } from '@capacitor/core'
 import type { ResolvedAddress } from '@/data/addressTypes'
 import { DEMO_PROPERTY, type MockProperty } from '@/data/mockProperty'
 import { isHouseNumberOnlyQuery, resolveAddress, searchAddresses } from '@/lib/addressSearch'
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
+import { invokePropertyLookup, type PropertyLookupPayload } from '@/lib/propertyLookupClient'
+import { isSupabaseConfigured } from '@/lib/supabaseClient'
 
 /**
  * Demo county/tax/sale fields must never ride along on a real address shell.
@@ -85,7 +86,7 @@ function blankCountyFacts(): Partial<MockProperty> {
   }
 }
 
-const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v16'
+const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v17'
 const SELECTED_ADDRESS_KEY = 'bfi.selectedAddress.v1'
 const RECENT_ADDRESSES_KEY = 'bfi.recentAddressSuggestions.v1'
 
@@ -105,6 +106,7 @@ try {
   sessionStorage.removeItem('bfi.propertyLookupCache.v13')
   sessionStorage.removeItem('bfi.propertyLookupCache.v14')
   sessionStorage.removeItem('bfi.propertyLookupCache.v15')
+  sessionStorage.removeItem('bfi.propertyLookupCache.v16')
 } catch {
   // ignore
 }
@@ -128,14 +130,7 @@ type CacheEntry = {
   savedAt: number
 }
 
-type LookupPayload = {
-  match?: ResolvedAddress | null
-  matches?: ResolvedAddress[]
-  property?: Partial<MockProperty> | null
-  factsStatus?: 'demo' | 'live' | 'pending'
-  attomError?: string | null
-  error?: string
-}
+type LookupPayload = PropertyLookupPayload
 
 /** Remember the exact suggestion the buyer tapped before navigation. */
 export function rememberSelectedAddress(match: ResolvedAddress) {
@@ -352,6 +347,14 @@ function statusFor(property: MockProperty, warning?: string): PropertyLookupStat
   }
 }
 
+function nativePendingWarning() {
+  if (!Capacitor.isNativePlatform()) return undefined
+  if (!isSupabaseConfigured()) {
+    return 'This iOS/Android build has no Supabase keys, so ATTOM cannot load. Rebuild with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local.'
+  }
+  return 'County records did not load on this device. Check your connection and search the address again.'
+}
+
 function resultFromPayload(
   query: string,
   payload: LookupPayload,
@@ -403,19 +406,7 @@ async function lookupViaLocalApi(query: string, mode: 'search' | 'resolve') {
 }
 
 async function lookupViaEdge(query: string, mode: 'search' | 'resolve') {
-  if (!isSupabaseConfigured()) return null
-  const supabase = getSupabase()
-  if (!supabase) return null
-  try {
-    const { data, error } = await supabase.functions.invoke('property-lookup', {
-      method: 'POST',
-      body: { query, mode },
-    })
-    if (error) return null
-    return data as LookupPayload
-  } catch {
-    return null
-  }
+  return invokePropertyLookup(query, mode)
 }
 
 export async function loadPropertyFromQuery(query: string): Promise<PropertyLookupResult> {
@@ -479,9 +470,9 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
     const result: PropertyLookupResult = {
       property,
       resolved: selected,
-      status: statusFor(property),
+      status: statusFor(property, nativePendingWarning()),
     }
-    writeCache(trimmed, result)
+    if (!Capacitor.isNativePlatform()) writeCache(trimmed, result)
     return result
   }
 
@@ -525,9 +516,9 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
   const result: PropertyLookupResult = {
     property,
     resolved,
-    status: statusFor(property),
+    status: statusFor(property, nativePendingWarning()),
   }
-  writeCache(trimmed, result)
+  if (!Capacitor.isNativePlatform()) writeCache(trimmed, result)
   return result
 }
 
