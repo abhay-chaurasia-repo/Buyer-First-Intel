@@ -81,6 +81,8 @@
 
   html {
     overflow: hidden;
+    background: #2a1f20;
+    color-scheme: dark;
   }
 
   body {
@@ -88,7 +90,7 @@
     overflow: hidden;
     font-family: var(--font-sans);
     color: var(--color-night-ink);
-    background: #1f1617;
+    background: #2a1f20;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     -webkit-tap-highlight-color: transparent;
@@ -98,12 +100,16 @@
   #root {
     height: 100dvh;
     overflow: hidden;
+    background: #2a1f20;
   }
 
   button,
   input,
-  textarea {
+  textarea,
+  select {
     font: inherit;
+    appearance: none;
+    -webkit-appearance: none;
   }
 }
 

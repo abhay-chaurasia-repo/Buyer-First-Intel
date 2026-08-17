@@ -313,7 +313,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               <button
                 type="submit"
                 disabled={busy || !canSendCode}
-                className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-white touch-manipulation disabled:opacity-50"
+                className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-[#2a1f20] touch-manipulation disabled:bg-saffron/40 disabled:text-[#2a1f20]/70"
                 data-testid="button-send-otp"
               >
                 {busy ? 'Sending…' : 'Text me a code'}
@@ -342,7 +342,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               <button
                 type="submit"
                 disabled={busy || !code.trim()}
-                className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-white touch-manipulation disabled:opacity-50"
+                className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-[#2a1f20] touch-manipulation disabled:bg-saffron/40 disabled:text-[#2a1f20]/70"
                 data-testid="button-verify-otp"
               >
                 {busy ? 'Verifying…' : 'Verify and continue'}

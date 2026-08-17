@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, HashRouter } from 'react-router-dom'
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
+import { Keyboard, KeyboardStyle } from '@capacitor/keyboard'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support'
 import './index.css'
@@ -11,7 +12,6 @@ import { AuthProvider } from './auth/AuthProvider'
 async function bootstrapNativeShell() {
   if (!Capacitor.isNativePlatform()) return
   try {
-    // Light icons on dark bars
     await SystemBars.setStyle({ style: SystemBarsStyle.Dark })
     await StatusBar.setStyle({ style: Style.Dark })
     if (Capacitor.getPlatform() === 'android') {
@@ -21,6 +21,9 @@ async function bootstrapNativeShell() {
       await EdgeToEdge.setNavigationBarColor({ color: '#2a1f20' })
     } else {
       await StatusBar.setBackgroundColor({ color: '#2a1f20' })
+      // Hide the white iOS prev/next/done bar above the keyboard.
+      await Keyboard.setAccessoryBarVisible({ isVisible: false })
+      await Keyboard.setStyle({ style: KeyboardStyle.Dark })
     }
   } catch {
     // Native chrome plugins may be unavailable in some simulators.

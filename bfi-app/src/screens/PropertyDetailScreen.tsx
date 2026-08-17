@@ -461,7 +461,7 @@ export function PropertyDetailScreen() {
                   <button
                     type="button"
                     onClick={() => setActiveSurface('county-facts')}
-                    className="mt-2.5 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.04] px-3 text-[12px] font-semibold text-saffron-glow transition-colors hover:border-saffron/40 touch-manipulation"
+                    className="mt-2.5 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-saffron/45 bg-saffron/15 px-3 text-[12px] font-semibold text-saffron-glow transition-colors hover:bg-saffron/25 touch-manipulation"
                     data-testid="button-promo-open-county-facts"
                   >
                     <FileText className="h-3.5 w-3.5" strokeWidth={2.25} />
