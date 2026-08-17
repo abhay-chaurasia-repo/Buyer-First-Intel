@@ -169,7 +169,7 @@ export type MockProperty = {
   lat?: number
   lng?: number
   /** How the street/city/state were obtained */
-  addressSource?: 'census' | 'nominatim' | 'edge' | 'demo' | 'unresolved' | 'google'
+  addressSource?: 'census' | 'nominatim' | 'edge' | 'demo' | 'unresolved' | 'google' | 'typed'
   /** County/ATTOM facts: demo shell, pending live bind, or live */
   factsStatus?: 'demo' | 'live' | 'pending'
   /** ATTOM identifier when facts are live */

@@ -1,6 +1,6 @@
 /** Shared address + property lookup types for search → detail. */
 
-export type AddressProvider = 'census' | 'nominatim' | 'edge' | 'demo' | 'google'
+export type AddressProvider = 'census' | 'nominatim' | 'edge' | 'demo' | 'google' | 'typed'
 
 export type ResolvedAddress = {
   /** Stable id from normalized components (used as MockProperty.id). */

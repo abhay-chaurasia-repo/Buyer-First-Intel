@@ -8,7 +8,7 @@
  */
 
 import type { AddressSearchResult, ResolvedAddress } from '@/data/addressTypes'
-import { addressQueryVariants } from '@/lib/expandAddressQuery'
+import { addressQueryVariants, parseTypedUsAddress } from '@/lib/expandAddressQuery'
 import { invokePropertyLookup } from '@/lib/propertyLookupClient'
 
 const CENSUS_BASE = 'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress'
@@ -404,6 +404,45 @@ async function searchPhotonSafe(query: string, limit = 5): Promise<ResolvedAddre
   }
 }
 
+async function geocodeCity(city: string, state: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const url = new URL(NOMINATIM_BASE)
+    url.searchParams.set('q', `${city}, ${state}, USA`)
+    url.searchParams.set('countrycodes', 'us')
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('limit', '1')
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as Array<{ lat?: string; lon?: string }>
+    const lat = Number(data[0]?.lat)
+    const lng = Number(data[0]?.lon)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return { lat, lng }
+  } catch {
+    return null
+  }
+}
+
+export async function typedAddressMatch(query: string): Promise<ResolvedAddress | null> {
+  const typed = parseTypedUsAddress(query)
+  if (!typed) return null
+  const pin = await geocodeCity(typed.city, typed.state)
+  return {
+    id: stableAddressId(typed),
+    formatted: typed.formatted,
+    street: typed.street,
+    city: typed.city,
+    state: typed.state,
+    zipCode: typed.zipCode,
+    lat: pin?.lat ?? 0,
+    lng: pin?.lng ?? 0,
+    source: 'typed',
+    matchedAddress: typed.formatted,
+  }
+}
+
 async function searchViaEdge(query: string): Promise<ResolvedAddress[] | null> {
   try {
     const payload = await invokePropertyLookup(query, 'search')
@@ -463,7 +502,11 @@ export async function searchAddresses(query: string): Promise<AddressSearchResul
       if (matches.length > 0) break
     }
 
-    return { ok: true, matches: dedupeMatches(matches).slice(0, 6) }
+    const typed = matches.length === 0 ? await typedAddressMatch(trimmed) : null
+    return {
+      ok: true,
+      matches: dedupeMatches(typed ? [typed, ...matches] : matches).slice(0, 6),
+    }
   } catch (err) {
     return {
       ok: false,

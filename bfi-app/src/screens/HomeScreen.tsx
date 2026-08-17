@@ -17,6 +17,7 @@ import type { ResolvedAddress } from '@/data/addressTypes'
 import { authMethodLabel } from '@/data/authSession'
 import { APP_NAME } from '@/data/brand'
 import { isHouseNumberOnlyQuery } from '@/lib/addressSearch'
+import { parseTypedUsAddress } from '@/lib/expandAddressQuery'
 import { suggestAddresses, rememberSelectedAddress } from '@/lib/propertyLookup'
 import {
   activateRemoteSearchSubscription,
@@ -47,6 +48,24 @@ export function HomeScreen() {
   const suggestSeq = useRef(0)
   const suggesting = showSuggestions && query.trim().length > 0
   const houseOnly = isHouseNumberOnlyQuery(query)
+  const typed = parseTypedUsAddress(query)
+  const typedMatch = typed
+    ? {
+        id: `typed-${typed.formatted.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        formatted: typed.formatted,
+        street: typed.street,
+        city: typed.city,
+        state: typed.state,
+        zipCode: typed.zipCode,
+        lat: 0,
+        lng: 0,
+        source: 'typed' as const,
+      }
+    : null
+  const visibleSuggestions =
+    typedMatch && !suggestions.some((match) => match.formatted === typedMatch.formatted)
+      ? [typedMatch, ...suggestions]
+      : suggestions
 
   async function refreshQuota() {
     const next = await fetchSearchQuotaSnapshot(ownerId)
@@ -331,7 +350,7 @@ export function HomeScreen() {
                 {suggestError ? (
                   <p className="px-3 py-3 text-[12px] text-red-300">{suggestError}</p>
                 ) : null}
-                {!suggestBusy && !suggestError && suggestions.length === 0 ? (
+                {!suggestBusy && !suggestError && visibleSuggestions.length === 0 ? (
                   <p className="px-3 py-3 text-[12px] text-night-faint">
                     {houseOnly
                       ? 'Keep going — type the street (e.g. 3147 Swallow) and options appear.'
@@ -340,7 +359,7 @@ export function HomeScreen() {
                         : 'No match yet. Add the state (e.g. GA) and spell out the street (Park, not Pk).'}
                   </p>
                 ) : null}
-                {suggestions.map((match) => (
+                {visibleSuggestions.map((match) => (
                   <button
                     key={match.id}
                     type="button"
@@ -357,6 +376,7 @@ export function HomeScreen() {
                       </span>
                       <span className="block text-[11px] text-night-faint">
                         {match.city}, {match.state} {match.zipCode}
+                        {match.source === 'typed' ? ' · open this address' : ''}
                       </span>
                     </span>
                   </button>

@@ -318,18 +318,32 @@ function attomHitToResolved(attom: Record<string, unknown>): ResolvedAddress | n
   }
 }
 
+function streetLineVariants(street: string): string[] {
+  const values = [street]
+  if (/\bDrive$/i.test(street)) values.push(street.replace(/\bDrive$/i, 'Dr'))
+  if (/\bDr$/i.test(street)) values.push(street.replace(/\bDr$/i, 'Drive'))
+  return [...new Set(values)]
+}
+
+function address2Variants(address2: string): string[] {
+  const values = [address2]
+  const strippedZip = address2.replace(/\s+\d{5}(?:-\d{4})?$/, '').trim()
+  if (strippedZip && strippedZip !== address2) values.push(strippedZip)
+  return [...new Set(values)]
+}
+
 async function searchAttomAddress(query: string): Promise<ResolvedAddress[]> {
   const key = Deno.env.get('ATTOM_API_KEY')
   const parsed = splitAddressQuery(query)
   if (!key || !parsed) return []
 
-  async function load(packagePath: string) {
+  async function load(packagePath: string, address1: string, address2: string) {
     const url = new URL(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/${packagePath}`)
-    url.searchParams.set('address1', parsed!.address1)
-    url.searchParams.set('address2', parsed!.address2)
+    url.searchParams.set('address1', address1)
+    url.searchParams.set('address2', address2)
     try {
       const res = await fetch(url.toString(), {
-        headers: { Accept: 'application/json', apikey: key! },
+        headers: { Accept: 'application/json', apikey: key },
       })
       const raw = await res.json().catch(() => null)
       const code = raw?.status?.code
@@ -342,10 +356,92 @@ async function searchAttomAddress(query: string): Promise<ResolvedAddress[]> {
     }
   }
 
-  const hit = (await load('property/address')) || (await load('property/basicprofile'))
-  if (!hit || typeof hit !== 'object') return []
-  const resolved = attomHitToResolved(hit as Record<string, unknown>)
-  return resolved ? [resolved] : []
+  for (const address1 of streetLineVariants(parsed.address1)) {
+    for (const address2 of address2Variants(parsed.address2)) {
+      const hit =
+        (await load('property/basicprofile', address1, address2)) ||
+        (await load('property/address', address1, address2))
+      if (!hit || typeof hit !== 'object') continue
+      const resolved = attomHitToResolved(hit as Record<string, unknown>)
+      if (resolved) return [resolved]
+    }
+  }
+  return []
+}
+
+async function geocodeCity(city: string, state: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/search')
+    url.searchParams.set('q', `${city}, ${state}, USA`)
+    url.searchParams.set('countrycodes', 'us')
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('limit', '1')
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json', 'User-Agent': 'DueDiligenceBuyerApp/1.0' },
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    const lat = Number(data?.[0]?.lat)
+    const lng = Number(data?.[0]?.lon)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return { lat, lng }
+  } catch {
+    return null
+  }
+}
+
+function parseTypedUsAddress(query: string): {
+  street: string
+  city: string
+  state: string
+  zipCode: string
+  formatted: string
+} | null {
+  const expanded = expandAddressQuery(query)
+  const parts = expanded
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+  if (parts.length < 2) return null
+  const street = parts[0]!
+  if (!/^\d+[A-Za-z]?\s+\S+/.test(street)) return null
+  let city = ''
+  let state = ''
+  let zipCode = ''
+  if (parts.length >= 3) {
+    city = titleCaseStreet(parts[1]!)
+    const stateZip = parts[2]!.match(/^([A-Za-z]{2})(?:\s+(\d{5})(?:-\d{4})?)?$/)
+    if (!stateZip) return null
+    state = stateZip[1]!.toUpperCase()
+    zipCode = stateZip[2] || ''
+  } else {
+    const cityState = parts[1]!.match(/^(.+?)\s+([A-Za-z]{2})(?:\s+(\d{5})(?:-\d{4})?)?$/)
+    if (!cityState) return null
+    city = titleCaseStreet(cityState[1]!)
+    state = cityState[2]!.toUpperCase()
+    zipCode = cityState[3] || ''
+  }
+  if (!city || state.length !== 2) return null
+  const formatted = zipCode ? `${street}, ${city}, ${state} ${zipCode}` : `${street}, ${city}, ${state}`
+  return { street, city, state, zipCode, formatted }
+}
+
+async function typedAddressMatch(query: string): Promise<ResolvedAddress | null> {
+  const typed = parseTypedUsAddress(query)
+  if (!typed) return null
+  const pin = await geocodeCity(typed.city, typed.state)
+  return {
+    id: stableAddressId(typed),
+    formatted: typed.formatted,
+    street: typed.street,
+    city: typed.city,
+    state: typed.state,
+    zipCode: typed.zipCode,
+    lat: pin?.lat ?? 0,
+    lng: pin?.lng ?? 0,
+    source: 'edge',
+    matchedAddress: typed.formatted,
+  }
 }
 
 async function searchAddressesForQuery(query: string): Promise<ResolvedAddress[]> {
@@ -377,7 +473,8 @@ async function searchAddressesForQuery(query: string): Promise<ResolvedAddress[]
     if (attom.length > 0) return attom
   }
 
-  return []
+  const typed = await typedAddressMatch(query)
+  return typed ? [typed] : []
 }
 
 function num(value: unknown): number | undefined {
@@ -1197,7 +1294,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let match = matches[0] ?? null
+    let match = matches[0] ?? (await typedAddressMatch(query))
     if (!match) {
       return new Response(JSON.stringify({ match: null, matches: [], factsStatus: 'pending' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

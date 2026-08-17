@@ -7,7 +7,12 @@
 import { Capacitor } from '@capacitor/core'
 import type { ResolvedAddress } from '@/data/addressTypes'
 import { DEMO_PROPERTY, type MockProperty } from '@/data/mockProperty'
-import { isHouseNumberOnlyQuery, resolveAddress, searchAddresses } from '@/lib/addressSearch'
+import {
+  isHouseNumberOnlyQuery,
+  resolveAddress,
+  searchAddresses,
+  typedAddressMatch,
+} from '@/lib/addressSearch'
 import { addressQueryVariants } from '@/lib/expandAddressQuery'
 import {
   describeLookupDiagnostic,
@@ -578,7 +583,11 @@ export async function suggestAddresses(query: string) {
   }
 
   const result = await searchAddresses(trimmed)
+  const typed = await typedAddressMatch(trimmed)
   if (!result.ok) {
+    if (typed) {
+      return { ok: true as const, matches: dedupeMatches([...recent, typed]).slice(0, 6) }
+    }
     if (recent.length > 0) return { ok: true as const, matches: recent.slice(0, 6) }
     return result
   }
@@ -586,6 +595,7 @@ export async function suggestAddresses(query: string) {
     ok: true as const,
     matches: dedupeMatches([
       ...recent,
+      ...(typed ? [typed] : []),
       ...result.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
     ]).slice(0, 6),
   }
