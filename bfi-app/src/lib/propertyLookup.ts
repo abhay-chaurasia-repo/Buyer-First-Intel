@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core'
 import type { ResolvedAddress } from '@/data/addressTypes'
 import { DEMO_PROPERTY, type MockProperty } from '@/data/mockProperty'
 import { isHouseNumberOnlyQuery, resolveAddress, searchAddresses } from '@/lib/addressSearch'
+import { addressQueryVariants } from '@/lib/expandAddressQuery'
 import {
   describeLookupDiagnostic,
   getLastLookupDiagnostic,
@@ -550,25 +551,29 @@ export async function suggestAddresses(query: string) {
     return { ok: true as const, matches: recent.slice(0, 6) }
   }
 
-  const local = await lookupViaLocalApi(trimmed, 'search')
-  if (local?.matches && local.matches.length > 0) {
-    return {
-      ok: true as const,
-      matches: dedupeMatches([
-        ...recent,
-        ...local.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
-      ]).slice(0, 6),
+  for (const variant of addressQueryVariants(trimmed)) {
+    const local = await lookupViaLocalApi(variant, 'search')
+    if (local?.matches && local.matches.length > 0) {
+      return {
+        ok: true as const,
+        matches: dedupeMatches([
+          ...recent,
+          ...local.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
+        ]).slice(0, 6),
+      }
     }
   }
 
-  const edge = await lookupViaEdge(trimmed, 'search')
-  if (edge?.matches && edge.matches.length > 0) {
-    return {
-      ok: true as const,
-      matches: dedupeMatches([
-        ...recent,
-        ...edge.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
-      ]).slice(0, 6),
+  for (const variant of addressQueryVariants(trimmed)) {
+    const edge = await lookupViaEdge(variant, 'search')
+    if (edge?.matches && edge.matches.length > 0) {
+      return {
+        ok: true as const,
+        matches: dedupeMatches([
+          ...recent,
+          ...edge.matches.map((m) => lockHouseNumberToQuery(trimmed, m)),
+        ]).slice(0, 6),
+      }
     }
   }
 

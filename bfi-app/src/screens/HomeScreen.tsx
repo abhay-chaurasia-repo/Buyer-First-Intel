@@ -153,7 +153,7 @@ export function HomeScreen() {
     if (!match) {
       setQuotaBusy(false)
       setSearchError(
-        'No US address match found. Add a street name, city, and state (example: 3147 Swallow Dr, Marietta, GA).',
+        'No US address match found. Add city and state, and spell out the street (example: 2212 Fern Park Dr, Chamblee, GA).',
       )
       setShowSuggestions(true)
       return
@@ -337,7 +337,7 @@ export function HomeScreen() {
                       ? 'Keep going — type the street (e.g. 3147 Swallow) and options appear.'
                       : query.trim().length < 3
                         ? 'Keep typing the street name — options appear as the address takes shape.'
-                        : 'Still looking — try adding city and state for a stronger match.'}
+                        : 'No match yet. Add the state (e.g. GA) and spell out the street (Park, not Pk).'}
                   </p>
                 ) : null}
                 {suggestions.map((match) => (

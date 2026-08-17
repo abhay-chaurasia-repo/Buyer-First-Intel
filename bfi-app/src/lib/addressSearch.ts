@@ -8,6 +8,7 @@
  */
 
 import type { AddressSearchResult, ResolvedAddress } from '@/data/addressTypes'
+import { addressQueryVariants } from '@/lib/expandAddressQuery'
 import { invokePropertyLookup } from '@/lib/propertyLookupClient'
 
 const CENSUS_BASE = 'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress'
@@ -445,19 +446,21 @@ export async function searchAddresses(query: string): Promise<AddressSearchResul
   }
 
   try {
-    const edge = await searchViaEdge(trimmed)
-    if (edge && edge.length > 0) {
-      return { ok: true, matches: dedupeMatches(edge).slice(0, 6) }
+    for (const variant of addressQueryVariants(trimmed)) {
+      const edge = await searchViaEdge(variant)
+      if (edge && edge.length > 0) {
+        return { ok: true, matches: dedupeMatches(edge).slice(0, 6) }
+      }
     }
 
     // Photon first — better partial-street autocomplete than Nominatim.
     // Census has no browser CORS headers, so keep it last / safe.
-    let matches = await searchPhotonSafe(trimmed, 8)
-    if (matches.length === 0) {
-      matches = await searchNominatimSafe(trimmed, 8)
-    }
-    if (matches.length === 0) {
-      matches = await searchCensusSafe(trimmed)
+    let matches: ResolvedAddress[] = []
+    for (const variant of addressQueryVariants(trimmed)) {
+      matches = await searchPhotonSafe(variant, 8)
+      if (matches.length === 0) matches = await searchNominatimSafe(variant, 8)
+      if (matches.length === 0) matches = await searchCensusSafe(variant)
+      if (matches.length > 0) break
     }
 
     return { ok: true, matches: dedupeMatches(matches).slice(0, 6) }

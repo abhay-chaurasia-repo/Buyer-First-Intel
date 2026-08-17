@@ -260,19 +260,163 @@ async function searchGooglePlaces(query: string, apiKey: string): Promise<Resolv
   return details.filter(Boolean) as ResolvedAddress[]
 }
 
+const STREET_TOKEN_EXPAND: Record<string, string> = {
+  pk: 'Park',
+  pkwy: 'Parkway',
+  hwy: 'Hwy',
+  blvd: 'Blvd',
+  ave: 'Ave',
+  av: 'Ave',
+  ln: 'Ln',
+  ct: 'Ct',
+  cir: 'Cir',
+  ter: 'Ter',
+  terr: 'Ter',
+  pl: 'Pl',
+  rd: 'Rd',
+  trl: 'Trl',
+  cv: 'Cv',
+  xing: 'Crossing',
+}
+
+function expandStreetLine(street: string): string {
+  return street
+    .trim()
+    .split(/\s+/)
+    .map((token, index) => {
+      if (index === 0 && /^\d/.test(token)) return token
+      const key = token.toLowerCase().replace(/\./g, '')
+      return STREET_TOKEN_EXPAND[key] || token
+    })
+    .join(' ')
+}
+
+function expandAddressQuery(query: string): string {
+  const parts = query.split(',')
+  const street = expandStreetLine(parts[0] || '')
+  const rest = parts.slice(1).map((part) => part.trim())
+  return [street, ...rest].filter(Boolean).join(', ')
+}
+
+function addressQueryVariants(query: string): string[] {
+  const trimmed = query.trim()
+  const expanded = expandAddressQuery(trimmed)
+  return expanded === trimmed ? [trimmed] : [trimmed, expanded]
+}
+
+function splitAddressQuery(query: string): { address1: string; address2: string } | null {
+  const expanded = expandAddressQuery(query)
+  const parts = expanded
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+  if (parts.length < 2) return null
+  const address1 = parts[0]!
+  if (!/^\d/.test(address1)) return null
+  return { address1, address2: parts.slice(1).join(', ') }
+}
+
+function attomHitToResolved(attom: Record<string, unknown>): ResolvedAddress | null {
+  const address = (attom.address || {}) as Record<string, unknown>
+  const location = (attom.location || {}) as Record<string, unknown>
+  const street =
+    typeof address.line1 === 'string' && address.line1.trim()
+      ? titleCaseStreet(address.line1)
+      : ''
+  const city =
+    typeof address.locality === 'string' && address.locality.trim()
+      ? titleCaseStreet(address.locality)
+      : ''
+  const state =
+    typeof address.countrySubd === 'string' && address.countrySubd.trim()
+      ? String(address.countrySubd).toUpperCase().slice(0, 2)
+      : ''
+  const zipCode =
+    typeof address.postal1 === 'string' ? String(address.postal1).split('-')[0]!.trim() : ''
+  const lat = Number(location.latitude)
+  const lng = Number(location.longitude)
+  if (!street || !city || !state || !Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  const formatted = zipCode ? `${street}, ${city}, ${state} ${zipCode}` : `${street}, ${city}, ${state}`
+  return {
+    id: stableAddressId({ street, city, state, zipCode }),
+    formatted,
+    street,
+    city,
+    state,
+    zipCode,
+    lat,
+    lng,
+    source: 'edge',
+    matchedAddress: typeof address.oneLine === 'string' ? address.oneLine : formatted,
+  }
+}
+
+async function searchAttomAddress(
+  query: string,
+  attomApiKey: string | undefined,
+): Promise<ResolvedAddress[]> {
+  const parsed = splitAddressQuery(query)
+  if (!attomApiKey || !parsed) return []
+  const address1 = parsed.address1
+  const address2 = parsed.address2
+
+  async function load(packagePath: string) {
+    const url = new URL(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/${packagePath}`)
+    url.searchParams.set('address1', address1)
+    url.searchParams.set('address2', address2)
+    try {
+      const res = await fetch(url.toString(), {
+        headers: { Accept: 'application/json', apikey: attomApiKey },
+      })
+      const raw = (await res.json().catch(() => null)) as {
+        status?: { code?: number | string; msg?: string }
+        property?: Record<string, unknown>[]
+      } | null
+      const code = raw?.status?.code
+      const okEmpty =
+        raw?.status?.msg === 'SuccessWithoutResult' || code === 400 || code === '400'
+      if (!res.ok && !okEmpty) return null
+      return Array.isArray(raw?.property) ? raw.property[0] ?? null : null
+    } catch {
+      return null
+    }
+  }
+
+  const hit = (await load('property/address')) || (await load('property/basicprofile'))
+  if (!hit) return []
+  const resolved = attomHitToResolved(hit)
+  return resolved ? [resolved] : []
+}
+
 async function searchAddressesForQuery(
   query: string,
   googleApiKey: string | undefined,
+  attomApiKey?: string,
 ): Promise<ResolvedAddress[]> {
+  const variants = addressQueryVariants(query)
   if (googleApiKey) {
-    try {
-      const google = await searchGooglePlaces(query, googleApiKey)
-      if (google.length > 0) return google
-    } catch {
-      // fall through to Census
+    for (const variant of variants) {
+      try {
+        const google = await searchGooglePlaces(variant, googleApiKey)
+        if (google.length > 0) return google
+      } catch {
+        // try next variant / Census / ATTOM
+      }
     }
   }
-  return searchCensus(query)
+  for (const variant of variants) {
+    try {
+      const census = await searchCensus(variant)
+      if (census.length > 0) return census
+    } catch {
+      // newer streets are often missing from Census
+    }
+  }
+  for (const variant of variants) {
+    const attom = await searchAttomAddress(variant, attomApiKey)
+    if (attom.length > 0) return attom
+  }
+  return []
 }
 
 function mapAttomProperty(attom: Record<string, unknown>) {
@@ -1065,7 +1209,7 @@ function propertyLookupApiPlugin(
       return
     }
 
-    const matches = await searchAddressesForQuery(query, googleMapsApiKey)
+    const matches = await searchAddressesForQuery(query, googleMapsApiKey, attomApiKey)
     if (mode === 'search') {
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json')

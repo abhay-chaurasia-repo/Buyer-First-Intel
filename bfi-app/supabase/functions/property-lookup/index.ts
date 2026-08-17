@@ -227,17 +227,157 @@ async function searchGooglePlaces(query: string, apiKey: string): Promise<Resolv
   return details.filter(Boolean) as ResolvedAddress[]
 }
 
-async function searchAddressesForQuery(query: string): Promise<ResolvedAddress[]> {
-  const googleKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
-  if (googleKey) {
+const STREET_TOKEN_EXPAND: Record<string, string> = {
+  pk: 'Park',
+  pkwy: 'Parkway',
+  hwy: 'Hwy',
+  blvd: 'Blvd',
+  ave: 'Ave',
+  av: 'Ave',
+  ln: 'Ln',
+  ct: 'Ct',
+  cir: 'Cir',
+  ter: 'Ter',
+  terr: 'Ter',
+  pl: 'Pl',
+  rd: 'Rd',
+  trl: 'Trl',
+  cv: 'Cv',
+  xing: 'Crossing',
+}
+
+function expandStreetLine(street: string): string {
+  return street
+    .trim()
+    .split(/\s+/)
+    .map((token, index) => {
+      if (index === 0 && /^\d/.test(token)) return token
+      const key = token.toLowerCase().replace(/\./g, '')
+      return STREET_TOKEN_EXPAND[key] || token
+    })
+    .join(' ')
+}
+
+function expandAddressQuery(query: string): string {
+  const parts = query.split(',')
+  const street = expandStreetLine(parts[0] || '')
+  const rest = parts.slice(1).map((part) => part.trim())
+  return [street, ...rest].filter(Boolean).join(', ')
+}
+
+function addressQueryVariants(query: string): string[] {
+  const trimmed = query.trim()
+  const expanded = expandAddressQuery(trimmed)
+  return expanded === trimmed ? [trimmed] : [trimmed, expanded]
+}
+
+function splitAddressQuery(query: string): { address1: string; address2: string } | null {
+  const expanded = expandAddressQuery(query)
+  const parts = expanded
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+  if (parts.length < 2) return null
+  const address1 = parts[0]!
+  if (!/^\d/.test(address1)) return null
+  return { address1, address2: parts.slice(1).join(', ') }
+}
+
+function attomHitToResolved(attom: Record<string, unknown>): ResolvedAddress | null {
+  const address = (attom.address || {}) as Record<string, unknown>
+  const location = (attom.location || {}) as Record<string, unknown>
+  const street =
+    typeof address.line1 === 'string' && address.line1.trim()
+      ? titleCaseStreet(address.line1)
+      : ''
+  const city =
+    typeof address.locality === 'string' && address.locality.trim()
+      ? titleCaseStreet(address.locality)
+      : ''
+  const state =
+    typeof address.countrySubd === 'string' && address.countrySubd.trim()
+      ? String(address.countrySubd).toUpperCase().slice(0, 2)
+      : ''
+  const zipCode =
+    typeof address.postal1 === 'string' ? String(address.postal1).split('-')[0]!.trim() : ''
+  const lat = Number(location.latitude)
+  const lng = Number(location.longitude)
+  if (!street || !city || !state || !Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  const formatted = zipCode ? `${street}, ${city}, ${state} ${zipCode}` : `${street}, ${city}, ${state}`
+  return {
+    id: stableAddressId({ street, city, state, zipCode }),
+    formatted,
+    street,
+    city,
+    state,
+    zipCode,
+    lat,
+    lng,
+    source: 'edge',
+    matchedAddress: typeof address.oneLine === 'string' ? address.oneLine : formatted,
+  }
+}
+
+async function searchAttomAddress(query: string): Promise<ResolvedAddress[]> {
+  const key = Deno.env.get('ATTOM_API_KEY')
+  const parsed = splitAddressQuery(query)
+  if (!key || !parsed) return []
+
+  async function load(packagePath: string) {
+    const url = new URL(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/${packagePath}`)
+    url.searchParams.set('address1', parsed!.address1)
+    url.searchParams.set('address2', parsed!.address2)
     try {
-      const google = await searchGooglePlaces(query, googleKey)
-      if (google.length > 0) return google
+      const res = await fetch(url.toString(), {
+        headers: { Accept: 'application/json', apikey: key! },
+      })
+      const raw = await res.json().catch(() => null)
+      const code = raw?.status?.code
+      const okEmpty =
+        raw?.status?.msg === 'SuccessWithoutResult' || code === 400 || code === '400'
+      if (!res.ok && !okEmpty) return null
+      return Array.isArray(raw?.property) ? raw.property[0] ?? null : null
     } catch {
-      // fall through
+      return null
     }
   }
-  return searchCensus(query)
+
+  const hit = (await load('property/address')) || (await load('property/basicprofile'))
+  if (!hit || typeof hit !== 'object') return []
+  const resolved = attomHitToResolved(hit as Record<string, unknown>)
+  return resolved ? [resolved] : []
+}
+
+async function searchAddressesForQuery(query: string): Promise<ResolvedAddress[]> {
+  const googleKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
+  const variants = addressQueryVariants(query)
+
+  if (googleKey) {
+    for (const variant of variants) {
+      try {
+        const google = await searchGooglePlaces(variant, googleKey)
+        if (google.length > 0) return google
+      } catch {
+        // try next variant / Census / ATTOM
+      }
+    }
+  }
+
+  for (const variant of variants) {
+    try {
+      const census = await searchCensus(variant)
+      if (census.length > 0) return census
+    } catch {
+      // try ATTOM — newer streets are often missing from Census
+    }
+  }
+
+  for (const variant of variants) {
+    const attom = await searchAttomAddress(variant)
+    if (attom.length > 0) return attom
+  }
+
+  return []
 }
 
 function num(value: unknown): number | undefined {
