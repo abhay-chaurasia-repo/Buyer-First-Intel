@@ -47,6 +47,9 @@ export function describeLookupDiagnostic(diagnostic: LookupDiagnostic | null) {
     case 'no_keys':
       return 'This build has no Supabase keys, so county records cannot load. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to bfi-app/.env.local, then rebuild the app.'
     case 'http_error':
+      if (diagnostic.status === 401) {
+        return 'County records need the latest property-lookup function (anon key is enough). Redeploy: supabase functions deploy property-lookup — then search again.'
+      }
       return `County records service returned HTTP ${diagnostic.status}. Confirm the property-lookup Edge Function is deployed and its ATTOM key secret is set.`
     case 'network_error':
       return `Could not reach the county records service (${diagnostic.message}). Check the device connection and try again.`
@@ -68,6 +71,20 @@ function truncateBody(body: unknown) {
   return body.slice(0, 160)
 }
 
+async function bearerToken(anonKey: string) {
+  const supabase = getSupabase()
+  if (supabase) {
+    try {
+      const { data } = await supabase.auth.getSession()
+      const access = data.session?.access_token
+      if (access) return access
+    } catch {
+      // Fall through to anon key — Edge now accepts it for county lookup.
+    }
+  }
+  return anonKey
+}
+
 async function invokeViaNativeHttp(
   query: string,
   mode: 'search' | 'resolve',
@@ -80,12 +97,14 @@ async function invokeViaNativeHttp(
   }
 
   try {
+    const token = await bearerToken(key)
     const res = await CapacitorHttp.post({
       url,
       headers: {
         'Content-Type': 'application/json',
         apikey: key,
-        Authorization: `Bearer ${key}`,
+        Authorization: `Bearer ${token}`,
+        'x-client-info': 'due-diligence-native',
       },
       data: { query, mode },
     })

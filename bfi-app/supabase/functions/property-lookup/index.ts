@@ -1,7 +1,6 @@
 // Supabase Edge Function: address search (Google Places + Census) + ATTOM
 // Deploy: supabase functions deploy property-lookup
 // Secrets: supabase secrets set ATTOM_API_KEY=... GOOGLE_MAPS_API_KEY=...
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -1033,21 +1032,6 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing auth' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    const userClient = createClient(supabaseUrl, supabaseAnon, {
-      global: { headers: { Authorization: authHeader } },
-    })
-    const {
-      data: { user },
-      error: userError,
-    } = await userClient.auth.getUser()
-
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Not authenticated' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })

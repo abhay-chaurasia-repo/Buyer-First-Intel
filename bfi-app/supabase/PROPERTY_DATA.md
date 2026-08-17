@@ -46,10 +46,13 @@ GOOGLE_MAPS_API_KEY=your_maps_platform_key
 
 ### Deploy Edge Function
 ```bash
-supabase functions deploy property-lookup
-supabase secrets set ATTOM_API_KEY=your_attom_key
-supabase secrets set GOOGLE_MAPS_API_KEY=your_maps_platform_key
+cd bfi-app
+npx supabase functions deploy property-lookup
+npx supabase secrets set ATTOM_API_KEY=your_attom_key
+npx supabase secrets set GOOGLE_MAPS_API_KEY=your_maps_platform_key
 ```
+
+Native iOS/Android send the app anon key (or the buyer’s phone JWT). The function allows either so Simulator county facts load without a phone-OTP session. Redeploy after pulling this change or iOS will keep showing pending (HTTP 401).
 
 ### Try these sample addresses (known to return ATTOM data on Free Trial)
 - `3147 Swallow Dr NE, Marietta, GA 30066`
