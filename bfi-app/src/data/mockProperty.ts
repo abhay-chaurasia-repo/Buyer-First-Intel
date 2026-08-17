@@ -6,6 +6,7 @@ import {
   formatCountyText,
   isMissingCountyNumber,
 } from '@/lib/formatCountyFact'
+import { buyerSalesRows } from '@/lib/formatSaleHistory'
 
 export type PropertyChannelId =
   | '01-property-summary'
@@ -472,6 +473,7 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
   const hasDiscrepancy = Boolean(
     live && property.claimedSqft && property.sqft && property.claimedSqft !== property.sqft,
   )
+  const salesCount = buyerSalesRows(property).length
 
   return [
     {
@@ -489,17 +491,12 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
     {
       id: 'sales-history',
       title: 'Sales History',
-      subtitle: 'Deed transfers',
-      badge:
-        property.salesHistory && property.salesHistory.length > 0
-          ? String(property.salesHistory.length)
-          : live
-            ? '1'
-            : undefined,
+      subtitle: 'Recorded sales',
+      badge: salesCount > 0 ? String(salesCount) : live ? '1' : undefined,
       detail: live
-        ? `${property.deedType} · ${property.lastSaleDate}`
+        ? `${property.lastSalePriceLabel} · ${property.lastSaleDate}`
         : property.factsStatus === 'demo'
-          ? `${property.deedType} · ${property.lastSaleDate}`
+          ? `${property.lastSalePriceLabel} · ${property.lastSaleDate}`
           : 'Pending recorded transfers',
       accent: 'sales-history',
     },

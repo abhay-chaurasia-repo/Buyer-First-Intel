@@ -21,6 +21,7 @@ import { SalesTaxHistoryPanel } from '@/components/catchup/SalesTaxHistoryPanel'
 import { VerifiedVisitsPanel } from '@/components/catchup/VerifiedVisitsPanel'
 import type { MockProperty } from '@/data/mockProperty'
 import { getVerifiedVisitsBundle } from '@/data/verifiedVisits'
+import { buyerSalesRows } from '@/lib/formatSaleHistory'
 import { cn } from '@/lib/utils'
 
 export type { CatchUpSurface }
@@ -39,7 +40,7 @@ const surfaceMeta: Record<
     title: 'Sales History',
     Icon: History,
     iconWrap: 'bg-saffron-bright/25 text-saffron-glow',
-    blurb: 'Recorded transfers for this address',
+    blurb: 'Recorded home sales for this address',
   },
   'tax-history': {
     title: 'Tax History',
@@ -192,7 +193,7 @@ export function CatchUpFlow({
   const headerCount = isVerifiedVisits
     ? getVerifiedVisitsBundle(property).visits.length
     : surface === 'sales-history'
-      ? property.salesHistory?.length || items.length
+      ? buyerSalesRows(property).length || items.length
       : surface === 'tax-history'
         ? property.taxHistory?.length || items.length
         : items.length

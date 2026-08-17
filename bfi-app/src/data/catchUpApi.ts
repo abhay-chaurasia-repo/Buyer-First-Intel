@@ -6,6 +6,7 @@ import {
   formatCountyText,
   isMissingCountyNumber,
 } from '@/lib/formatCountyFact'
+import { isOwnershipSaleRow } from '@/lib/formatSaleHistory'
 
 /** API-shaped payloads ready for future fetch() binding */
 
@@ -284,15 +285,15 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
 /** GET /api/properties/:id/sales-history */
 export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse {
   const live = property.factsStatus === 'live'
-  const history = property.salesHistory || []
+  const history = (property.salesHistory || []).filter(isOwnershipSaleRow)
   const items: CatchUpCard[] = [
     {
       id: 'sh-last-sale',
       type: 'legal',
       channel: 'last-sale',
       unreadCount: 1,
-      headline: 'Most recent transfer',
-      preview: `${property.deedType} recorded ${property.lastSaleDate}${
+      headline: 'Most recent sale',
+      preview: `Sold ${property.lastSaleDate}${
         property.lastSalePriceLabel && property.lastSalePriceLabel !== '—'
           ? ` · ${property.lastSalePriceLabel}`
           : ''
@@ -300,80 +301,30 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
       timestamp: isoMinutesAgo(12),
       source: live ? 'ATTOM /sale/detail' : 'GET /api/properties/:id · sales',
       fields: [
-        { label: 'Sale date', value: property.lastSaleDate },
-        { label: 'Deed type', value: property.deedType },
+        { label: 'Date of sale', value: property.lastSaleDate },
         { label: 'Amount', value: property.lastSalePriceLabel },
-        {
-          label: 'Document #',
-          value: property.saleDocumentNumber || (live ? 'Not on file' : '2019-084221 (stub)'),
-        },
       ],
     },
   ]
 
   if (history.length > 0) {
     for (const [index, event] of history.slice(0, 8).entries()) {
-      const headlineBits = [
-        event.deedType,
-        event.deedCode ? `(${event.deedCode})` : null,
-      ]
-        .filter(Boolean)
-        .join(' ')
       items.push({
         id: event.id || `sh-event-${index}`,
         type: 'legal',
         channel: 'prior-transfers',
         unreadCount: index === 0 ? 1 : 0,
-        headline: headlineBits,
-        preview: [
-          event.date,
-          event.documentNumber ? `Doc ${event.documentNumber}` : null,
-          event.sellerName ? `Seller ${event.sellerName}` : null,
-          event.deedInLieu ? 'Deed-in-lieu' : null,
-          event.sellerCarryBack ? 'Seller carry-back' : null,
-          event.lenderName ? `Lender ${event.lenderName}` : null,
-        ]
+        headline: event.buyerName ? `Sold to ${event.buyerName}` : 'Recorded sale',
+        preview: [event.date, event.amountLabel, event.sellerName ? `Seller ${event.sellerName}` : null]
           .filter(Boolean)
           .join(' · '),
         timestamp: isoMinutesAgo(30 + index * 8),
         source: 'ATTOM /saleshistory/expandedhistory',
         fields: [
-          { label: 'Transfer date', value: event.date },
-          ...(event.recordedDate
-            ? [{ label: 'Recorded', value: event.recordedDate }]
-            : []),
-          { label: 'Transfer type', value: event.deedType },
-          ...(event.deedCode ? [{ label: 'Deed code', value: event.deedCode }] : []),
-          ...(event.documentType
-            ? [{ label: 'Document type', value: event.documentType }]
-            : []),
-          {
-            label: 'Document #',
-            value: event.documentNumber || 'Not on file',
-          },
+          { label: 'Date of sale', value: event.date },
           { label: 'Amount', value: event.amountLabel },
-          ...(event.buyerName ? [{ label: 'Buyer', value: event.buyerName }] : []),
+          ...(event.buyerName ? [{ label: 'Buyer (sold to)', value: event.buyerName }] : []),
           ...(event.sellerName ? [{ label: 'Seller', value: event.sellerName }] : []),
-          ...(event.deedInLieu != null
-            ? [{ label: 'Deed in lieu', value: event.deedInLieu ? 'Yes' : 'No' }]
-            : []),
-          ...(event.sellerCarryBack != null
-            ? [{ label: 'Seller carry-back', value: event.sellerCarryBack ? 'Yes' : 'No' }]
-            : []),
-          ...(event.titleCompany
-            ? [{ label: 'Title company', value: event.titleCompany }]
-            : []),
-          ...(event.lenderName ? [{ label: 'Lender', value: event.lenderName }] : []),
-          ...(event.loanType ? [{ label: 'Loan type', value: event.loanType }] : []),
-          ...(event.loanTermMonths
-            ? [{ label: 'Loan term (months)', value: event.loanTermMonths }]
-            : []),
-          ...(event.loanDueDate
-            ? [{ label: 'Loan due', value: event.loanDueDate }]
-            : []),
-          ...(event.loanDocumentNumber
-            ? [{ label: 'Loan document #', value: event.loanDocumentNumber }]
-            : []),
         ],
       })
     }
@@ -383,18 +334,15 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
       type: 'legal',
       channel: 'prior-transfers',
       unreadCount: live ? 0 : 1,
-      headline: live ? 'Earlier transfers' : 'Prior deed chain (stub)',
+      headline: live ? 'Earlier sales' : 'Prior sales (stub)',
       preview: live
-        ? 'No additional ATTOM sales-history rows for this property.'
-        : 'Earlier warranty / special warranty instruments available for diligence cross-check when API is bound.',
+        ? 'No additional recorded sales for this property.'
+        : 'Earlier sales appear after a live address resolve.',
       timestamp: isoMinutesAgo(180),
       source: live ? 'ATTOM /saleshistory' : 'County recorder stub',
       fields: live
-        ? [{ label: 'Status', value: 'Latest transfer shown above' }]
-        : [
-            { label: 'Prior sale', value: '2011-03-22 (stub)' },
-            { label: 'Instrument', value: 'Special Warranty (stub)' },
-          ],
+        ? [{ label: 'Status', value: 'Latest sale shown above' }]
+        : [{ label: 'Prior sale', value: '2011-03-22 (stub)' }],
     })
   }
 

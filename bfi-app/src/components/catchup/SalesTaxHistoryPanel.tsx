@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import type {
-  MockProperty,
-  PropertySaleEvent,
-  PropertyTaxYear,
-} from '@/data/mockProperty'
+import type { MockProperty, PropertySaleEvent, PropertyTaxYear } from '@/data/mockProperty'
 import { isMissingCountyNumber } from '@/lib/formatCountyFact'
+import {
+  buyerSalesRows,
+  saleKindExplanation,
+  saleRowHint,
+  salesHistoryCoverageNote,
+  soldToLabel,
+} from '@/lib/formatSaleHistory'
 import { cn } from '@/lib/utils'
 
 type HistoryTab = 'sales' | 'tax'
@@ -21,24 +24,6 @@ function formatDisplayDate(raw?: string) {
     day: 'numeric',
     year: 'numeric',
   })
-}
-
-function buildSalesRows(property: MockProperty): PropertySaleEvent[] {
-  if (property.salesHistory && property.salesHistory.length > 0) {
-    return property.salesHistory
-  }
-  if (property.lastSaleDate && property.lastSaleDate !== '—') {
-    return [
-      {
-        id: 'sale-latest',
-        date: property.lastSaleDate,
-        deedType: property.deedType || 'Recorded transfer',
-        documentNumber: property.saleDocumentNumber,
-        amountLabel: property.lastSalePriceLabel || '—',
-      },
-    ]
-  }
-  return []
 }
 
 function buildTaxRows(property: MockProperty): PropertyTaxYear[] {
@@ -64,58 +49,33 @@ function buildTaxRows(property: MockProperty): PropertyTaxYear[] {
 function SaleRow({ event }: { event: PropertySaleEvent }) {
   const [open, setOpen] = useState(false)
   const extras = [
-    event.recordedDate
-      ? { label: 'Recorded', value: formatDisplayDate(event.recordedDate) }
-      : null,
-    event.deedCode ? { label: 'Deed code', value: event.deedCode } : null,
-    event.documentType ? { label: 'Document type', value: event.documentType } : null,
-    event.documentNumber ? { label: 'Document #', value: event.documentNumber } : null,
-    event.buyerName ? { label: 'Buyer', value: event.buyerName } : null,
+    { label: 'Date of sale', value: formatDisplayDate(event.date) },
+    { label: 'Amount', value: event.amountLabel || '—' },
+    { label: 'Buyer (sold to)', value: soldToLabel(event) },
     event.sellerName ? { label: 'Seller', value: event.sellerName } : null,
-    event.deedInLieu != null
-      ? { label: 'Deed in lieu', value: event.deedInLieu ? 'Yes' : 'No' }
+    saleKindExplanation(event)
+      ? { label: 'What this is', value: saleKindExplanation(event)! }
       : null,
-    event.sellerCarryBack != null
-      ? { label: 'Seller carry-back', value: event.sellerCarryBack ? 'Yes' : 'No' }
-      : null,
-    event.titleCompany ? { label: 'Title company', value: event.titleCompany } : null,
-    event.lenderName ? { label: 'Lender', value: event.lenderName } : null,
-    event.loanType ? { label: 'Loan type', value: event.loanType } : null,
-    event.loanTermMonths
-      ? { label: 'Loan term (months)', value: event.loanTermMonths }
-      : null,
-    event.loanDueDate
-      ? { label: 'Loan due', value: formatDisplayDate(event.loanDueDate) }
-      : null,
-    event.loanDocumentNumber
-      ? { label: 'Loan document #', value: event.loanDocumentNumber }
-      : null,
-    { label: 'Sale amount', value: event.amountLabel || '—' },
   ].filter(Boolean) as { label: string; value: string }[]
-
-  const eventLabel = [event.deedType, event.deedCode ? `(${event.deedCode})` : null]
-    .filter(Boolean)
-    .join(' ')
+  const hint = saleRowHint(event)
 
   return (
     <div className="border-b border-white/15 last:border-b-0" data-testid={`sale-row-${event.id}`}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="grid w-full grid-cols-[5.5rem_minmax(0,1fr)_auto] items-start gap-2 px-1 py-3 text-left touch-manipulation"
+        className="grid w-full grid-cols-[5.75rem_minmax(0,1fr)_auto] items-start gap-2 px-1 py-3 text-left touch-manipulation"
         aria-expanded={open}
       >
         <span className="text-[13px] font-medium text-night-ink">
           {formatDisplayDate(event.date)}
         </span>
         <span className="min-w-0">
-          <span className="block text-[13px] font-semibold text-night-ink">{eventLabel}</span>
-          {event.sellerName || event.buyerName ? (
-            <span className="mt-0.5 block truncate text-[11px] text-night-muted">
-              {[event.sellerName ? `Seller ${event.sellerName}` : null, event.buyerName ? `Buyer ${event.buyerName}` : null]
-                .filter(Boolean)
-                .join(' · ')}
-            </span>
+          <span className="block truncate text-[13px] font-semibold text-night-ink">
+            {soldToLabel(event)}
+          </span>
+          {hint ? (
+            <span className="mt-0.5 block truncate text-[11px] text-night-muted">{hint}</span>
           ) : null}
         </span>
         <span className="inline-flex items-center gap-1 text-[12px] text-night-muted">
@@ -200,34 +160,35 @@ export function SalesTaxHistoryPanel({
   mode: HistoryTab
 }) {
   const [showAll, setShowAll] = useState(false)
-  const salesRows = useMemo(() => buildSalesRows(property), [property])
+  const salesRows = useMemo(() => buyerSalesRows(property), [property])
   const taxRows = useMemo(() => buildTaxRows(property), [property])
   const live = property.factsStatus === 'live'
   const isSales = mode === 'sales'
   const rows = isSales ? salesRows : taxRows
   const visible = showAll ? rows : rows.slice(0, INITIAL_ROWS)
+  const coverageNote = isSales ? salesHistoryCoverageNote(property, salesRows) : null
 
   return (
-    <div className="px-3 pt-2" data-testid="sales-tax-history-panel" data-mode={mode}>
-      <section className="rounded-2xl border border-white/25 bg-transparent px-3 py-3.5">
-        <h2 className="px-1 font-display text-[15px] font-bold tracking-tight text-night-ink">
-          {isSales ? 'Sales history' : 'Tax history'}
-        </h2>
-        <p className="mt-0.5 px-1 text-[11px] text-night-muted">
-          {isSales
-            ? live
-              ? 'ATTOM deed chain · recorded sale amounts when published'
-              : 'Demo shell — live ATTOM transfers appear after address resolve'
-            : live
-              ? 'Multi-year assessor rolls from ATTOM'
-              : 'Demo shell — live ATTOM tax years appear after address resolve'}
-        </p>
+    <div className="px-3 pt-4" data-testid="sales-tax-history-panel" data-mode={mode}>
+      <h2 className="px-1 font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+        {isSales ? 'Sales history' : 'Tax history'}
+      </h2>
+      <p className="mt-0.5 px-1 text-[11px] text-night-muted">
+        {isSales
+          ? live
+            ? 'Recorded home sales for this address'
+            : 'Demo shell — live sales appear after address resolve'
+          : live
+            ? 'Multi-year assessor rolls from ATTOM'
+            : 'Demo shell — live ATTOM tax years appear after address resolve'}
+      </p>
 
+      <section className="mt-3 rounded-2xl border border-white/25 bg-transparent px-3 py-3.5">
         {isSales ? (
-          <div className="mt-3" data-testid="sales-history-table">
-            <div className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] gap-2 border-b border-white/20 px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-night-faint">
-              <span>Date</span>
-              <span>Event</span>
+          <div data-testid="sales-history-table">
+            <div className="grid grid-cols-[5.75rem_minmax(0,1fr)_auto] gap-2 border-b border-white/20 px-1 pb-2 text-[10px] font-bold uppercase leading-tight tracking-[0.08em] text-night-faint">
+              <span>Date of sale</span>
+              <span>Sold to</span>
               <span className="text-right">Amount</span>
             </div>
             {visible.length > 0 ? (
@@ -236,7 +197,7 @@ export function SalesTaxHistoryPanel({
               ))
             ) : (
               <p className="px-1 py-6 text-center text-sm text-night-muted">
-                No recorded transfers yet for this address.
+                No recorded sales yet for this address.
               </p>
             )}
             {salesRows.length > INITIAL_ROWS ? (
@@ -250,12 +211,9 @@ export function SalesTaxHistoryPanel({
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             ) : null}
-            <p className="mt-2 px-1 text-[11px] text-night-faint">
-              Tap a row for deed, parties, and loan cues. Mortgage amounts stay hidden.
-            </p>
           </div>
         ) : (
-          <div className="mt-3" data-testid="tax-history-table">
+          <div data-testid="tax-history-table">
             <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 border-b border-white/20 px-1 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-night-faint">
               <span>Year</span>
               <span>Property taxes</span>
@@ -286,7 +244,10 @@ export function SalesTaxHistoryPanel({
           </div>
         )}
       </section>
+
+      {isSales && coverageNote ? (
+        <p className="mt-2 px-1 text-[11px] leading-relaxed text-night-faint">{coverageNote}</p>
+      ) : null}
     </div>
   )
 }
-
