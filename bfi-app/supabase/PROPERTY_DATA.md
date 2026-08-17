@@ -47,10 +47,20 @@ GOOGLE_MAPS_API_KEY=your_maps_platform_key
 ### Deploy Edge Function
 ```bash
 cd bfi-app
-npx supabase functions deploy property-lookup
 npx supabase secrets set ATTOM_API_KEY=your_attom_key
 npx supabase secrets set GOOGLE_MAPS_API_KEY=your_maps_platform_key
+npx supabase functions deploy property-lookup
 ```
+
+If the iOS/Android property banner says **`ATTOM_API_KEY not set`**, the Edge Function is reachable but this secret was never stored. From `bfi-app` (uses the same key as web `.env.local`):
+
+```bash
+set -a && source .env.local && set +a
+npx supabase secrets set "ATTOM_API_KEY=$ATTOM_API_KEY"
+npx supabase functions deploy property-lookup
+```
+
+Then search the address again — no app rebuild needed for the secret.
 
 Native iOS/Android send the app anon key (or the buyer’s phone JWT). The function allows either so Simulator county facts load without a phone-OTP session. Redeploy after pulling this change or iOS will keep showing pending (HTTP 401).
 

@@ -28,6 +28,22 @@ async function bootstrapNativeShell() {
 
 void bootstrapNativeShell()
 
+if (Capacitor.isNativePlatform()) {
+  document.addEventListener(
+    'touchend',
+    (event) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (target.closest('input, textarea, select, [contenteditable="true"]')) return
+      const active = document.activeElement
+      if (active instanceof HTMLElement && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+        active.blur()
+      }
+    },
+    { passive: true },
+  )
+}
+
 /** HashRouter is safer inside Capacitor WebViews than path-based history. */
 const Router = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter
 

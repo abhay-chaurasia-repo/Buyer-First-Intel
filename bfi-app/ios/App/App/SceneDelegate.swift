@@ -1,12 +1,32 @@
 import UIKit
 import WebKit
+import ObjectiveC
 import Capacitor
+
+enum FormAccessoryHider {
+    /// Hides the iOS WKWebView prev/next/✓ bar without @capacitor/keyboard (that package broke SPM).
+    static func install() {
+        let block: @convention(block) (AnyObject) -> UIView? = { _ in nil }
+        let imp = imp_implementationWithBlock(block)
+        let selector = #selector(getter: UIResponder.inputAccessoryView)
+        for name in ["WKContentView", "WKWebView"] {
+            guard let cls = NSClassFromString(name) else { continue }
+            if let method = class_getInstanceMethod(cls, selector) {
+                method_setImplementation(method, imp)
+            } else {
+                class_addMethod(cls, selector, imp, "@@:")
+            }
+        }
+    }
+}
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
+
+        FormAccessoryHider.install()
 
         let night = UIColor(red: 42.0 / 255.0, green: 31.0 / 255.0, blue: 32.0 / 255.0, alpha: 1)
 
