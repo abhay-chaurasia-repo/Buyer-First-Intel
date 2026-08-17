@@ -129,31 +129,15 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       preview: live
         ? isMissingCountyNumber(property.sqft)
           ? 'County living area not published in ATTOM basicprofile for this parcel. Compare listing size on Zillow or Redfin when available.'
-          : `County grossSizeAdjusted shows ${property.sqft.toLocaleString()} sqft. Compare with the published listing size on Zillow or Redfin, then upvote whether it matches or looks overstated.`
+          : `County living area is ${property.sqft.toLocaleString()} sqft. Compare with the published size on Zillow or Redfin, then upvote whether it matches or looks overstated.`
         : `Demo shell shows ${property.sqft.toLocaleString()} sqft — replace by searching a live address with ATTOM bound.`,
       timestamp: isoMinutesAgo(18),
       source,
       fields: [
         {
-          label: live ? 'grossSizeAdjusted' : 'County sqft (demo)',
+          label: live ? 'Living area' : 'Living area (demo)',
           value: sqftLabel,
         },
-        ...(property.grossSizeSqft != null
-          ? [
-              {
-                label: 'grossSize',
-                value: `${property.grossSizeSqft.toLocaleString()} sqft`,
-              },
-            ]
-          : []),
-        ...(property.groundFloorSizeSqft != null
-          ? [
-              {
-                label: 'groundFloorSize',
-                value: `${property.groundFloorSizeSqft.toLocaleString()} sqft`,
-              },
-            ]
-          : []),
       ],
       insightLabelIds: [
         'published-listing-size-matches-county',

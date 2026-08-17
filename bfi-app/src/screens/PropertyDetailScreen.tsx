@@ -444,7 +444,7 @@ export function PropertyDetailScreen() {
                     then upvote whether it matches or looks overstated.
                   </p>
                   <ol className="mt-2 list-decimal space-y-1 pl-4 text-[11px] leading-snug text-night-faint">
-                    <li>Open County&apos;s Fact and read grossSizeAdjusted.</li>
+                    <li>Open County&apos;s Fact and read Living area.</li>
                     <li>Check the published size on Zillow or Redfin.</li>
                     <li>Upvote Match or Overstated in the remote insight panel.</li>
                   </ol>
