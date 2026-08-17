@@ -1,7 +1,6 @@
 import type { MockProperty } from './mockProperty'
 import {
   COUNTY_FACT_MISSING,
-  formatCountyLot,
   formatCountyNumber,
   formatCountySqft,
   formatCountyText,
@@ -110,7 +109,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           .filter(Boolean)
           .join(', ')
       : null
-  const lotLabel = formatCountyLot(property.lotSizeSqft, property.lotSizeAcres)
+  const lotSqftLabel = formatCountySqft(property.lotSizeSqft)
   const sqftLabel = formatCountySqft(property.sqft)
   const bedsLabel = formatCountyNumber(property.bedrooms)
   const bathsLabel = !isMissingCountyNumber(property.bathrooms)
@@ -154,7 +153,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
         `${bedsLabel} bed`,
         `${formatCountyNumber(property.bathrooms)} bath`,
         `built ${yearLabel}`,
-        `lot ${lotLabel}`,
+        `lot ${lotSqftLabel}`,
       ].join(' · ') + '.',
       timestamp: isoMinutesAgo(40),
       source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
@@ -165,17 +164,6 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           value: bathsLabel,
         },
         { label: 'Year built', value: yearLabel },
-        ...(property.majorImprovementsYear != null
-          ? [
-              {
-                label: 'Major improvements year',
-                value: String(property.majorImprovementsYear),
-              },
-            ]
-          : []),
-        ...(property.architecturalStyle
-          ? [{ label: 'Architecture', value: property.architecturalStyle }]
-          : []),
         ...(property.levels != null
           ? [{ label: 'Levels', value: String(property.levels) }]
           : []),
@@ -185,10 +173,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
         ...(property.fireplaceCount != null
           ? [{ label: 'Fireplaces', value: String(property.fireplaceCount) }]
           : []),
-        { label: 'Lot', value: lotLabel },
-        ...(property.lotNumber ? [{ label: 'Lot #', value: property.lotNumber }] : []),
-        { label: 'Zoning', value: formatCountyText(property.zoning) },
-        { label: 'APN', value: formatCountyText(property.apn) },
+        { label: 'Lot size', value: lotSqftLabel },
       ],
     },
     {
@@ -199,10 +184,8 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       headline: 'Property type & land identity',
       preview: [
         property.propertyTypeLabel,
-        property.architecturalStyle,
         property.subdivisionName ? `Subdivision ${property.subdivisionName}` : null,
-        property.municipalityName ||
-          (property.countyName ? `${property.countyName} County` : null),
+        property.countyName ? `${property.countyName} County` : null,
       ]
         .filter(Boolean)
         .join(' · ') || 'County identity fields when published.',
@@ -212,9 +195,6 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
         ...(property.propertyTypeLabel
           ? [{ label: 'Property type', value: property.propertyTypeLabel }]
           : []),
-        ...(property.architecturalStyle
-          ? [{ label: 'Architecture', value: property.architecturalStyle }]
-          : []),
         ...(property.subdivisionName
           ? [{ label: 'Subdivision', value: property.subdivisionName }]
           : []),
@@ -222,14 +202,6 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           ? [{ label: 'Legal', value: property.legalDescription }]
           : []),
         ...(property.countyName ? [{ label: 'County', value: property.countyName }] : []),
-        ...(property.municipalityName
-          ? [{ label: 'Municipality', value: property.municipalityName }]
-          : []),
-        ...(property.taxCodeArea
-          ? [{ label: 'Tax code area', value: property.taxCodeArea }]
-          : []),
-        ...(property.lotNumber ? [{ label: 'Lot #', value: property.lotNumber }] : []),
-        { label: 'Zoning', value: formatCountyText(property.zoning) },
         { label: 'APN', value: formatCountyText(property.apn) },
       ],
     },
@@ -283,66 +255,6 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           ? [{ label: 'Construction', value: property.constructionType }]
           : []),
         ...(property.frameType ? [{ label: 'Frame', value: property.frameType }] : []),
-        ...(property.majorImprovementsYear != null
-          ? [
-              {
-                label: 'Major improvements year',
-                value: String(property.majorImprovementsYear),
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      id: 'cf-title-finance',
-      type: 'spec',
-      channel: 'title-finance-cues',
-      unreadCount: live ? 1 : 0,
-      headline: 'Title, transfer & financing cues',
-      preview: live
-        ? [
-            property.quitClaimFlag != null
-              ? `Quitclaim ${property.quitClaimFlag ? 'Yes' : 'No'}`
-              : null,
-            property.reoFlag != null ? `REO ${property.reoFlag ? 'Yes' : 'No'}` : null,
-            property.lastSaleSellerName ? `Seller ${property.lastSaleSellerName}` : null,
-            property.mortgageLender ? `Lender ${property.mortgageLender}` : null,
-          ]
-            .filter(Boolean)
-            .join(' · ') || 'Expanded-profile title and mortgage metadata when published.'
-        : 'Demo shell — bind ATTOM expandedprofile.',
-      timestamp: isoMinutesAgo(80),
-      source: live ? 'ATTOM /property/expandedprofile' : 'Demo county shell',
-      fields: [
-        ...(property.quitClaimFlag != null
-          ? [{ label: 'Quitclaim flag', value: property.quitClaimFlag ? 'Yes' : 'No' }]
-          : []),
-        ...(property.reoFlag != null
-          ? [{ label: 'REO flag', value: property.reoFlag ? 'Yes' : 'No' }]
-          : []),
-        ...(property.lastSaleSellerName
-          ? [{ label: 'Last seller', value: property.lastSaleSellerName }]
-          : []),
-        ...(property.mortgageLender
-          ? [{ label: 'Mortgage lender', value: property.mortgageLender }]
-          : []),
-        ...(property.mortgageLoanType
-          ? [{ label: 'Loan type', value: property.mortgageLoanType }]
-          : []),
-        ...(property.mortgageDate
-          ? [{ label: 'Mortgage date', value: property.mortgageDate }]
-          : []),
-        ...(property.mortgageDueDate
-          ? [{ label: 'Mortgage due', value: property.mortgageDueDate }]
-          : []),
-        ...(!live
-          ? [{ label: 'Status', value: 'Demo — search a live address' }]
-          : property.quitClaimFlag == null &&
-              property.reoFlag == null &&
-              !property.lastSaleSellerName &&
-              !property.mortgageLender
-            ? [{ label: 'Status', value: 'None published for this parcel' }]
-            : []),
       ],
     },
     {
@@ -362,99 +274,6 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           : live
             ? []
             : [{ label: 'Mailing', value: 'Same as property (demo)' }]),
-        ...(property.lastSaleSellerName
-          ? [{ label: 'Last seller', value: property.lastSaleSellerName }]
-          : []),
-      ],
-    },
-    {
-      id: 'cf-permits',
-      type: 'spec',
-      channel: 'building-permits',
-      unreadCount: live && (property.buildingPermits?.length ?? 0) > 0 ? 1 : 0,
-      headline: 'Building permits',
-      preview: live
-        ? property.buildingPermits?.length
-          ? `${property.buildingPermits.length} permit${property.buildingPermits.length === 1 ? '' : 's'} from ATTOM buildingpermits.`
-          : 'No building permits published for this parcel.'
-        : 'Demo shell — bind ATTOM /property/buildingpermits.',
-      timestamp: isoMinutesAgo(100),
-      source: live ? 'ATTOM /property/buildingpermits' : 'Demo county shell',
-      fields: live
-        ? property.buildingPermits?.length
-          ? property.buildingPermits.flatMap((permit) => {
-              const headline = [
-                permit.effectiveDate,
-                permit.permitNumber ? `#${permit.permitNumber}` : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')
-              const detail = [
-                permit.type,
-                permit.subType,
-                permit.status,
-              ]
-                .filter(Boolean)
-                .join(' · ')
-              const rows: Array<{ label: string; value: string }> = [
-                {
-                  label: headline || 'Permit',
-                  value: detail || 'On file',
-                },
-              ]
-              if (permit.description) {
-                rows.push({ label: 'Description', value: permit.description })
-              }
-              if (permit.projectName) {
-                rows.push({ label: 'Project', value: permit.projectName })
-              }
-              if (permit.feesLabel) {
-                rows.push({ label: 'Fees', value: permit.feesLabel })
-              }
-              if (permit.homeOwnerName) {
-                rows.push({ label: 'Applicant', value: permit.homeOwnerName })
-              }
-              if (permit.classifiers?.length) {
-                rows.push({ label: 'Classifiers', value: permit.classifiers.join(', ') })
-              }
-              return rows
-            })
-          : [{ label: 'Status', value: 'None on file' }]
-        : [
-            { label: 'Status', value: 'Demo — search a live address' },
-            { label: 'Source', value: 'ATTOM /property/buildingpermits' },
-          ],
-    },
-    {
-      id: 'cf-freshness',
-      type: 'record_update',
-      channel: 'county-freshness',
-      unreadCount: 0,
-      headline: 'Record freshness',
-      preview: live
-        ? [
-            property.factsPubDate ? `Published ${property.factsPubDate}` : null,
-            property.factsLastModified ? `Modified ${property.factsLastModified}` : null,
-            property.locationAccuracy ? `Location ${property.locationAccuracy}` : null,
-          ]
-            .filter(Boolean)
-            .join(' · ') || 'ATTOM vintage when published.'
-        : 'Demo shell has no ATTOM vintage.',
-      timestamp: isoMinutesAgo(120),
-      source: live ? 'ATTOM basicprofile vintage / location' : 'Demo county shell',
-      fields: [
-        ...(property.factsPubDate
-          ? [{ label: 'Published', value: property.factsPubDate }]
-          : []),
-        ...(property.factsLastModified
-          ? [{ label: 'Last modified', value: property.factsLastModified }]
-          : []),
-        ...(property.locationAccuracy
-          ? [{ label: 'Geo accuracy', value: property.locationAccuracy }]
-          : []),
-        ...(property.attomId != null
-          ? [{ label: 'ATTOM ID', value: String(property.attomId) }]
-          : []),
       ],
     },
   ]
