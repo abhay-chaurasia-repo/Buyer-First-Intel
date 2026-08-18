@@ -143,33 +143,44 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
           {phoneStep === 'phone' ? (
             <form
               onSubmit={handleSendCode}
-              className="mt-8 w-full max-w-[21rem] space-y-3"
+              className="mt-8 w-full max-w-[21.5rem] space-y-4"
               data-testid="phone-otp-form"
             >
-              <label className="sr-only" htmlFor="auth-phone">
-                US mobile number
-              </label>
               <div
-                className="flex min-h-[3.4rem] w-full items-center gap-2 rounded-full border border-white/25 bg-transparent px-4 focus-within:border-saffron focus-within:ring-4 focus-within:ring-saffron/20"
+                className="overflow-hidden rounded-[13px] border border-white/18 bg-white/[0.08] shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]"
                 data-testid="phone-us-field"
               >
-                <span
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/8 px-2.5 py-1 text-[0.85rem] font-semibold text-night-ink"
-                  aria-hidden
-                  data-testid="phone-us-prefix"
-                >
-                  <span className="text-[0.7rem] tracking-wide text-night-faint uppercase">US</span>
-                  <span>+1</span>
-                </span>
+                <div className="flex min-h-[3.15rem] items-center justify-between gap-3 px-4">
+                  <span className="flex min-w-0 items-center gap-2.5 text-[17px] text-night-ink">
+                    <span aria-hidden className="text-[1.15rem] leading-none">
+                      🇺🇸
+                    </span>
+                    <span className="truncate font-normal">United States</span>
+                  </span>
+                  <span
+                    className="shrink-0 text-[17px] tabular-nums text-night-muted"
+                    data-testid="phone-us-prefix"
+                  >
+                    +1
+                  </span>
+                </div>
+                <div className="mx-4 h-px bg-white/12" aria-hidden />
+                <label className="sr-only" htmlFor="auth-phone">
+                  Phone number
+                </label>
                 <input
                   id="auth-phone"
                   type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel-national"
-                  placeholder="(555) 555-0100"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  autoFocus
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  placeholder="Phone Number"
                   value={formatUsNationalDisplay(nationalPhone)}
                   onChange={(event) => setNationalPhone(usNationalDigits(event.target.value))}
-                  className="min-w-0 flex-1 bg-transparent py-3 text-[1rem] text-night-ink outline-none placeholder:text-night-faint"
+                  className="min-h-[3.35rem] w-full bg-transparent px-4 text-[17px] tracking-[0.02em] text-night-ink outline-none placeholder:text-night-faint/80"
                   data-testid="input-auth-phone"
                   maxLength={14}
                 />
@@ -177,16 +188,16 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
               <button
                 type="submit"
                 disabled={busy || !canSendCode}
-                className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-[#2a1f20] touch-manipulation disabled:bg-saffron/40 disabled:text-[#2a1f20]/70"
+                className="inline-flex min-h-[3.15rem] w-full items-center justify-center rounded-[13px] bg-saffron px-5 text-[17px] font-semibold text-white touch-manipulation disabled:bg-saffron/35 disabled:text-white/70"
                 data-testid="button-send-otp"
               >
-                {busy ? 'Sending…' : 'Text me a code'}
+                {busy ? 'Sending…' : 'Continue'}
               </button>
             </form>
           ) : (
             <form
               onSubmit={handleVerifyCode}
-              className="mt-8 w-full max-w-[21rem] space-y-3"
+              className="mt-8 w-full max-w-[21.5rem] space-y-4"
               data-testid="phone-code-form"
             >
               <label className="sr-only" htmlFor="auth-otp">
@@ -197,16 +208,22 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                placeholder="6-digit code"
+                autoFocus
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                pattern="[0-9]*"
+                placeholder="Code"
                 value={code}
-                onChange={(event) => setCode(event.target.value)}
-                className="min-h-[3.4rem] w-full rounded-full border border-white/25 bg-transparent px-5 text-center text-[1.15rem] tracking-[0.2em] text-night-ink outline-none placeholder:tracking-normal placeholder:text-night-faint focus:border-saffron focus:ring-4 focus:ring-saffron/20"
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                className="min-h-[3.35rem] w-full rounded-[13px] border border-white/18 bg-white/[0.08] px-4 text-center text-[22px] font-medium tracking-[0.35em] text-night-ink outline-none placeholder:tracking-normal placeholder:text-night-faint/80"
                 data-testid="input-auth-otp"
+                maxLength={6}
               />
               <button
                 type="submit"
-                disabled={busy || !code.trim()}
-                className="inline-flex min-h-[3.4rem] w-full items-center justify-center rounded-full bg-saffron px-5 text-[0.98rem] font-semibold text-[#2a1f20] touch-manipulation disabled:bg-saffron/40 disabled:text-[#2a1f20]/70"
+                disabled={busy || code.trim().length < 6}
+                className="inline-flex min-h-[3.15rem] w-full items-center justify-center rounded-[13px] bg-saffron px-5 text-[17px] font-semibold text-white touch-manipulation disabled:bg-saffron/35 disabled:text-white/70"
                 data-testid="button-verify-otp"
               >
                 {busy ? 'Verifying…' : isSignup ? 'Verify and start' : 'Verify and continue'}
@@ -219,7 +236,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
                   setCode('')
                   setError(null)
                 }}
-                className="w-full text-center text-[12px] font-medium text-night-muted underline underline-offset-2 touch-manipulation"
+                className="w-full text-center text-[15px] font-medium text-saffron-glow touch-manipulation"
               >
                 Use a different number
               </button>
