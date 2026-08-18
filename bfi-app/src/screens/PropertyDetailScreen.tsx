@@ -315,12 +315,10 @@ export function PropertyDetailScreen() {
                 title={fullAddress}
               >
                 <h1
-                  className="truncate font-display text-[1.05rem] font-semibold tracking-tight"
+                  className="truncate font-display text-[1.05rem] font-semibold tracking-tight text-night-ink"
                   data-testid="text-truncated-address"
                 >
-                  <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
-                    {truncated}
-                  </span>
+                  {truncated}
                 </h1>
               </div>
 

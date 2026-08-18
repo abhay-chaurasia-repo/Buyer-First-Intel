@@ -61,7 +61,7 @@ export function GuidanceScreen() {
               <p className="truncate font-display text-[11px] font-bold tracking-[0.14em] text-saffron-glow uppercase">
                 {doc.eyebrow}
               </p>
-              <p className="truncate font-display text-[14px] font-semibold text-saffron-glow">
+              <p className="truncate font-display text-[14px] font-semibold text-night-ink">
                 {doc.title}
               </p>
             </div>
@@ -82,10 +82,8 @@ export function GuidanceScreen() {
                 {doc.updatedLabel}
               </span>
             </div>
-            <h1 className="mt-3 text-center font-display text-[1.25rem] font-semibold tracking-tight">
-              <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
-                {doc.title}
-              </span>
+            <h1 className="mt-3 text-center font-display text-[1.25rem] font-semibold tracking-tight text-night-ink">
+              {doc.title}
             </h1>
             <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-night-muted">{doc.summary}</p>
 

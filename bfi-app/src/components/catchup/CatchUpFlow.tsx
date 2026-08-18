@@ -224,7 +224,7 @@ export function CatchUpFlow({
 
           <h1
             id="detail-title"
-            className="flex min-h-11 min-w-0 items-center justify-center text-center font-display text-[13px] font-semibold leading-snug tracking-tight text-balance text-saffron-glow sm:text-[15px]"
+            className="flex min-h-11 min-w-0 items-center justify-center text-center font-display text-[13px] font-semibold leading-snug tracking-tight text-balance text-night-ink sm:text-[15px]"
             data-testid="text-tile-address"
           >
             {address}
@@ -239,10 +239,8 @@ export function CatchUpFlow({
         {!isCountyFacts && !isBuyerCommunity && !isSalesTaxHistory ? (
           <section className="px-3 pt-4" data-testid="tile-section-header">
             <div className="px-2 py-1.5 text-center">
-              <p className="font-display text-[13px] font-extrabold tracking-tight">
-                <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
-                  {meta.title}
-                </span>
+              <p className="font-display text-[13px] font-extrabold tracking-tight text-night-ink">
+                {meta.title}
               </p>
               <p className="mt-0.5 text-[11px] text-saffron-glow">{meta.blurb}</p>
               <span className="mt-2 inline-flex rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
