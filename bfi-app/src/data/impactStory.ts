@@ -1,10 +1,12 @@
 import type { PageSceneId } from '@/data/pageScenes'
 
 export const IMPACT_SEEN_KEY = 'bfi.impact-seen'
+const IMPACT_LAUNCH_KEY = 'bfi.impact-seen-launch'
 
+/** True after the buyer finishes welcome in this app launch. */
 export function hasSeenImpact(): boolean {
   try {
-    return localStorage.getItem(IMPACT_SEEN_KEY) === '1'
+    return sessionStorage.getItem(IMPACT_LAUNCH_KEY) === '1'
   } catch {
     return false
   }
@@ -12,6 +14,7 @@ export function hasSeenImpact(): boolean {
 
 export function markImpactSeen() {
   try {
+    sessionStorage.setItem(IMPACT_LAUNCH_KEY, '1')
     localStorage.setItem(IMPACT_SEEN_KEY, '1')
   } catch {
     // Ignore storage failures in demo shell

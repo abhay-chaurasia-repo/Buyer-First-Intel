@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, CalendarClock, MapPin, ThumbsUp, Users } from 'lucide-react'
+import { useAuth } from '@/auth/AuthProvider'
 import { BrandLogo } from '@/components/BrandLogo'
 import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
 import { APP_NAME, APP_TAGLINE } from '@/data/brand'
-import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
+import { IMPACT_PAGES, markImpactSeen, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
 
 const AUTO_MS = 3500
@@ -176,7 +177,7 @@ function StorySlide({ page }: { page: ImpactPage }) {
   return (
     <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
       <SceneBackdrop scene={page.scene} src={page.image} intensity="medium" />
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(5.5rem,calc(var(--bfi-status-pad)+4rem))] pb-[11.5rem]">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(5.5rem,calc(var(--bfi-status-pad)+4rem))] pb-[9rem]">
         <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {page.eyebrow}
         </p>
@@ -199,6 +200,7 @@ function StorySlide({ page }: { page: ImpactPage }) {
  */
 export function ImpactStoryScreen() {
   const navigate = useNavigate()
+  const { isSignedIn } = useAuth()
   const [index, setIndex] = useState(0)
   const [holding, setHolding] = useState(false)
   const touchStartX = useRef<number | null>(null)
@@ -310,7 +312,10 @@ export function ImpactStoryScreen() {
 
         <button
           type="button"
-          onClick={() => navigate('/signup')}
+          onClick={() => {
+            markImpactSeen()
+            navigate(isSignedIn ? '/' : '/signup')
+          }}
           className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-saffron text-base font-semibold text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)] transition-colors hover:bg-saffron-deep touch-manipulation"
           data-testid="button-impact-continue"
         >

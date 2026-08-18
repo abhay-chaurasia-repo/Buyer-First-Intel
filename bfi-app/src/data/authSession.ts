@@ -2,6 +2,8 @@
 
 export const AUTH_SESSION_KEY = 'bfi.auth-session'
 export const AUTH_LAST_METHOD_KEY = 'bfi.lastAuthMethod'
+/** Stay signed in this long after OTP — then ask for a code again. */
+export const AUTH_SESSION_TTL_MS = 24 * 60 * 60 * 1000
 
 export type AuthMethodId = 'apple' | 'facebook' | 'mobile' | 'quick'
 
@@ -39,7 +41,13 @@ function displayNameFor(method: AuthMethodId) {
   return 'Facebook buyer'
 }
 
-export function loadAuthSession(): AuthSession | null {
+export function isAuthSessionFresh(session: AuthSession) {
+  const started = Date.parse(session.signedInAt)
+  if (!Number.isFinite(started)) return false
+  return Date.now() - started < AUTH_SESSION_TTL_MS
+}
+
+export function peekStoredAuthSession(): AuthSession | null {
   try {
     const raw = localStorage.getItem(AUTH_SESSION_KEY)
     if (!raw) return null
@@ -49,6 +57,16 @@ export function loadAuthSession(): AuthSession | null {
   } catch {
     return null
   }
+}
+
+export function loadAuthSession(): AuthSession | null {
+  const parsed = peekStoredAuthSession()
+  if (!parsed) return null
+  if (!isAuthSessionFresh(parsed)) {
+    clearAuthSession()
+    return null
+  }
+  return parsed
 }
 
 export function persistAuthSession(session: AuthSession) {
@@ -104,17 +122,20 @@ export function signInWithMethod(method: AuthMethodId): AuthSession {
 export function signInWithSupabasePhone(params: {
   userId: string
   phone?: string | null
+  /** OTP success starts a new 24h window. Session restore keeps the original. */
+  renewTtl?: boolean
 }): AuthSession {
-  const existing = loadAuthSession()
-  const phone = params.phone?.trim()
+  const existing = peekStoredAuthSession()
+  const keepWindow =
+    !params.renewTtl &&
+    existing?.userId === params.userId &&
+    existing.method === 'mobile' &&
+    isAuthSessionFresh(existing)
   const session: AuthSession = {
     userId: params.userId,
-    displayName: phone ? `Buyer · ${phone.replace(/^\+/, '')}` : 'Buyer',
+    displayName: 'Buyer',
     method: 'mobile',
-    signedInAt:
-      existing?.userId === params.userId && existing.method === 'mobile'
-        ? existing.signedInAt
-        : new Date().toISOString(),
+    signedInAt: keepWindow ? existing.signedInAt : new Date().toISOString(),
   }
   persistAuthSession(session)
   return session

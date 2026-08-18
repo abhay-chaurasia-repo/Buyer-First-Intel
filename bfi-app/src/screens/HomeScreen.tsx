@@ -4,7 +4,6 @@ import {
   ArrowRight,
   ClipboardCheck,
   FileSearch,
-  LogOut,
   MapPin,
   Search,
   Star,
@@ -14,7 +13,6 @@ import { BrandLogo } from '@/components/BrandLogo'
 import { AppShell } from '@/components/layout/AppShell'
 import { SearchPaywall, SearchQuotaBar } from '@/components/SearchQuotaPanel'
 import type { ResolvedAddress } from '@/data/addressTypes'
-import { authMethodLabel } from '@/data/authSession'
 import { APP_NAME } from '@/data/brand'
 import { isHouseNumberOnlyQuery } from '@/lib/addressSearch'
 import { parseTypedUsAddress } from '@/lib/expandAddressQuery'
@@ -31,7 +29,7 @@ import { cn } from '@/lib/utils'
 
 export function HomeScreen() {
   const navigate = useNavigate()
-  const { session, isSignedIn, signOut, ownerId } = useAuth()
+  const { isSignedIn, signOut, ownerId } = useAuth()
   const inputId = useId()
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -235,28 +233,19 @@ export function HomeScreen() {
       >
         <header className="animate-bfi-fade flex items-center justify-between gap-3">
           <BrandLogo size={36} />
-          {isSignedIn && session ? (
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="min-w-0 text-right" data-testid="home-auth-session">
-                <p className="truncate text-[11px] font-semibold text-saffron-glow">
-                  {session.displayName}
-                </p>
-                <p className="truncate text-[10px] text-night-faint">
-                  via {authMethodLabel(session.method)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  void signOut().then(() => navigate('/login'))
-                }}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 text-night-muted transition-colors hover:border-saffron/40 hover:text-saffron-glow touch-manipulation"
-                aria-label="Sign out"
-                data-testid="button-home-sign-out"
-              >
-                <LogOut className="h-4 w-4" strokeWidth={2.25} />
-              </button>
-            </div>
+          {isSignedIn ? (
+            <button
+              type="button"
+              onClick={() => {
+                void signOut().then(() => navigate('/login'))
+              }}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 touch-manipulation"
+              aria-label="Sign out"
+              title="Sign out"
+              data-testid="button-home-sign-out"
+            >
+              <BrandLogo size={36} className="rounded-full" testId="home-sign-out-mark" />
+            </button>
           ) : (
             <button
               type="button"
@@ -271,10 +260,8 @@ export function HomeScreen() {
 
         <div className="flex flex-1 flex-col items-center py-5">
           <div className="animate-bfi-rise w-full text-center">
-            <h1 className="font-display text-[1.85rem] leading-none font-extrabold tracking-tight">
-              <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
-                {APP_NAME}
-              </span>
+            <h1 className="font-display text-[1.85rem] leading-none font-extrabold tracking-tight text-night-ink">
+              {APP_NAME}
             </h1>
             <p className="mx-auto mt-10 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
               Search a US property address. Match public records before you commit — and before you

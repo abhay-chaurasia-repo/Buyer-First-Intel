@@ -9,7 +9,9 @@ import {
 } from 'react'
 import { GUEST_OWNER_ID } from '@/data/authPolicy'
 import {
+  isAuthSessionFresh,
   loadAuthSession,
+  peekStoredAuthSession,
   signInWithMethod,
   signInWithSupabasePhone,
   signOut as clearSession,
@@ -49,18 +51,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => loadAuthSession())
   const [authReady, setAuthReady] = useState(() => !isSupabaseConfigured())
 
-  const applySupabaseUser = useCallback((userId: string, phone?: string | null) => {
-    const next = signInWithSupabasePhone({ userId, phone })
-    claimGuestDataForUser(next.userId)
-    setSession(next)
-    void ensureRemoteProfile()
-    void import('@/lib/diligenceSync')
-      .then((mod) => mod.pullDiligenceFromCloud())
-      .catch(() => {
-        // ignore
-      })
-    return next
-  }, [])
+  const applySupabaseUser = useCallback(
+    (userId: string, phone?: string | null, renewTtl = false) => {
+      const next = signInWithSupabasePhone({ userId, phone, renewTtl })
+      claimGuestDataForUser(next.userId)
+      setSession(next)
+      void ensureRemoteProfile()
+      void import('@/lib/diligenceSync')
+        .then((mod) => mod.pullDiligenceFromCloud())
+        .catch(() => {
+          // ignore
+        })
+      return next
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -77,19 +82,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void (async () => {
       try {
+        const stored = peekStoredAuthSession()
+        if (stored && !isAuthSessionFresh(stored)) {
+          await signOutSupabase()
+          clearSession()
+          if (!cancelled) setSession(null)
+          return
+        }
+
         const { data } = await supabase.auth.getSession()
         if (cancelled) return
-        if (data.session?.user) {
-          applySupabaseUser(data.session.user.id, data.session.user.phone)
-        } else {
-          // Keep any local demo session; only clear if we had a mobile supabase session
-          // that is no longer valid.
+        if (data.session?.user && stored && isAuthSessionFresh(stored)) {
+          applySupabaseUser(data.session.user.id, data.session.user.phone, false)
+        } else if (!data.session?.user) {
           const local = loadAuthSession()
           if (local?.method === 'mobile' && !local.userId.startsWith('buyer_local_')) {
-            // Supabase session missing after return — keep local shell so RequireAuth
-            // doesn't bounce to login before the user can recover via phone OTP.
             setSession(local)
           }
+        } else if (data.session?.user && !stored) {
+          // Supabase still has a JWT but our 24h window ended — require OTP again.
+          await signOutSupabase()
+          clearSession()
+          setSession(null)
         }
       } finally {
         if (!cancelled) setAuthReady(true)
@@ -98,7 +112,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data } = supabase.auth.onAuthStateChange((event, supabaseSession) => {
       if (supabaseSession?.user) {
-        applySupabaseUser(supabaseSession.user.id, supabaseSession.user.phone)
+        const stored = peekStoredAuthSession()
+        if (!stored || !isAuthSessionFresh(stored)) {
+          if (event !== 'SIGNED_IN' && event !== 'USER_UPDATED') {
+            void signOutSupabase().then(() => {
+              clearSession()
+              setSession(null)
+            })
+          }
+          return
+        }
+        applySupabaseUser(supabaseSession.user.id, supabaseSession.user.phone, false)
         return
       }
       if (event === 'SIGNED_OUT') {
@@ -133,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (phone: string, token: string) => {
       const result = await verifyPhoneOtp(phone, token)
       if (!result.ok) return result
-      const next = applySupabaseUser(result.userId, result.phone)
+      const next = applySupabaseUser(result.userId, result.phone, true)
       return { ok: true as const, session: next }
     },
     [applySupabaseUser],
@@ -144,6 +168,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearSession()
     setSession(null)
   }, [])
+
+  useEffect(() => {
+    const tick = () => {
+      if (!session) return
+      if (isAuthSessionFresh(session)) return
+      void signOut()
+    }
+    const id = window.setInterval(tick, 60_000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') tick()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [session, signOut])
 
   const refresh = useCallback(() => {
     setSession(loadAuthSession())
