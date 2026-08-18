@@ -317,15 +317,6 @@ export function ImpactStoryScreen() {
           Start Due Diligence
           <ArrowRight className="h-5 w-5" />
         </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('/login')}
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/25 bg-transparent text-base font-semibold text-night-muted transition-colors hover:border-saffron/40 hover:text-saffron-glow touch-manipulation"
-          data-testid="button-impact-login"
-        >
-          Already have an account? Log in
-        </button>
       </div>
     </div>
   )
