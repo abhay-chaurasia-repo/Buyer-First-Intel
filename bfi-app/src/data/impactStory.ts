@@ -1,3 +1,5 @@
+import type { PageSceneId } from '@/data/pageScenes'
+
 export const IMPACT_SEEN_KEY = 'bfi.impact-seen'
 
 export function hasSeenImpact(): boolean {
@@ -21,45 +23,34 @@ export type ImpactPage = {
   eyebrow: string
   title: string
   body: string
-  image: string
-  imageAlt: string
   snippet: 'size' | 'visits' | 'community'
-  /**
-   * dusk — already low-key photo (visits reference).
-   * day — brighter exterior; grade toward the visits dusk feel.
-   */
-  mood: 'dusk' | 'day'
+  /** Same house scene + wash as the matching in-app screen */
+  scene: PageSceneId
 }
 
 export const IMPACT_PAGES: ImpactPage[] = [
   {
     id: 'size',
-    eyebrow: 'County vs listing',
-    title: 'County living area first — then check the listing.',
-    body: 'See the county sqft on Due Diligence, compare it with Zillow or Redfin, and upvote whether the published size matches or looks overstated. No typed numbers.',
-    image: '/impact/impact-georgian-home.png',
-    imageAlt: 'Georgian-style home facade',
+    eyebrow: "County's Fact",
+    title: 'Gross living area first — then check the listing.',
+    body: 'Open County’s Fact, compare Gross living area with Zillow or Redfin, and upvote whether the published size matches or looks overstated. No typed numbers.',
     snippet: 'size',
-    mood: 'day',
+    scene: 'property',
   },
   {
     id: 'visits',
-    eyebrow: 'Verified visits',
+    eyebrow: 'Verified Visits',
     title: 'See how many buyers actually showed up — and when.',
     body: 'Every GPS-verified visit logs date and time so you can spot natural diligence patterns, not manufactured urgency. Visitor identities stay hidden — buyers can’t contact each other.',
-    image: '/impact/impact-visits.png',
-    imageAlt: 'Quiet residential street at dusk',
     snippet: 'visits',
-    mood: 'dusk',
+    scene: 'journey',
   },
   {
     id: 'community',
-    eyebrow: 'Buyer community',
+    eyebrow: 'Buyer Community',
     title: 'Read Plus and Watch signals from buyers.',
-    body: 'Plus labels flag upsides buyers noticed. Watch labels flag watch-outs to dig into. Most need an on-site visit; listing-vs-county size labels can be upvoted remotely. Structured signals, not marketing blurbs.',
-    image: '/impact/impact-community.png',
-    imageAlt: 'Neighborhood community atmosphere',
+    body: 'Plus labels flag upsides buyers noticed. Watch labels flag watch-outs to dig into. Most need an on-site visit; listing-vs-county size labels can be upvoted remotely.',
     snippet: 'community',
-    mood: 'day',
+    scene: 'watchlist',
   },
 ]

@@ -176,7 +176,7 @@ export function AuthOptionsScreen({ mode }: AuthOptionsScreenProps) {
       data-testid={isSignup ? 'signup-screen' : 'login-screen'}
       data-auth-mode={mode}
     >
-      <SceneBackdrop scene="login" intensity={isSignup ? 'soft' : 'medium'} />
+      <SceneBackdrop scene="login" intensity="medium" />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,calc(var(--bfi-status-pad)+0.25rem))]">
         <header className="flex items-center">

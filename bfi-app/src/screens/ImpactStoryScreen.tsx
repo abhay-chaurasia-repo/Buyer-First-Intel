@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
+import { ArrowRight, CalendarClock, MapPin, ThumbsUp, Users } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { PlusWatchLegend, plusWatchChipClass } from '@/components/PlusWatchLegend'
+import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
 import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
@@ -11,49 +12,53 @@ const AUTO_MS = 3500
 
 function SizeSnippet() {
   return (
-    <div
-      className="rounded-2xl border border-white/25 bg-transparent p-3 text-night-ink"
-      data-testid="impact-snippet-size"
-    >
-      <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-saffron/25">
-          <FileText className="h-4 w-4 text-saffron-glow" strokeWidth={2.25} />
+    <div className="text-night-ink" data-testid="impact-snippet-size">
+      <div
+        className="flex w-full min-h-11 items-center gap-2 px-2 py-1.5"
+        data-testid="section-heading-cf-living-area"
+      >
+        <span className="min-w-0 flex-1 font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+          Gross living area
         </span>
-        <p className="font-display text-[10px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-          County living area
-        </p>
       </div>
-      <div className="mt-3 flex min-h-11 items-center justify-between rounded-xl px-2 py-2">
-        <span className="text-[13px] text-night-muted">County sqft</span>
-        <span className="text-sm font-semibold text-night-ink">2,509</span>
-      </div>
-      <div className="mt-1.5 rounded-xl border border-saffron/35 bg-saffron/10 px-2.5 py-2">
-        <p className="text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
-          Remote insight · no visit needed
-        </p>
-        <PlusWatchLegend variant="compact" showIntro={false} className="mt-1.5" />
-        <div className="mt-1.5 space-y-1">
-          {[
-            { text: 'Published listing size matches county', tone: 'plus' as const, votes: 4 },
-            {
-              text: 'Published listing size looks larger than county',
-              tone: 'watch' as const,
-              votes: 5,
-            },
-          ].map((label) => (
-            <div key={label.text} className="flex items-center gap-2 py-1">
-              <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
-                {label.tone === 'plus' ? 'Plus' : 'Watch'}
-              </span>
-              <span className="min-w-0 flex-1 text-[12px] leading-snug text-night-ink">
-                {label.text}
-              </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-saffron-glow">
-                <ThumbsUp className="h-3 w-3" strokeWidth={2.25} />
-                {label.votes}
-              </span>
-            </div>
-          ))}
+      <div className="mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
+        <div className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-2 py-2">
+          <span className="text-[13px] text-night-muted">Gross living area</span>
+          <span className="text-right text-sm font-semibold text-night-ink">2,509 sqft</span>
+        </div>
+        <div
+          className="mt-2 rounded-xl border border-white/15 bg-night-elevated/55 px-3 py-2.5 shadow-[inset_0_1px_0_rgb(246_231_200_/0.06)]"
+          data-testid="remote-insight-preview"
+        >
+          <p className="text-[10px] font-bold tracking-[0.14em] text-saffron-glow/90 uppercase">
+            Remote insight · no visit needed
+          </p>
+          <p className="mt-1 text-[10px] leading-snug text-night-faint">
+            Compare Gross living area to Zillow/Redfin, then upvote one.
+          </p>
+          <div className="mt-2 space-y-1">
+            {[
+              { text: 'Published listing size matches county', tone: 'plus' as const, votes: 4 },
+              {
+                text: 'Published listing size looks larger than county',
+                tone: 'watch' as const,
+                votes: 5,
+              },
+            ].map((label) => (
+              <div key={label.text} className="flex items-center gap-2 rounded-lg px-0.5 py-1">
+                <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
+                  {label.tone === 'plus' ? 'Plus' : 'Watch'}
+                </span>
+                <span className="min-w-0 flex-1 text-[12px] leading-snug text-night-ink">
+                  {label.text}
+                </span>
+                <span className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.04] px-2.5 text-xs font-semibold text-night-muted">
+                  <ThumbsUp className="h-3.5 w-3.5" strokeWidth={2.25} />
+                  <span className="tabular-nums">{label.votes}</span>
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -62,71 +67,77 @@ function SizeSnippet() {
 
 function VisitsSnippet() {
   return (
-    <div
-      className="rounded-2xl border border-white/25 bg-transparent p-3 text-night-ink"
-      data-testid="impact-snippet-visits"
-    >
-      <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-saffron/25">
-          <ShieldCheck className="h-4 w-4 text-saffron-glow" strokeWidth={2.25} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-[10px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-            Verified visits
-          </p>
-          <p className="text-[11px] text-night-faint">6 visits · 5 with labels · anonymous</p>
+    <div className="text-night-ink" data-testid="impact-snippet-visits">
+      <div className="rounded-2xl border border-white/25 bg-transparent p-3">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
+            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
+              Verified visits
+            </p>
+            <p className="mt-1 text-sm font-semibold text-night-ink">6</p>
+            <p className="text-[11px] text-night-muted">3 days · 6 visits</p>
+          </div>
+          <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
+            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
+              With labels
+            </p>
+            <p className="mt-1 text-sm font-semibold text-night-ink">5</p>
+            <p className="text-[11px] text-night-muted">From Buyer Community</p>
+          </div>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-night-faint">
+          <span className="inline-flex items-center gap-1">
+            <CalendarClock className="h-3 w-3 text-saffron-glow" aria-hidden />
+            Date & time on every visit
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Users className="h-3 w-3 text-saffron-glow" aria-hidden />
+            Anonymous visit counts
+          </span>
         </div>
       </div>
-      <div className="mt-3 space-y-1">
-        {[
-          { when: 'Tue, Aug 5 · 9:03 AM', tag: '2 labels' },
-          { when: 'Sat, Aug 1 · 6:15 PM', tag: '3 labels' },
-          { when: 'Wed, Jul 22 · 11:48 AM', tag: '3 labels' },
-        ].map((row) => (
-          <div
-            key={row.when}
-            className="flex min-h-11 items-center justify-between gap-2 rounded-xl px-2 py-2"
-          >
-            <p className="min-w-0 truncate text-[13px] font-semibold text-night-ink">{row.when}</p>
-            <span className="shrink-0 rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-              {row.tag}
-            </span>
+
+      <article className="mt-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-night-ink">Tue, Aug 5, 2025</p>
+            <p className="mt-0.5 text-[13px] text-night-muted">9:03 AM</p>
           </div>
-        ))}
-      </div>
-      <p className="mt-2 text-[10px] leading-snug text-night-faint">
-        Counts and timing only — visitor details stay private.
-      </p>
+          <span className="shrink-0 rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
+            2 labels
+          </span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-night-muted">
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="h-3 w-3 text-saffron-glow" aria-hidden />
+            42m from pin · ±8m
+          </span>
+          <span className="text-saffron-glow">Inside 100m</span>
+        </div>
+      </article>
     </div>
   )
 }
 
 function CommunitySnippet() {
   return (
-    <div
-      className="rounded-2xl border border-white/25 bg-transparent p-3 text-night-ink"
-      data-testid="impact-snippet-community"
-    >
-      <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-saffron/25">
-          <Users className="h-4 w-4 text-saffron-glow" strokeWidth={2.25} />
+    <div className="text-night-ink" data-testid="impact-snippet-community">
+      <div className="flex w-full min-h-11 items-center gap-2 px-2 py-1.5">
+        <span className="min-w-0 flex-1 truncate font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+          Surroundings & utilities
         </span>
-        <p className="font-display text-[10px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-          Buyer Community
-        </p>
+        <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+          3
+        </span>
       </div>
-      <PlusWatchLegend variant="compact" showIntro={false} className="mt-2.5" />
-      <div className="mt-2 space-y-1">
+      <div className="mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
+        <PlusWatchLegend variant="compact" showIntro={false} className="px-2 pb-1" />
         {[
-          { text: 'Quiet at night', tone: 'plus' as const, votes: 4 },
+          { text: 'No overhead power lines in view', tone: 'plus' as const, votes: 3 },
           { text: 'High-tension cables nearby', tone: 'watch' as const, votes: 2 },
-          { text: 'Published listing size matches county', tone: 'plus' as const, votes: 4 },
-          { text: 'Mature trees', tone: 'plus' as const, votes: 4 },
+          { text: 'Clean air feel on site', tone: 'plus' as const, votes: 2 },
         ].map((label) => (
-          <div
-            key={label.text}
-            className="flex min-h-11 items-center gap-2 rounded-xl px-2 py-2"
-          >
+          <div key={label.text} className="flex min-h-11 items-center gap-2 rounded-xl px-2 py-2">
             <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
               {label.tone === 'plus' ? 'Plus' : 'Watch'}
             </span>
@@ -151,34 +162,9 @@ function Snippet({ kind }: { kind: ImpactPage['snippet'] }) {
 }
 
 function StorySlide({ page }: { page: ImpactPage }) {
-  const isDay = page.mood === 'day'
-
   return (
     <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
-      <img
-        src={page.image}
-        alt={page.imageAlt}
-        className={cn(
-          'absolute inset-0 h-full w-full object-cover',
-          // Bright exteriors → dusk luminance like the visits slide
-          isDay && 'brightness-[0.62] contrast-[1.12] saturate-[0.88]',
-        )}
-      />
-      {/* Same pleasing visits wash: open mid so the scene shows; type still pops */}
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-ink/58 via-ink/38 to-ink/90"
-        aria-hidden
-      />
-      {/* Soft left scrim for copy — keeps brick / stoop / porch glow visible on the right */}
-      <div
-        className="absolute inset-0 bg-gradient-to-r from-ink/45 via-ink/18 to-transparent"
-        aria-hidden
-      />
-      <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-8%,rgb(232_145_58/0.18),transparent_58%)]"
-        aria-hidden
-      />
-      {/* Clear the logo + tagline, with a little air — not as much as before */}
+      <SceneBackdrop scene={page.scene} intensity="medium" />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(5.5rem,calc(var(--bfi-status-pad)+4rem))] pb-[11.5rem]">
         <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {page.eyebrow}
@@ -198,7 +184,7 @@ function StorySlide({ page }: { page: ImpactPage }) {
 }
 
 /**
- * Welcome impact story — same scene language as inner diligence screens.
+ * Welcome impact story — same scene wash and CatchUp chrome as inner screens.
  */
 export function ImpactStoryScreen() {
   const navigate = useNavigate()
@@ -260,7 +246,6 @@ export function ImpactStoryScreen() {
         setHolding(false)
       }}
     >
-      {/* Full-bleed carousel — image fills the entire phone frame */}
       <div className="absolute inset-0 overflow-hidden">
         <div
           className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
@@ -287,7 +272,7 @@ export function ImpactStoryScreen() {
         </span>
       </header>
 
-      <div className="absolute inset-x-0 bottom-0 z-20 space-y-3 bg-gradient-to-t from-ink via-ink/90 to-transparent px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
+      <div className="absolute inset-x-0 bottom-0 z-20 space-y-3 bg-gradient-to-t from-ink/80 via-ink/35 to-transparent px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
         <div className="flex items-center justify-center gap-2" aria-label="Story progress">
           {IMPACT_PAGES.map((item, i) => (
             <button
