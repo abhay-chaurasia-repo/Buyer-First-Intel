@@ -34,7 +34,7 @@ function SizeSnippet() {
             Remote insight · no visit needed
           </p>
           <p className="mt-1 text-[10px] leading-snug text-night-faint">
-            Compare Gross living area to Zillow/Redfin, then upvote one.
+            Compare with the listing, then upvote to help each other.
           </p>
           <div className="mt-2 space-y-1">
             {[
