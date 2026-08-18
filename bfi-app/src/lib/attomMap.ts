@@ -619,8 +619,15 @@ export function mapAttomToPropertyFields(attom: AttomProperty): Partial<MockProp
   const permits = mapAttomBuildingPermits(attom)
   if (permits.length > 0) fields.buildingPermits = permits
 
-  const schools = mapAttomSchools(attom)
+  const schools = mapAttomSchools(attom).filter((school) =>
+    isPublishedAssignedSchool(school.name, school.geoIdV4),
+  )
   if (schools.length > 0) fields.schools = schools
+
+  const nearby = mapAttomNearbySchoolSearch(
+    (attom as AttomProperty & { nearbySearch?: unknown[] }).nearbySearch,
+  )
+  if (nearby.length > 0) fields.nearbySchools = nearby
 
   const district = mapAttomSchoolDistrict(attom)
   if (district) fields.schoolDistrict = district
@@ -800,6 +807,64 @@ function inferSchoolLevel(gradeLow?: string, gradeHigh?: string): PropertySchool
   return 'middle'
 }
 
+function isPublishedAssignedSchool(name: string, geoIdV4?: string) {
+  const n = name.toLowerCase()
+  if (!n || n.includes('unassigned')) return false
+  if (geoIdV4 && /^G\d/i.test(geoIdV4)) return false
+  return true
+}
+
+function nearbySchoolLevel(
+  instructionalLevel?: string,
+  gradeLow?: string,
+  gradeHigh?: string,
+): PropertySchool['level'] {
+  const t = String(instructionalLevel || '').toLowerCase()
+  if (t.includes('elem') || t.includes('primary')) return 'elementary'
+  if (t.includes('middle') || t.includes('junior') || t.includes('intermed')) return 'middle'
+  if (t.includes('high') || t.includes('senior')) return 'high'
+  return inferSchoolLevel(gradeLow, gradeHigh)
+}
+
+export function mapAttomNearbySchoolSearch(raw: unknown): PropertySchool[] {
+  if (!Array.isArray(raw)) return []
+  const schools: PropertySchool[] = []
+  for (const [index, row] of raw.entries()) {
+    if (!row || typeof row !== 'object') continue
+    const item = row as Record<string, unknown>
+    const location = (item.location || {}) as Record<string, unknown>
+    const detail = (item.detail || {}) as Record<string, unknown>
+    const status = String(detail.status || '').toLowerCase()
+    if (status.includes('closed') || status.includes('inactive')) continue
+    const nameRaw = detail.schoolName || item.schoolName
+    if (!nameRaw || !String(nameRaw).trim()) continue
+    const name = titleCaseStreet(String(nameRaw))
+    const gradeLow = String(detail.gradeSpanLow || '').trim()
+    const gradeHigh = String(detail.gradeSpanHigh || '').trim()
+    const geoIdV4 = location.geoIdV4 ? String(location.geoIdV4) : undefined
+    const distanceRaw = detail.distance != null ? Number(detail.distance) : undefined
+    const lat = location.latitude != null ? Number(location.latitude) : undefined
+    const lng = location.longitude != null ? Number(location.longitude) : undefined
+    const typeRaw = detail.institutionType || detail.schoolType
+    schools.push({
+      id: `near-${geoIdV4 || index}`,
+      name,
+      gradeLow: gradeLow || undefined,
+      gradeHigh: gradeHigh || undefined,
+      level: nearbySchoolLevel(String(detail.instructionalLevel || ''), gradeLow, gradeHigh),
+      type: typeRaw ? titleCaseStreet(String(typeRaw)) : undefined,
+      distanceMiles:
+        distanceRaw != null && Number.isFinite(distanceRaw) ? distanceRaw : undefined,
+      lat: lat != null && Number.isFinite(lat) ? lat : undefined,
+      lng: lng != null && Number.isFinite(lng) ? lng : undefined,
+      geoIdV4,
+    })
+  }
+  return schools
+    .sort((a, b) => (a.distanceMiles ?? 99) - (b.distanceMiles ?? 99))
+    .slice(0, 8)
+}
+
 export function mapAttomSchoolDistrict(
   attom: AttomProperty | Record<string, unknown>,
 ): PropertySchoolDistrict | undefined {
@@ -960,6 +1025,29 @@ async function fetchAttomPackage(
     return pickAttomProperty(raw)
   } catch {
     return null
+  }
+}
+
+async function fetchAttomNearbySchools(params: {
+  apiKey: string
+  lat?: number
+  lng?: number
+}): Promise<unknown[]> {
+  if (params.lat == null || params.lng == null) return []
+  if (!Number.isFinite(params.lat) || !Number.isFinite(params.lng)) return []
+  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v4/school/search')
+  url.searchParams.set('latitude', String(params.lat))
+  url.searchParams.set('longitude', String(params.lng))
+  url.searchParams.set('radius', '5')
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json', apikey: params.apiKey },
+    })
+    const raw = (await res.json().catch(() => null)) as { schools?: unknown[] } | null
+    if (!res.ok) return []
+    return Array.isArray(raw?.schools) ? raw.schools : []
+  } catch {
+    return []
   }
 }
 
@@ -1226,7 +1314,18 @@ export async function fetchAttomCountyFacts(params: {
     }
   }
 
-  const fields = mapAttomToPropertyFields(merged)
+  const loc = merged.location
+  const lat = loc?.latitude != null ? Number(loc.latitude) : undefined
+  const lng = loc?.longitude != null ? Number(loc.longitude) : undefined
+  const nearbySearch = await fetchAttomNearbySchools({
+    apiKey: params.apiKey,
+    lat,
+    lng,
+  })
+  const fields = mapAttomToPropertyFields({
+    ...merged,
+    nearbySearch,
+  } as AttomProperty & { nearbySearch?: unknown[] })
   const warnings: string[] = []
   if (!profile) warnings.push('property/basicprofile unavailable')
   if (!expanded) warnings.push('property/expandedprofile unavailable')

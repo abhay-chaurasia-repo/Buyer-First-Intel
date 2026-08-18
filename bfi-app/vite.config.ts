@@ -34,6 +34,93 @@ function titleCaseStreet(raw: string) {
     .join(' ')
 }
 
+function parseGradeToken(raw?: unknown) {
+  if (raw == null) return null
+  const t = String(raw).trim().toUpperCase()
+  if (!t) return null
+  if (t === 'PK' || t === 'PREK' || t === 'PRE-K' || t === 'KG' || t === 'K') return 0
+  const n = Number.parseInt(t, 10)
+  return Number.isFinite(n) ? n : null
+}
+
+function inferSchoolLevel(gradeLow?: string, gradeHigh?: string) {
+  const low = parseGradeToken(gradeLow)
+  const high = parseGradeToken(gradeHigh)
+  if (low == null && high == null) return 'other'
+  const lo = low ?? high ?? 0
+  const hi = high ?? low ?? lo
+  if (hi <= 5) return 'elementary'
+  if (lo >= 9) return 'high'
+  if (lo >= 6 && hi <= 8) return 'middle'
+  if (lo <= 5) return 'elementary'
+  if (hi >= 9) return 'high'
+  return 'middle'
+}
+
+function nearbySchoolLevel(instructionalLevel?: string, gradeLow?: string, gradeHigh?: string) {
+  const t = String(instructionalLevel || '').toLowerCase()
+  if (t.includes('elem') || t.includes('primary')) return 'elementary'
+  if (t.includes('middle') || t.includes('junior') || t.includes('intermed')) return 'middle'
+  if (t.includes('high') || t.includes('senior')) return 'high'
+  return inferSchoolLevel(gradeLow, gradeHigh)
+}
+
+function isPublishedAssignedSchool(name: string, geoIdV4?: string) {
+  const n = name.toLowerCase()
+  if (!n || n.includes('unassigned')) return false
+  if (geoIdV4 && /^G\d/i.test(geoIdV4)) return false
+  return true
+}
+
+function mapNearbySchoolSearch(rows: unknown[]) {
+  const schools: Array<{
+    id: string
+    name: string
+    gradeLow?: string
+    gradeHigh?: string
+    level: string
+    type?: string
+    distanceMiles?: number
+    lat?: number
+    lng?: number
+    geoIdV4?: string
+  }> = []
+  for (const [index, row] of rows.entries()) {
+    if (!row || typeof row !== 'object') continue
+    const item = row as Record<string, unknown>
+    const location = (item.location || {}) as Record<string, unknown>
+    const detail = (item.detail || {}) as Record<string, unknown>
+    const status = String(detail.status || '').toLowerCase()
+    if (status.includes('closed') || status.includes('inactive')) continue
+    const nameRaw = detail.schoolName || item.schoolName
+    if (!nameRaw || !String(nameRaw).trim()) continue
+    const name = titleCaseStreet(String(nameRaw))
+    const gradeLow = String(detail.gradeSpanLow || '').trim()
+    const gradeHigh = String(detail.gradeSpanHigh || '').trim()
+    const geoIdV4 = location.geoIdV4 ? String(location.geoIdV4) : undefined
+    const distanceRaw = detail.distance != null ? Number(detail.distance) : undefined
+    const lat = location.latitude != null ? Number(location.latitude) : undefined
+    const lng = location.longitude != null ? Number(location.longitude) : undefined
+    const typeRaw = detail.institutionType || detail.schoolType
+    schools.push({
+      id: `near-${geoIdV4 || index}`,
+      name,
+      gradeLow: gradeLow || undefined,
+      gradeHigh: gradeHigh || undefined,
+      level: nearbySchoolLevel(String(detail.instructionalLevel || ''), gradeLow, gradeHigh),
+      type: typeRaw ? titleCaseStreet(String(typeRaw)) : undefined,
+      distanceMiles:
+        distanceRaw != null && Number.isFinite(distanceRaw) ? distanceRaw : undefined,
+      lat: lat != null && Number.isFinite(lat) ? lat : undefined,
+      lng: lng != null && Number.isFinite(lng) ? lng : undefined,
+      geoIdV4,
+    })
+  }
+  return schools
+    .sort((a, b) => (a.distanceMiles ?? 99) - (b.distanceMiles ?? 99))
+    .slice(0, 8)
+}
+
 function stableAddressId(parts: {
   street: string
   city: string
@@ -1077,27 +1164,6 @@ function mapAttomProperty(attom: Record<string, unknown>) {
 
   const schoolRaw = attom.school
   if (Array.isArray(schoolRaw) && schoolRaw.length > 0) {
-    const parseGradeToken = (raw?: unknown) => {
-      if (raw == null) return null
-      const t = String(raw).trim().toUpperCase()
-      if (!t) return null
-      if (t === 'PK' || t === 'PREK' || t === 'PRE-K' || t === 'KG' || t === 'K') return 0
-      const n = Number.parseInt(t, 10)
-      return Number.isFinite(n) ? n : null
-    }
-    const inferLevel = (gradeLow?: string, gradeHigh?: string) => {
-      const low = parseGradeToken(gradeLow)
-      const high = parseGradeToken(gradeHigh)
-      if (low == null && high == null) return 'other'
-      const lo = low ?? high ?? 0
-      const hi = high ?? low ?? lo
-      if (hi <= 5) return 'elementary'
-      if (lo >= 9) return 'high'
-      if (lo >= 6 && hi <= 8) return 'middle'
-      if (lo <= 5) return 'elementary'
-      if (hi >= 9) return 'high'
-      return 'middle'
-    }
     const levelRank: Record<string, number> = {
       elementary: 0,
       middle: 1,
@@ -1110,6 +1176,9 @@ function mapAttomProperty(attom: Record<string, unknown>) {
         const item = row as Record<string, unknown>
         const nameRaw = item.InstitutionName || item.institutionName
         if (!nameRaw || !String(nameRaw).trim()) return null
+        const name = titleCaseStreet(String(nameRaw))
+        const geoIdV4 = item.geoIdV4 ? String(item.geoIdV4) : undefined
+        if (!isPublishedAssignedSchool(name, geoIdV4)) return null
         const gradeLow = String(item.lowAssignedGrade || item.gradelevel1lotext || '')
           .trim()
           .replace(/\s+$/g, '')
@@ -1120,10 +1189,10 @@ function mapAttomProperty(attom: Record<string, unknown>) {
         const distanceRaw = item.distance != null ? Number(item.distance) : undefined
         const lat = item.geocodinglatitude != null ? Number(item.geocodinglatitude) : undefined
         const lng = item.geocodinglongitude != null ? Number(item.geocodinglongitude) : undefined
-        const level = inferLevel(gradeLow || undefined, gradeHigh || undefined)
+        const level = inferSchoolLevel(gradeLow || undefined, gradeHigh || undefined)
         return {
           id: `school-${item.geoIdV4 || index}`,
-          name: titleCaseStreet(String(nameRaw)),
+          name,
           rating:
             typeof item.schoolRating === 'string' && item.schoolRating.trim()
               ? item.schoolRating.trim()
@@ -1141,7 +1210,7 @@ function mapAttomProperty(attom: Record<string, unknown>) {
             distanceRaw != null && Number.isFinite(distanceRaw) ? distanceRaw : undefined,
           lat: lat != null && Number.isFinite(lat) ? lat : undefined,
           lng: lng != null && Number.isFinite(lng) ? lng : undefined,
-          geoIdV4: item.geoIdV4 ? String(item.geoIdV4) : undefined,
+          geoIdV4,
         }
       })
       .filter(Boolean)
@@ -1251,7 +1320,28 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
     }
   }
 
-  const [profile, expanded, assessment, sale, history, permits, schools, assessmentHistory] =
+  async function loadNearby() {
+    if (!Number.isFinite(match.lat) || !Number.isFinite(match.lng)) return []
+    const url = new URL('https://api.gateway.attomdata.com/propertyapi/v4/school/search')
+    url.searchParams.set('latitude', String(match.lat))
+    url.searchParams.set('longitude', String(match.lng))
+    url.searchParams.set('radius', '5')
+    try {
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json', apikey: apiKey },
+      })
+      const raw = (await res.json().catch(() => null)) as {
+        schools?: unknown[]
+        status?: { msg?: string; code?: number | string }
+      } | null
+      if (!res.ok) return []
+      return Array.isArray(raw?.schools) ? raw.schools : []
+    } catch {
+      return []
+    }
+  }
+
+  const [profile, expanded, assessment, sale, history, permits, schools, assessmentHistory, nearbyRows] =
     await Promise.all([
       load('property/basicprofile'),
       load('property/expandedprofile'),
@@ -1261,6 +1351,7 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
       load('property/buildingpermits'),
       load('property/detailwithschools', 'v4'),
       load('assessmenthistory/detail'),
+      loadNearby(),
     ])
 
   if (
@@ -1417,7 +1508,10 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
       assessmentHistory?.location
   }
 
-  return { ok: true as const, property: mapAttomProperty(merged) }
+  const fields = mapAttomProperty(merged)
+  const nearbySchools = mapNearbySchoolSearch(nearbyRows)
+  if (nearbySchools.length > 0) fields.nearbySchools = nearbySchools
+  return { ok: true as const, property: fields }
 }
 
 /**

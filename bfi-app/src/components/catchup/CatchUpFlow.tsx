@@ -64,7 +64,7 @@ const surfaceMeta: Record<
     title: 'Schools',
     Icon: School,
     iconWrap: 'bg-saffron-bright/20 text-saffron-glow',
-    blurb: 'Schools associated with this address',
+    blurb: 'Assigned when published · nearby when not · confirm with the district',
   },
 }
 
@@ -127,7 +127,9 @@ function DetailSection({
         <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
           {/* Preview is a duplicate of field rows when fields exist — show only as fallback. */}
           {!hasFields && card.preview ? (
-            <p className="px-2 py-2 text-sm text-night-ink">{stripHash(card.preview)}</p>
+            <p className="px-2 py-2 text-sm leading-relaxed text-night-ink">{stripHash(card.preview)}</p>
+          ) : hasFields && card.channel === 'note' && card.preview ? (
+            <p className="px-2 pb-2 text-sm leading-relaxed text-night-ink">{stripHash(card.preview)}</p>
           ) : null}
 
           {hasFields

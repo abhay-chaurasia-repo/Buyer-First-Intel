@@ -187,6 +187,8 @@ export type MockProperty = {
   buildingPermits?: BuildingPermit[]
   /** Assigned schools from ATTOM /property/detailwithschools */
   schools?: PropertySchool[]
+  /** Nearby campuses from ATTOM /school/search — not the assigned zone */
+  nearbySchools?: PropertySchool[]
   schoolDistrict?: PropertySchoolDistrict
   /** Multi-year tax rolls from ATTOM /assessmenthistory/detail */
   taxHistory?: PropertyTaxYear[]
@@ -363,6 +365,53 @@ export const DEMO_PROPERTY: MockProperty = {
   apn: '0410120809',
   zoning: 'SF-3',
   starred: false,
+  schoolDistrict: { name: 'Austin ISD', type: 'Independent' },
+  schools: [
+    {
+      id: 'demo-es',
+      name: 'Oak Ridge Elementary',
+      level: 'elementary',
+      gradeLow: 'KG',
+      gradeHigh: '5',
+      type: 'Public',
+    },
+    {
+      id: 'demo-ms',
+      name: 'South Austin Middle',
+      level: 'middle',
+      gradeLow: '6',
+      gradeHigh: '8',
+      type: 'Public',
+    },
+    {
+      id: 'demo-hs',
+      name: 'Austin High School',
+      level: 'high',
+      gradeLow: '9',
+      gradeHigh: '12',
+      type: 'Public',
+    },
+  ],
+  nearbySchools: [
+    {
+      id: 'demo-near-es',
+      name: 'Zilker Elementary',
+      level: 'elementary',
+      gradeLow: 'KG',
+      gradeHigh: '5',
+      type: 'Public',
+      distanceMiles: 0.8,
+    },
+    {
+      id: 'demo-near-ms',
+      name: 'O Henry Middle',
+      level: 'middle',
+      gradeLow: '6',
+      gradeHigh: '8',
+      type: 'Public',
+      distanceMiles: 1.4,
+    },
+  ],
 }
 
 export const SEARCH_HISTORY: HistoryAddress[] = [
@@ -538,20 +587,24 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
     {
       id: 'schools',
       title: 'Schools',
-      subtitle: property.schoolDistrict?.name || 'Associated',
+      subtitle: property.schoolDistrict?.name || 'Assigned + nearby',
       badge:
         property.schools && property.schools.length > 0
           ? String(property.schools.length)
-          : property.factsStatus === 'live'
-            ? '—'
-            : '2',
+          : property.nearbySchools && property.nearbySchools.length > 0
+            ? String(property.nearbySchools.length)
+            : property.factsStatus === 'live'
+              ? '—'
+              : undefined,
       detail:
         property.schools && property.schools.length > 0
           ? property.schools
               .slice(0, 3)
-              .map((s) => [s.name, s.rating].filter(Boolean).join(' '))
+              .map((s) => s.name)
               .join(' · ')
-          : 'Assigned campuses for this address',
+          : property.nearbySchools && property.nearbySchools.length > 0
+            ? 'Nearby schools · confirm assignment with the district'
+            : 'Assigned campuses not published — confirm with the district',
       accent: 'schools',
     },
   ]
@@ -749,7 +802,7 @@ export function getChannelCanvas(
       const high = byLevel('high')
       const formatSchool = (school?: PropertySchool) => {
         if (!school) return live ? '—' : undefined
-        return [school.name, school.rating].filter(Boolean).join(' · ')
+        return school.name
       }
       return {
         id: '05-school-ratings' as const,
@@ -783,14 +836,27 @@ export function getChannelCanvas(
                   value: property.schoolDistrict?.name || (live ? '—' : 'Austin ISD'),
                   source,
                 },
+                {
+                  label: 'Nearby',
+                  value:
+                    (property.nearbySchools || [])
+                      .slice(0, 3)
+                      .map((s) => s.name)
+                      .join(' · ') || (live ? '—' : 'Zilker Elementary'),
+                  source: live ? 'ATTOM /school/search' : 'District stub',
+                },
               ]
             : [
                 { label: 'Elementary', value: 'Oak Ridge Elementary', source: 'District stub' },
                 { label: 'Middle', value: 'South Austin Middle', source: 'District stub' },
                 { label: 'High', value: 'Austin High School', source: 'District stub' },
                 { label: 'District', value: 'Austin ISD', source: 'District stub' },
+                { label: 'Nearby', value: 'Zilker Elementary', source: 'District stub' },
               ],
-        notes: ['Ratings are contextual only — not a ranking marketplace.'],
+        notes: [
+          'Assigned campuses not published for some addresses — confirm with the district before you write an offer.',
+          'Nearby list is proximity, not the attendance zone.',
+        ],
       }
     })(),
     '06-neighborhood-vibe': {

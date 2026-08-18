@@ -75,10 +75,14 @@ Native iOS/Android send the app anon key (or the buyer’s phone JWT). The funct
 
 Some residential streets may return `SuccessWithoutResult` on the trial plan — address match still works; facts stay pending with a note.
 
-## Step 3 — Schools (ATTOM detailwithschools)
-- Bound via `GET /property/detailwithschools` (v4) on property lookup
-- CatchUp surface uses assigned ES/MS/HS + district; verify boundaries with the district before deciding
-- GreatSchools numeric (`GSTestRating`) may be empty on trial — letter `schoolRating` is preferred when present
+## Step 3 — Schools (ATTOM detailwithschools + nearby search)
+- Assigned campuses via `GET /property/detailwithschools` (v4)
+- CatchUp shows assigned ES/MS/HS + district when ATTOM publishes them
+- If assigned campuses are missing, the card says so and still shows district when present
+- Nearby campuses via `GET /school/search` (v4, 5-mile radius) — labeled **Nearby**, never assigned
+- Buyers are told to confirm zoning with the district before writing an offer
+- Ratings stay hidden in the Schools tile
+- GreatSchools enrichment is deferred
 
 ## Step 4 — Real GPS Verify (v1 done)
 - Property page **Verify** uses `navigator.geolocation` vs `property.lat` / `property.lng`

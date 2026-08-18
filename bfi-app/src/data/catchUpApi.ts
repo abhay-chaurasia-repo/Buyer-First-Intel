@@ -514,68 +514,16 @@ export function fetchBuyerInsightsApi(property: MockProperty): CatchUpApiRespons
 
 /** GET /api/properties/:id/schools */
 export function fetchSchoolsApi(property: MockProperty): CatchUpApiResponse {
-  const live = property.factsStatus === 'live'
-  const schools = property.schools || []
+  const assigned = property.schools || []
+  const nearby = dedupeNearbySchools(assigned, property.nearbySchools || [])
   const district = property.schoolDistrict
-  const source = live
+  const live = property.factsStatus === 'live'
+  const assignedSource = live
     ? 'ATTOM /property/detailwithschools'
-    : 'GET /api/properties/:id/schools'
-
-  if (schools.length === 0) {
-    const items: CatchUpCard[] = live
-      ? [
-          {
-            id: 'sc-pending',
-            type: 'school',
-            channel: 'assigned',
-            unreadCount: 0,
-            headline: 'Assigned schools',
-            preview: district?.name
-              ? `District ${district.name}. Campus list not returned for this address.`
-              : 'ATTOM did not return assigned campuses for this address. Verify boundaries with the district.',
-            timestamp: isoMinutesAgo(20),
-            source,
-            fields: [
-              ...(district?.name
-                ? [{ label: 'District', value: district.name }]
-                : [{ label: 'District', value: '—' }]),
-            ],
-          },
-        ]
-      : [
-          {
-            id: 'sc-elementary',
-            type: 'school',
-            channel: 'elementary',
-            unreadCount: 1,
-            headline: 'Assigned elementary',
-            preview:
-              'Oak Ridge Elementary — verify current boundary with the district before deciding.',
-            timestamp: isoMinutesAgo(20),
-            source,
-            fields: [
-              { label: 'Campus', value: 'Oak Ridge Elementary' },
-              { label: 'District', value: 'Austin ISD' },
-            ],
-          },
-          {
-            id: 'sc-secondary',
-            type: 'school',
-            channel: 'secondary',
-            unreadCount: 1,
-            headline: 'Middle & high assignment',
-            preview:
-              'South Austin Middle → Austin High School. Ratings are contextual — not a rankings marketplace.',
-            timestamp: isoMinutesAgo(55),
-            source,
-            fields: [
-              { label: 'Middle', value: 'South Austin Middle' },
-              { label: 'High', value: 'Austin High School' },
-            ],
-          },
-        ]
-    return wrapResponse(property.id, `/api/properties/${property.id}/schools`, items)
-  }
+    : property.factsStatus === 'demo'
+      ? 'Demo'
+      : 'GET /api/properties/:id/schools'
+  const nearbySource = live ? 'ATTOM /school/search' : assignedSource
 
   const levelLabel: Record<string, string> = {
     elementary: 'Elementary',
@@ -585,64 +533,143 @@ export function fetchSchoolsApi(property: MockProperty): CatchUpApiResponse {
   }
 
   const items: CatchUpCard[] = []
-  if (district?.name) {
+
+  items.push({
+    id: 'sc-verify',
+    type: 'school',
+    channel: 'note',
+    unreadCount: 0,
+    headline: 'Confirm with the district',
+    preview:
+      'Verify assigned campuses with the district before you write an offer. Attendance zones can change.',
+    timestamp: isoMinutesAgo(8),
+    source: assignedSource,
+  })
+
+  if (assigned.length === 0) {
     items.push({
-      id: 'sc-district',
+      id: 'sc-assigned-missing',
       type: 'school',
-      channel: 'district',
-      unreadCount: 1,
-      headline: district.name,
-      preview: [district.type, 'Assigned district for this address']
-        .filter(Boolean)
-        .join(' · '),
+      channel: 'note',
+      unreadCount: 0,
+      headline: 'Assigned campuses',
+      preview: district?.name
+        ? `District ${district.name}. Assigned campuses not published for this address.`
+        : 'Assigned campuses not published for this address. Confirm boundaries with the district.',
       timestamp: isoMinutesAgo(12),
-      source,
+      source: assignedSource,
       fields: [
-        { label: 'District', value: district.name },
-        ...(district.type ? [{ label: 'Type', value: district.type }] : []),
+        {
+          label: 'Status',
+          value: 'Not published for this address',
+        },
+        ...(district?.name ? [{ label: 'District', value: district.name }] : []),
+        ...(district?.type ? [{ label: 'Type', value: district.type }] : []),
       ],
     })
+  } else {
+    if (district?.name) {
+      items.push({
+        id: 'sc-district',
+        type: 'school',
+        channel: 'district',
+        unreadCount: 0,
+        headline: district.name,
+        preview: [district.type, 'Assigned district for this address'].filter(Boolean).join(' · '),
+        timestamp: isoMinutesAgo(12),
+        source: assignedSource,
+        fields: [
+          { label: 'District', value: district.name },
+          ...(district.type ? [{ label: 'Type', value: district.type }] : []),
+        ],
+      })
+    }
+
+    for (const [index, school] of assigned.entries()) {
+      items.push(schoolCard(school, index, 'Assigned', assignedSource, levelLabel))
+    }
   }
 
-  for (const [index, school] of schools.entries()) {
-    const level = school.level || 'other'
-    const grades =
-      school.gradeLow || school.gradeHigh
-        ? [school.gradeLow, school.gradeHigh].filter(Boolean).join('–')
-        : null
+  if (nearby.length > 0) {
     items.push({
-      id: school.id || `sc-${index}`,
+      id: 'sc-nearby-note',
       type: 'school',
-      channel: level,
-      unreadCount: index === 0 ? 1 : 0,
-      headline: [levelLabel[level] || 'Campus', school.name].join(' · '),
-      preview: [
-        school.rating ? `Rating ${school.rating}` : null,
-        grades ? `Grades ${grades}` : null,
-        school.distanceMiles != null ? `${school.distanceMiles.toFixed(2)} mi` : null,
-        school.type,
-      ]
-        .filter(Boolean)
-        .join(' · '),
-      timestamp: isoMinutesAgo(18 + index * 6),
-      source,
-      fields: [
-        { label: 'Campus', value: school.name },
-        ...(school.rating ? [{ label: 'Rating', value: school.rating }] : []),
-        ...(school.gsTestRating != null
-          ? [{ label: 'GreatSchools test', value: String(school.gsTestRating) }]
-          : []),
-        ...(grades ? [{ label: 'Grades', value: grades }] : []),
-        ...(school.type ? [{ label: 'Type', value: school.type }] : []),
-        ...(school.distanceMiles != null
-          ? [{ label: 'Distance', value: `${school.distanceMiles.toFixed(2)} mi` }]
-          : []),
-        ...(district?.name ? [{ label: 'District', value: district.name }] : []),
-      ],
+      channel: 'nearby',
+      unreadCount: 0,
+      headline: 'Nearby',
+      preview:
+        'Schools within about 5 miles of this pin — not the assigned attendance zone.',
+      timestamp: isoMinutesAgo(16),
+      source: nearbySource,
+    })
+    for (const [index, school] of nearby.entries()) {
+      items.push(schoolCard(school, index, 'Nearby', nearbySource, levelLabel))
+    }
+  } else if (assigned.length === 0) {
+    items.push({
+      id: 'sc-nearby-missing',
+      type: 'school',
+      channel: 'nearby',
+      unreadCount: 0,
+      headline: 'Nearby',
+      preview: 'No nearby campuses returned for this pin.',
+      timestamp: isoMinutesAgo(16),
+      source: nearbySource,
     })
   }
 
   return wrapResponse(property.id, `/api/properties/${property.id}/schools`, items)
+}
+
+function schoolKey(school: { name: string; geoIdV4?: string }) {
+  return (school.geoIdV4 || school.name).toLowerCase().replace(/[^a-z0-9]+/g, '')
+}
+
+function dedupeNearbySchools(
+  assigned: NonNullable<MockProperty['schools']>,
+  nearby: NonNullable<MockProperty['nearbySchools']>,
+) {
+  const taken = new Set(assigned.map(schoolKey))
+  return nearby.filter((school) => !taken.has(schoolKey(school)))
+}
+
+function schoolCard(
+  school: NonNullable<MockProperty['schools']>[number],
+  index: number,
+  kind: 'Assigned' | 'Nearby',
+  source: string,
+  levelLabel: Record<string, string>,
+) {
+  const level = school.level || 'other'
+  const grades =
+    school.gradeLow || school.gradeHigh
+      ? [school.gradeLow, school.gradeHigh].filter(Boolean).join('–')
+      : null
+  return {
+    id: `${kind === 'Nearby' ? 'near' : 'sc'}-${school.id || index}`,
+    type: 'school' as const,
+    channel: kind === 'Nearby' ? 'nearby' : level,
+    unreadCount: 0,
+    headline: [kind, levelLabel[level] || 'Campus', school.name].join(' · '),
+    preview: [
+      grades ? `Grades ${grades}` : null,
+      school.distanceMiles != null ? `${school.distanceMiles.toFixed(2)} mi` : null,
+      school.type,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    timestamp: isoMinutesAgo(18 + index * 6),
+    source,
+    fields: [
+      { label: 'Campus', value: school.name },
+      { label: kind === 'Nearby' ? 'Kind' : 'Assignment', value: kind },
+      ...(grades ? [{ label: 'Grades', value: grades }] : []),
+      ...(school.type ? [{ label: 'Type', value: school.type }] : []),
+      ...(school.distanceMiles != null
+        ? [{ label: 'Distance', value: `${school.distanceMiles.toFixed(2)} mi` }]
+        : []),
+    ],
+  }
 }
 
 export function fetchSurfaceApi(
