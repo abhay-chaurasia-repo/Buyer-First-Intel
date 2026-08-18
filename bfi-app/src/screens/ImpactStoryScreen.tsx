@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText, ShieldCheck, ThumbsUp, Users } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { PlusWatchLegend, plusWatchChipClass } from '@/components/PlusWatchLegend'
-import { APP_TAGLINE } from '@/data/brand'
+import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
 import { cn } from '@/lib/utils'
 
@@ -183,10 +183,8 @@ function StorySlide({ page }: { page: ImpactPage }) {
         <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {page.eyebrow}
         </p>
-        <h1 className="mt-3.5 max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight">
-          <span className="bg-gradient-to-br from-saffron-glow via-saffron-bright to-saffron bg-clip-text text-transparent">
-            {page.title}
-          </span>
+        <h1 className="mt-3.5 max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight text-night-ink">
+          {page.title}
         </h1>
         <p className="mt-3.5 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
           {page.body}
@@ -280,6 +278,9 @@ export function ImpactStoryScreen() {
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 px-5 bfi-status-pad">
         <div className="pointer-events-auto flex items-center gap-2 pb-2 pt-1">
           <BrandLogo size={36} />
+          <p className="font-display text-[1.05rem] font-bold tracking-tight text-night-ink">
+            {APP_NAME}
+          </p>
         </div>
         <span className="pointer-events-none shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow">
           {APP_TAGLINE}
