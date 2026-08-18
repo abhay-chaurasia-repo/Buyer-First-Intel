@@ -132,11 +132,23 @@ function CommunitySnippet() {
       </div>
       <div className="mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
         {[
+          {
+            text: 'High-tension cables nearby',
+            tone: 'watch' as const,
+            votes: 6,
+            featured: true,
+          },
           { text: 'No overhead power lines in view', tone: 'plus' as const, votes: 3 },
-          { text: 'High-tension cables nearby', tone: 'watch' as const, votes: 2 },
           { text: 'Clean air feel on site', tone: 'plus' as const, votes: 2 },
         ].map((label) => (
-          <div key={label.text} className="flex min-h-11 items-center gap-2 rounded-xl px-2 py-2">
+          <div
+            key={label.text}
+            className={cn(
+              'flex min-h-11 items-center gap-2 rounded-xl px-2 py-2',
+              label.featured && 'border border-watch/45 bg-watch-soft/40',
+            )}
+            data-testid={label.featured ? 'impact-label-high-tension' : undefined}
+          >
             <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
               {label.tone === 'plus' ? 'Plus' : 'Watch'}
             </span>
@@ -163,7 +175,7 @@ function Snippet({ kind }: { kind: ImpactPage['snippet'] }) {
 function StorySlide({ page }: { page: ImpactPage }) {
   return (
     <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
-      <SceneBackdrop scene={page.scene} intensity="medium" />
+      <SceneBackdrop scene={page.scene} src={page.image} intensity="medium" />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(5.5rem,calc(var(--bfi-status-pad)+4rem))] pb-[11.5rem]">
         <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
           {page.eyebrow}

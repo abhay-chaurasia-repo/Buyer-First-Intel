@@ -26,6 +26,8 @@ export type ImpactPage = {
   snippet: 'size' | 'visits' | 'community'
   /** Same house scene + wash as the matching in-app screen */
   scene: PageSceneId
+  /** Optional photo override; overlay wash still matches `scene` */
+  image?: string
 }
 
 export const IMPACT_PAGES: ImpactPage[] = [
@@ -48,9 +50,10 @@ export const IMPACT_PAGES: ImpactPage[] = [
   {
     id: 'community',
     eyebrow: 'Buyer Community',
-    title: 'Read signals from buyers who showed up.',
-    body: 'Most labels need an on-site visit; listing-vs-county size can be upvoted remotely. Structured signals, not marketing blurbs.',
+    title: 'Buyers flag what they actually saw on site.',
+    body: 'This Watch label is High-tension cables nearby — the lines sit over the house. Structured signals from visits, not listing copy.',
     snippet: 'community',
     scene: 'watchlist',
+    image: '/scenes/bg-community-cables.png',
   },
 ]

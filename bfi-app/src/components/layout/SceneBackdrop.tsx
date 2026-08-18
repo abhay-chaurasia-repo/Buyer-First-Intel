@@ -5,6 +5,8 @@ type SceneBackdropProps = {
   scene: PageSceneId
   /** Stronger ink wash keeps dense UI readable */
   intensity?: 'soft' | 'medium' | 'strong'
+  /** Optional photo override — same wash as the named scene */
+  src?: string
   className?: string
 }
 
@@ -40,6 +42,7 @@ const accentWash: Partial<Record<PageSceneId, string>> = {
 export function SceneBackdrop({
   scene,
   intensity = 'medium',
+  src,
   className,
 }: SceneBackdropProps) {
   const page = PAGE_SCENES[scene]
@@ -52,7 +55,7 @@ export function SceneBackdrop({
       data-testid={`scene-backdrop-${scene}`}
     >
       <img
-        src={page.src}
+        src={src || page.src}
         alt=""
         className="absolute inset-0 h-full w-full scale-105 object-cover"
       />
