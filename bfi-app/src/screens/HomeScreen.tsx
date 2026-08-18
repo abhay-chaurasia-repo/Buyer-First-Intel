@@ -239,12 +239,10 @@ export function HomeScreen() {
               onClick={() => {
                 void signOut().then(() => navigate('/login'))
               }}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 touch-manipulation"
-              aria-label="Sign out"
-              title="Sign out"
+              className="shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow touch-manipulation"
               data-testid="button-home-sign-out"
             >
-              <BrandLogo size={36} className="rounded-full" testId="home-sign-out-mark" />
+              Log out
             </button>
           ) : (
             <button
