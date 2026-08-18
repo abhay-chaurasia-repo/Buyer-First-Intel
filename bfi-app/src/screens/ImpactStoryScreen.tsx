@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, CalendarClock, MapPin, ThumbsUp, Users } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
-import { PlusWatchLegend, plusWatchChipClass } from '@/components/PlusWatchLegend'
+import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
 import { APP_NAME, APP_TAGLINE } from '@/data/brand'
 import { IMPACT_PAGES, type ImpactPage } from '@/data/impactStory'
@@ -131,7 +131,6 @@ function CommunitySnippet() {
         </span>
       </div>
       <div className="mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
-        <PlusWatchLegend variant="compact" showIntro={false} className="px-2 pb-1" />
         {[
           { text: 'No overhead power lines in view', tone: 'plus' as const, votes: 3 },
           { text: 'High-tension cables nearby', tone: 'watch' as const, votes: 2 },
