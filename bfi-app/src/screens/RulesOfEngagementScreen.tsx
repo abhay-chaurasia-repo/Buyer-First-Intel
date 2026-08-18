@@ -53,7 +53,7 @@ export function RulesOfEngagementScreen() {
               </h2>
               <div className="mt-2 space-y-2">
                 {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph} className="text-[13px] leading-relaxed text-night-muted">
+                  <p key={paragraph} className="text-[13px] leading-relaxed text-night-ink">
                     {paragraph}
                   </p>
                 ))}

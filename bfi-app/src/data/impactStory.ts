@@ -41,6 +41,7 @@ export const IMPACT_PAGES: ImpactPage[] = [
     body: 'Open County’s Fact, check Gross living area against Zillow or Redfin, then upvote. Your vote is for the next buyer walking this address — no typed numbers.',
     snippet: 'size',
     scene: 'property',
+    image: '/scenes/bg-property.png?v=darkwarm',
   },
   {
     id: 'visits',
@@ -49,6 +50,7 @@ export const IMPACT_PAGES: ImpactPage[] = [
     body: 'Every GPS-verified visit logs date and time so you can spot natural diligence patterns, not manufactured urgency. Visitor identities stay hidden — buyers can’t contact each other.',
     snippet: 'visits',
     scene: 'journey',
+    image: '/scenes/bg-journey.png?v=darkwarm',
   },
   {
     id: 'community',

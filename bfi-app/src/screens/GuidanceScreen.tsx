@@ -85,7 +85,7 @@ export function GuidanceScreen() {
             <h1 className="mt-3 text-center font-display text-[1.25rem] font-semibold tracking-tight text-night-ink">
               {doc.title}
             </h1>
-            <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-night-muted">{doc.summary}</p>
+            <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-night-ink">{doc.summary}</p>
 
             <div
               className="mt-4 rounded-2xl border border-white/25 bg-transparent p-3 text-left"
@@ -111,7 +111,7 @@ export function GuidanceScreen() {
                     {section.paragraphs.map((paragraph) => (
                       <p
                         key={paragraph.slice(0, 48)}
-                        className="text-[14px] leading-relaxed text-night-muted"
+                        className="text-[14px] leading-relaxed text-night-ink"
                       >
                         {paragraph}
                       </p>

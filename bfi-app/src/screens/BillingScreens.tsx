@@ -63,7 +63,7 @@ export function BillingSuccessScreen() {
   }, [authReady, isSignedIn, ownerId, params])
 
   return (
-    <AppShell scene="search" sceneIntensity="soft" contentClassName="min-h-0 text-night-ink">
+    <AppShell scene="search" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 text-center">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-saffron/20">
           <Check className="h-7 w-7 text-saffron-glow" strokeWidth={2.5} />
@@ -90,7 +90,7 @@ export function BillingSuccessScreen() {
 
 export function BillingCancelScreen() {
   return (
-    <AppShell scene="search" sceneIntensity="soft" contentClassName="min-h-0 text-night-ink">
+    <AppShell scene="search" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 text-center">
         <h1 className="font-display text-[1.6rem] font-bold tracking-tight text-night-ink">Checkout canceled</h1>
         <p className="mt-2 max-w-[18rem] text-[0.95rem] leading-relaxed text-night-muted">

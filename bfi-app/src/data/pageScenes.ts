@@ -13,30 +13,34 @@ export type PageScene = {
   alt: string
 }
 
+const APP_CANVAS = '/scenes/bg-search.png'
+const APP_CANVAS_ALT =
+  'Warm craftsman home at dusk — same Search canvas on every in-app screen'
+
 /**
- * Atmospheric house scenes matched to each screen’s job —
- * same subject meaning, dark warm grade for readable champagne type.
+ * In-app screens share the Search photo so the wash and hue stay identical.
+ * Login keeps its own entry photo. Welcome slides pin their own images.
  */
 export const PAGE_SCENES: Record<PageSceneId, PageScene> = {
   search: {
     id: 'search',
-    src: '/scenes/bg-search.png',
-    alt: 'Warm craftsman home at dusk with softened glow for readable type',
+    src: APP_CANVAS,
+    alt: APP_CANVAS_ALT,
   },
   watchlist: {
     id: 'watchlist',
-    src: '/scenes/bg-watchlist.png?v=darkwarm',
-    alt: 'Homes in Diligence craftsman house, darkened and warmed for readable type',
+    src: APP_CANVAS,
+    alt: APP_CANVAS_ALT,
   },
   journey: {
     id: 'journey',
-    src: '/scenes/bg-journey.png?v=darkwarm',
-    alt: 'Dusk street toward neighborhood homes, darkened and warmed for readable type',
+    src: APP_CANVAS,
+    alt: APP_CANVAS_ALT,
   },
   property: {
     id: 'property',
-    src: '/scenes/bg-property.png?v=darkwarm',
-    alt: 'Premium house facade for diligence, darkened and warmed for readable type',
+    src: APP_CANVAS,
+    alt: APP_CANVAS_ALT,
   },
   login: {
     id: 'login',
@@ -45,12 +49,12 @@ export const PAGE_SCENES: Record<PageSceneId, PageScene> = {
   },
   guidance: {
     id: 'guidance',
-    src: '/scenes/bg-guidance.png?v=darkwarm',
-    alt: 'Calm neighborhood home, darkened and warmed for readable type',
+    src: APP_CANVAS,
+    alt: APP_CANVAS_ALT,
   },
   browse: {
     id: 'browse',
-    src: '/scenes/bg-guidance.png?v=darkwarm',
-    alt: 'Calm neighborhood home, darkened and warmed for readable type',
+    src: APP_CANVAS,
+    alt: APP_CANVAS_ALT,
   },
 }

@@ -51,7 +51,7 @@ function PhaseSection({
 
       {open ? (
         <div className="animate-bfi-fade mt-1 space-y-1.5 rounded-2xl border border-white/25 bg-transparent p-2">
-          <p className="px-2 pb-1 text-[11px] text-night-faint">{blurb}</p>
+          <p className="px-2 pb-1 text-[11px] leading-relaxed text-night-muted">{blurb}</p>
           {items.map((item) => {
             const checked = Boolean(progress[item.id])
             return (
@@ -85,7 +85,7 @@ function PhaseSection({
                   >
                     {item.title}
                   </span>
-                  <span className="mt-0.5 block text-[11px] leading-relaxed text-night-faint">
+                  <span className="mt-0.5 block text-[11px] leading-relaxed text-night-ink">
                     {item.detail}
                   </span>
                 </span>

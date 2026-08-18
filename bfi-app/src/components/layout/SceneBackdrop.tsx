@@ -17,23 +17,9 @@ const overlays: Record<NonNullable<SceneBackdropProps['intensity']>, string> = {
   strong: 'from-ink/62 via-ink/55 to-ink/90',
 }
 
-/** Soft saffron warmth on every diligence surface (same language as Search) */
-const accentWash: Partial<Record<PageSceneId, string>> = {
-  search:
-    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.14),transparent_55%)]',
-  login:
-    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
-  property:
-    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
-  watchlist:
-    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.12),transparent_55%)]',
-  journey:
-    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.11),transparent_55%)]',
-  guidance:
-    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.11),transparent_55%)]',
-  browse:
-    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.11),transparent_55%)]',
-}
+/** Same saffron warmth as Search on every scene, including login */
+const accentWash =
+  'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgb(232_145_58/0.14),transparent_55%)]'
 
 /**
  * Welcome-style house photography behind app screens.
@@ -46,7 +32,6 @@ export function SceneBackdrop({
   className,
 }: SceneBackdropProps) {
   const page = PAGE_SCENES[scene]
-  const accent = accentWash[scene]
 
   return (
     <div
@@ -62,7 +47,7 @@ export function SceneBackdrop({
       <div
         className={cn('absolute inset-0 bg-gradient-to-b', overlays[intensity])}
       />
-      {accent ? <div className={cn('absolute inset-0', accent)} /> : null}
+      <div className={cn('absolute inset-0', accentWash)} />
     </div>
   )
 }
