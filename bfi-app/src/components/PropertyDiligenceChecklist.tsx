@@ -12,15 +12,9 @@ import { cn } from '@/lib/utils'
 
 type PropertyDiligenceChecklistProps = {
   propertyId: string
-  compact?: boolean
-  onProgressChange?: (done: number, total: number) => void
 }
 
-export function PropertyDiligenceChecklist({
-  propertyId,
-  compact = false,
-  onProgressChange,
-}: PropertyDiligenceChecklistProps) {
+export function PropertyDiligenceChecklist({ propertyId }: PropertyDiligenceChecklistProps) {
   const { ownerId } = useAuth()
   const [progress, setProgress] = useState<DiligenceChecklistProgress>(() =>
     loadDiligenceChecklistProgress(propertyId),
@@ -35,19 +29,13 @@ export function PropertyDiligenceChecklist({
     setProgress((prev) => {
       const next = { ...prev, [itemId]: !prev[itemId] }
       persistDiligenceChecklistProgress(propertyId, next)
-      const nextStats = diligenceChecklistStats(next)
-      onProgressChange?.(nextStats.done, nextStats.total)
       return next
     })
   }
 
   return (
     <section
-      className={cn(
-        compact
-          ? 'rounded-xl border border-white/20 bg-transparent px-2 py-2'
-          : 'rounded-2xl border border-white/20 bg-night-elevated/45 px-3 py-3',
-      )}
+      className="rounded-2xl border border-white/20 bg-night-elevated/45 px-3 py-3"
       data-testid="property-diligence-checklist"
       data-property-id={propertyId}
     >

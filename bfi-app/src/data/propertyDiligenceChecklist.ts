@@ -22,16 +22,6 @@ export const DILIGENCE_CHECKLIST_ITEMS: DiligenceChecklistItem[] = [
     detail: 'Compare county gross living area with the listing. Note why they differ, or that they match.',
   },
   {
-    id: 'permits',
-    title: 'Permits reviewed',
-    detail: 'Check the city or county building department for additions, garage conversions, or unfinished space.',
-  },
-  {
-    id: 'fema-flood',
-    title: 'FEMA flood map reviewed',
-    detail: 'Look up the flood zone on FEMA’s map. Ask an insurer what that means for a quote.',
-  },
-  {
     id: 'schools',
     title: 'School assignment verified',
     detail: 'Confirm campuses with the district. Nearby schools in the app are not an assignment.',
