@@ -5,21 +5,24 @@ import {
   MapPin,
   ShieldAlert,
   ShieldCheck,
+  Tag,
   Users,
 } from 'lucide-react'
+import { PlusWatchLegend, plusWatchChipClass } from '@/components/PlusWatchLegend'
 import type { MockProperty } from '@/data/mockProperty'
 import {
   formatVisitDate,
   formatVisitTime,
   getVerifiedVisitsBundle,
   bundleFromPresenceLog,
+  labelTextById,
   visitSummary,
   type VisitPatternSignal,
   type VerifiedVisit,
   type VerifiedVisitsBundle,
 } from '@/data/verifiedVisits'
 import { fetchPresenceLog } from '@/lib/communityApi'
-import { observationLines } from '@/data/observationFields'
+import { labelToneById } from '@/data/buyerCommunityLabels'
 import { cn } from '@/lib/utils'
 
 function toneClass(tone: VisitPatternSignal['tone']) {
@@ -29,7 +32,7 @@ function toneClass(tone: VisitPatternSignal['tone']) {
 }
 
 function VisitRow({ visit }: { visit: VerifiedVisit }) {
-  const lines = visit.observation ? observationLines(visit.observation) : []
+  const labels = visit.communityLabelIds.map(labelTextById)
   const isYou = visit.visitorLabel === 'You'
 
   return (
@@ -47,9 +50,9 @@ function VisitRow({ visit }: { visit: VerifiedVisit }) {
             {isYou ? <span className="text-night-faint"> · You</span> : null}
           </p>
         </div>
-        {lines.length > 0 ? (
+        {labels.length > 0 ? (
           <span className="shrink-0 rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow uppercase tracking-wide">
-            Observation
+            {labels.length} label{labels.length === 1 ? '' : 's'}
           </span>
         ) : (
           <span className="shrink-0 rounded-md bg-night-ink/10 px-1.5 py-0.5 text-[10px] font-bold text-night-faint uppercase tracking-wide">
@@ -69,29 +72,31 @@ function VisitRow({ visit }: { visit: VerifiedVisit }) {
         </span>
       </div>
 
-      {lines.length > 0 ? (
-        <div className="mt-2.5" data-testid={`visit-observation-${visit.id}`}>
-          <p className="mb-1.5 text-[10px] font-bold tracking-wide text-night-faint uppercase">
-            Your observation
+      {labels.length > 0 ? (
+        <div className="mt-2.5" data-testid={`visit-labels-${visit.id}`}>
+          <p className="mb-1.5 inline-flex items-center gap-1 text-[10px] font-bold tracking-wide text-night-faint uppercase">
+            <Tag className="h-3 w-3 text-saffron-glow" aria-hidden />
+            {isYou ? 'Your Buyer Community labels' : 'Buyer Community labels'}
           </p>
-          <div className="space-y-1">
-            {lines.map((line) => (
-              <div key={line.fieldId} className="flex items-start justify-between gap-3">
-                <span className="text-[12px] leading-snug text-night-muted">{line.title}</span>
-                <span className="text-right text-[12px] font-semibold leading-snug text-night-ink">
-                  {line.value}
-                </span>
-              </div>
-            ))}
+          <div className="space-y-1.5">
+            {visit.communityLabelIds.map((labelId) => {
+              const text = labelTextById(labelId)
+              const tone = labelToneById(labelId)
+              const isPlus = tone === 'positive'
+              return (
+                <div key={labelId} className="flex items-start gap-2">
+                  <span className={cn('mt-0.5 shrink-0', plusWatchChipClass(isPlus ? 'plus' : 'watch'))}>
+                    {isPlus ? 'Plus' : 'Watch'}
+                  </span>
+                  <span className="min-w-0 text-[12px] leading-snug text-night-ink">{text}</span>
+                </div>
+              )
+            })}
           </div>
         </div>
-      ) : isYou ? (
-        <p className="mt-2 text-[11px] text-night-faint">
-          No observation on this visit yet. Submit the form in Buyer Community.
-        </p>
       ) : (
         <p className="mt-2 text-[11px] text-night-faint">
-          Other buyers’ answers stay in Buyer Community tallies.
+          No community labels on this visit yet.
         </p>
       )}
     </article>
@@ -154,7 +159,7 @@ type VerifiedVisitsPanelProps = {
 /**
  * Presence Confirmed: dated log of phones within ~100m of the pin.
  * Does not prove anyone entered the home or completed a tour.
- * Your observation appears on your latest log when you submitted the form.
+ * Community labels from Buyer Community appear on visits when labeled.
  */
 export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
   const [bundle, setBundle] = useState<VerifiedVisitsBundle>(() =>
@@ -192,11 +197,15 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
       <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
           Presence Confirmed means a phone was within about {bundle.radiusMeters}m of the property
-          pin — date and time only. That log stays even after the 2-week observation window ends.
+          pin — date and time only. That log stays even after the 2-week labeling window ends.
           It does not prove anyone entered the home or completed a tour. Identities stay hidden.
-          Your observation, if you submitted one, shows on your latest log. Other buyers see
-          tallies in Buyer Community.
+          If a log also has Buyer Community labels, those Plus and Watch labels show here.
         </p>
+
+        <PlusWatchLegend
+          variant="compact"
+          className="mt-3 rounded-xl border border-white/20 bg-night/20 px-2.5 py-2"
+        />
 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
@@ -210,10 +219,10 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
           </div>
           <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
             <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
-              With observation
+              With labels
             </p>
-            <p className="mt-1 text-sm font-semibold text-night-ink">{summary.withObservation}</p>
-            <p className="text-[11px] text-night-muted">Your form on this log</p>
+            <p className="mt-1 text-sm font-semibold text-night-ink">{summary.withLabels}</p>
+            <p className="text-[11px] text-night-muted">From Buyer Community</p>
           </div>
         </div>
 
@@ -306,7 +315,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
             <span className="text-right font-semibold">Permanent dated events</span>
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
-            <span className="text-night-muted">Observation window</span>
+            <span className="text-night-muted">Labeling window</span>
             <span className="text-right font-semibold">2 weeks from last Confirm</span>
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
@@ -315,7 +324,7 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Buyer Community</span>
-            <span className="text-right font-semibold">One structured form per buyer</span>
+            <span className="font-semibold">Labels appear on logs when upvoted</span>
           </p>
         </div>
       </CollapsibleSection>

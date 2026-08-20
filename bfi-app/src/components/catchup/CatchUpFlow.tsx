@@ -16,6 +16,7 @@ import {
   type CatchUpSurface,
 } from '@/data/catchUpApi'
 import { BuyerCommunityPanel } from '@/components/catchup/BuyerCommunityPanel'
+import { RemoteInsightVote } from '@/components/catchup/RemoteInsightVote'
 import { SalesTaxHistoryPanel } from '@/components/catchup/SalesTaxHistoryPanel'
 import { VerifiedVisitsPanel } from '@/components/catchup/VerifiedVisitsPanel'
 import type { MockProperty } from '@/data/mockProperty'
@@ -52,13 +53,13 @@ const surfaceMeta: Record<
     Icon: ShieldCheck,
     iconWrap: 'bg-night-ink/15 text-saffron-glow',
     blurb:
-      'Phone within ~100m of the pin — dated log stays; observation form is open for 2 weeks',
+      'Phone within ~100m of the pin — dated log stays; labeling is open for 2 weeks',
   },
   'buyer-insights': {
     title: 'Buyer Community',
     Icon: Users,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'One structured observation per buyer after Presence Confirmed — no ratings or free text',
+    blurb: 'Fixed Plus & Watch labels — on-site votes after Presence Confirmed (size labels can be remote)',
   },
   schools: {
     title: 'Schools',
@@ -74,9 +75,11 @@ function stripHash(value: string) {
 
 function DetailSection({
   card,
+  propertyId,
   collapsible = true,
 }: {
   card: CatchUpCard
+  propertyId: string
   /** County’s Fact entries stay open — buyers scroll the full set. */
   collapsible?: boolean
 }) {
@@ -144,6 +147,19 @@ function DetailSection({
                 </div>
               ))
             : null}
+
+          {card.insightLabelIds?.length || card.insightLabelId ? (
+            <RemoteInsightVote
+              propertyId={propertyId}
+              labelIds={
+                card.insightLabelIds?.length
+                  ? card.insightLabelIds
+                  : card.insightLabelId
+                    ? [card.insightLabelId]
+                    : []
+              }
+            />
+          ) : null}
         </div>
       ) : null}
     </section>
@@ -253,6 +269,7 @@ export function CatchUpFlow({
                 <DetailSection
                   key={card.id}
                   card={card}
+                  propertyId={propertyId}
                   collapsible={!isCountyFacts}
                 />
               ))

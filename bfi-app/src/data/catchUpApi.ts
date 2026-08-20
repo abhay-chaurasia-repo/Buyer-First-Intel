@@ -31,6 +31,10 @@ export type CatchUpCard = {
   timestamp: string
   source: string
   fields?: Array<{ label: string; value: string }>
+  /** Optional Buyer Community label id for an inline remote upvote */
+  insightLabelId?: string
+  /** Optional set of Buyer Community label ids for a remote Plus/Watch pair */
+  insightLabelIds?: string[]
 }
 
 export type CatchUpApiResponse = {
@@ -125,7 +129,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       preview: live
         ? isMissingCountyNumber(property.sqft)
           ? 'Gross living area is not published in county records for this parcel. Compare listing size on Zillow or Redfin when available.'
-          : `Gross living area is ${property.sqft.toLocaleString()} sqft. Compare with the published size on Zillow or Redfin.`
+          : `Gross living area is ${property.sqft.toLocaleString()} sqft. Compare with the published size on Zillow or Redfin, then upvote whether it matches or looks overstated.`
         : `Demo shell shows ${property.sqft.toLocaleString()} sqft — replace by searching a live address with ATTOM bound.`,
       timestamp: isoMinutesAgo(18),
       source,
@@ -134,6 +138,10 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           label: live ? 'Gross living area' : 'Gross living area (demo)',
           value: sqftLabel,
         },
+      ],
+      insightLabelIds: [
+        'published-listing-size-matches-county',
+        'published-listing-size-overstated',
       ],
     },
     {
@@ -462,18 +470,45 @@ export function fetchVerifiedVisitsApi(property: MockProperty): CatchUpApiRespon
 export function fetchBuyerInsightsApi(property: MockProperty): CatchUpApiResponse {
   const items: CatchUpCard[] = [
     {
-      id: 'bi-observation',
+      id: 'bi-noise',
       type: 'buyer_signal',
-      channel: 'on-site-observation',
-      unreadCount: 1,
-      headline: 'On-site observation form',
-      preview:
-        'One structured form per buyer: noise, parking, basement, moisture. GPS-gated. No free text.',
+      channel: 'neighborhood-noise',
+      unreadCount: 3,
+      headline: 'Evening street noise',
+      preview: '3 buyers observed evening street noise. Aggregated counts only — no public free text.',
       timestamp: isoMinutesAgo(45),
-      source: 'GET /api/properties/:id/buyer-insights',
+      source: 'GET /api/flags/:propertyId',
       fields: [
-        { label: 'Contribution', value: 'One form per buyer' },
-        { label: 'Gate', value: 'Presence Confirmed' },
+        { label: 'Signal', value: 'Evening noise' },
+        { label: 'Buyers', value: '3' },
+      ],
+    },
+    {
+      id: 'bi-parking',
+      type: 'buyer_signal',
+      channel: 'parking-driveway',
+      unreadCount: 4,
+      headline: 'Driveway / parking constraints',
+      preview: '4 buyers noted limited driveway depth. 2 noted tight street parking after 6pm.',
+      timestamp: isoMinutesAgo(100),
+      source: 'GET /api/flags/:propertyId',
+      fields: [
+        { label: 'Driveway depth', value: '4 buyers' },
+        { label: 'Street parking', value: '2 buyers' },
+      ],
+    },
+    {
+      id: 'bi-structure',
+      type: 'buyer_signal',
+      channel: 'structure-signals',
+      unreadCount: 1,
+      headline: 'Structured condition signals',
+      preview: 'Possible garage conversion flagged by 1 verified buyer. Basement present confirmed by 2.',
+      timestamp: isoMinutesAgo(160),
+      source: 'GET /api/flags/:propertyId',
+      fields: [
+        { label: 'Garage conversion', value: '1 verified' },
+        { label: 'Basement present', value: '2 verified' },
       ],
     },
   ]

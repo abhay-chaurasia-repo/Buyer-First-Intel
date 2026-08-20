@@ -89,7 +89,7 @@ export const BUYER_BEFORE_COMMIT_BRIEF: GuidanceDoc = {
     {
       heading: '4. Confirm presence at the pin',
       paragraphs: [
-        'Due Diligence’s Confirm action logs Presence Confirmed: your phone was within about 100 meters of the property pin, with date and time. That dated log is permanent. You can submit one structured observation for two weeks after Confirm. The log does not prove you entered the home or completed a tour.',
+        'Due Diligence’s Confirm action logs Presence Confirmed: your phone was within about 100 meters of the property pin, with date and time. That dated log is permanent. You can add Plus/Watch observations for two weeks after Confirm. The log does not prove you entered the home or completed a tour.',
       ],
     },
   ],

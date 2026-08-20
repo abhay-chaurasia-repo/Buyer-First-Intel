@@ -15,7 +15,6 @@ export const OWNED_STORAGE_BASES = [
   'bfi.property-notes',
   'bfi.journey-checklist',
   'bfi.property-diligence-checklist',
-  'bfi.community-observations.v1',
   'bfi.buyer-community-votes.v2',
   'bfi.buyer-community-votes',
   'bfi.buyer-community-verified',
@@ -270,7 +269,7 @@ function sortPresenceEvents(events: PresenceEvent[]) {
 }
 
 /**
- * Permanent presence log. Never deleted when the 2-week observation window ends.
+ * Permanent presence log. Never deleted when the 2-week labeling window ends.
  */
 export function loadPresenceEvents(
   propertyId: string,
@@ -306,7 +305,7 @@ export function latestPresenceEvent(
   return events.length > 0 ? events[events.length - 1]! : null
 }
 
-/** True while on-site observations are allowed (2 weeks from latest Confirm). */
+/** True while on-site Plus/Watch votes are allowed (2 weeks from latest Confirm). */
 export function canContributeOnSite(
   propertyId: string,
   ownerId = currentOwnerId(),

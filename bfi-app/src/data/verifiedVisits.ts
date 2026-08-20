@@ -1,11 +1,6 @@
 import type { MockProperty } from './mockProperty'
-import {
-  loadCommunityObservation,
-} from './buyerCommunityStorage'
-import {
-  parseObservationAnswers,
-  type ObservationAnswers,
-} from './observationFields'
+import { BUYER_COMMUNITY_LABELS } from './buyerCommunityLabels'
+import { loadBuyerVoteState } from './buyerCommunityStorage'
 import { loadPresenceEvents } from './ownerScope'
 
 /** One Presence Confirmed log: device within ~100m of the pin (not a tour). */
@@ -23,10 +18,10 @@ export type VerifiedVisit = {
   /** Coarse platform hint only */
   platform: 'iOS' | 'Android'
   /**
-   * This buyer's structured observation, attached only to their latest "You" log.
-   * Other buyers' answers stay in property-level tallies, not on the presence list.
+   * Buyer Community label ids this visitor upvoted.
+   * Empty when they verified presence but did not label.
    */
-  observation: ObservationAnswers | null
+  communityLabelIds: string[]
 }
 
 export type VisitPatternSignal = {
@@ -54,7 +49,7 @@ function uniqueVisitors(visits: VerifiedVisit[]) {
 function buildSignals(visits: VerifiedVisit[]): VisitPatternSignal[] {
   const daySpan = uniqueDays(visits)
   const visitors = uniqueVisitors(visits)
-  const withObservation = visits.filter((v) => v.observation).length
+  const withLabels = visits.filter((v) => v.communityLabelIds.length > 0).length
 
   const sorted = [...visits].sort(
     (a, b) => new Date(a.visitedAt).getTime() - new Date(b.visitedAt).getTime(),
@@ -95,13 +90,13 @@ function buildSignals(visits: VerifiedVisit[]): VisitPatternSignal[] {
       tone: daytime >= Math.ceil(visits.length * 0.6) ? 'positive' : 'neutral',
     },
     {
-      id: 'vs-observation',
-      title: withObservation > 0 ? 'Observation on your log' : 'No observation on this log yet',
+      id: 'vs-labels',
+      title: withLabels > 0 ? 'Community labels on visits' : 'No community labels yet',
       detail:
-        withObservation > 0
-          ? 'Your structured observation is attached to your latest Confirm. Other buyers see tallies in Buyer Community, not this list.'
-          : 'Presence is logged on its own. Submit the observation form in Buyer Community after Confirm.',
-      tone: withObservation > 0 ? 'positive' : 'neutral',
+        withLabels > 0
+          ? `${withLabels} visit(s) also have Buyer Community labels. Labels pull from the same community catalog.`
+          : 'Verified presence alone is logged. Label votes appear here when upvoted in Buyer Community.',
+      tone: withLabels > 0 ? 'positive' : 'neutral',
     },
   ]
 }
@@ -111,7 +106,7 @@ function buildSignals(visits: VerifiedVisit[]): VisitPatternSignal[] {
  * anonymous dated events from the server. No demo visitors.
  */
 export function getVerifiedVisitsBundle(property: MockProperty): VerifiedVisitsBundle {
-  const visits = mergeLiveObservation(property.id, [])
+  const visits = mergeLiveCommunityLabels(property.id, [])
 
   return {
     propertyId: property.id,
@@ -129,7 +124,7 @@ export function bundleFromPresenceLog(
     distanceMeters: number
     accuracyMeters: number
     isYou: boolean
-    observation: ObservationAnswers | null
+    communityLabelIds: string[]
   }>,
 ): VerifiedVisitsBundle {
   const sortedYou = [...events].filter((event) => event.isYou)
@@ -145,10 +140,8 @@ export function bundleFromPresenceLog(
     distanceMeters: event.distanceMeters,
     withinRadius: event.distanceMeters <= 100,
     platform: 'iOS',
-    observation:
-      event.isYou && event.id === latestYouId
-        ? parseObservationAnswers(event.observation)
-        : null,
+    communityLabelIds:
+      event.isYou && event.id === latestYouId ? [...event.communityLabelIds] : [],
   }))
 
   return {
@@ -161,17 +154,17 @@ export function bundleFromPresenceLog(
 
 /**
  * Overlay the current user's presence events as "You" rows.
- * The observation attaches to the latest You row. Events stay after the 2-week window ends.
+ * Votes attach to the latest You row. Events stay even after the 2-week window ends.
  */
-function mergeLiveObservation(
+function mergeLiveCommunityLabels(
   propertyId: string,
   seed: VerifiedVisit[],
 ): VerifiedVisit[] {
   if (typeof localStorage === 'undefined') return seed.map((v) => ({ ...v }))
 
-  const stored = loadCommunityObservation(propertyId)
+  const { myVotes } = loadBuyerVoteState(propertyId)
   const events = loadPresenceEvents(propertyId)
-  const base = seed.map((v) => ({ ...v, observation: v.observation }))
+  const base = seed.map((v) => ({ ...v, communityLabelIds: [...v.communityLabelIds] }))
 
   const youVisits: VerifiedVisit[] = events.map((event) => ({
     id: event.id,
@@ -181,15 +174,19 @@ function mergeLiveObservation(
     distanceMeters: event.distanceMeters ?? 0,
     withinRadius: true,
     platform: 'iOS',
-    observation: null,
+    communityLabelIds: [],
   }))
 
-  if (youVisits.length > 0 && stored) {
+  if (youVisits.length > 0 && myVotes.length > 0) {
     const latestYou = youVisits[youVisits.length - 1]!
-    latestYou.observation = stored.answers
+    latestYou.communityLabelIds = [...myVotes]
   }
 
   return [...youVisits, ...base]
+}
+
+export function labelTextById(labelId: string) {
+  return BUYER_COMMUNITY_LABELS.find((label) => label.id === labelId)?.text ?? labelId
 }
 
 export function formatVisitDate(iso: string) {
@@ -209,11 +206,10 @@ export function formatVisitTime(iso: string) {
 }
 
 export function visitSummary(bundle: VerifiedVisitsBundle) {
-  const withObservation = bundle.visits.filter((v) => v.observation).length
+  const withLabels = bundle.visits.filter((v) => v.communityLabelIds.length > 0).length
   return {
     total: bundle.visits.length,
-    withObservation,
-    withLabels: withObservation,
+    withLabels,
     distinctDays: uniqueDays(bundle.visits),
     distinctVisitors: uniqueVisitors(bundle.visits),
   }

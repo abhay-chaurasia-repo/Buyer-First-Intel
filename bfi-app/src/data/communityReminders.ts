@@ -1,12 +1,15 @@
-/** In-app / local reminders to submit a Buyer Community observation after Presence Confirmed.
+/** In-app / local reminders to contribute Buyer Community labels after Presence Confirmed.
  *  Phone numbers are for sign-in OTP only — we do not send community SMS. */
 
+import { loadBuyerVoteState } from './buyerCommunityStorage'
 import { canContributeOnSite } from './ownerScope'
 import { notificationsSupported } from './visitReminders'
 
-export { hasCommunityObservation } from './buyerCommunityStorage'
+export function hasCommunityVotes(propertyId: string) {
+  return loadBuyerVoteState(propertyId).myVotes.length > 0
+}
 
-/** True for the whole 2-week window — including after an observation is already submitted. */
+/** True for the whole 2-week window — including after labels are already shared. */
 export function shouldNudgeCommunityContribute(propertyId: string) {
   return canContributeOnSite(propertyId)
 }
@@ -15,8 +18,8 @@ export function shouldNudgeCommunityContribute(propertyId: string) {
 export function notifyContributeAfterVerify(address: string) {
   if (!notificationsSupported() || Notification.permission !== 'granted') return false
   try {
-    const note = new Notification('On-site observation unlocked', {
-      body: `${address} — submit one structured observation in Buyer Community. The form stays open for 2 weeks even after you share. Phone near pin, not a tour.`,
+    const note = new Notification('On-site labels unlocked', {
+      body: `${address} — add or update Plus/Watch in Buyer Community. Labeling stays open for 2 weeks even after you share. Phone near pin, not a tour.`,
       tag: `bfi-contribute-${address}`,
     })
     note.onclick = () => {
