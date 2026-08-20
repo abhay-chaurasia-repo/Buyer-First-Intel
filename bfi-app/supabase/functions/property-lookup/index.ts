@@ -1,6 +1,11 @@
 // Supabase Edge Function: address search (Google Places + Census) + ATTOM
 // Deploy: supabase functions deploy property-lookup
 // Secrets: supabase secrets set ATTOM_API_KEY=... GOOGLE_MAPS_API_KEY=...
+// ATTOM snapshots are stored 24h in attom_lookup_cache so the same address
+// searched by another user does not call ATTOM again. Do not lengthen TTL
+// without a written ATTOM license.
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -1574,6 +1579,85 @@ async function fetchAttomFacts(match: ResolvedAddress): Promise<{
   }
 }
 
+const ATTOM_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+
+function attomCacheKey(address: ResolvedAddress) {
+  return [
+    address.street.trim().toLowerCase(),
+    address.city.trim().toLowerCase(),
+    address.state.trim().toUpperCase(),
+    address.zipCode.replace(/\D/g, '').slice(0, 5),
+  ].join('|')
+}
+
+function cacheAdminClient() {
+  const url = Deno.env.get('SUPABASE_URL')
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (!url || !key) return null
+  return createClient(url, key, { auth: { persistSession: false } })
+}
+
+async function readAttomCache(address: ResolvedAddress): Promise<Record<string, unknown> | null> {
+  try {
+    const supabase = cacheAdminClient()
+    if (!supabase) return null
+    const { data, error } = await supabase
+      .from('attom_lookup_cache')
+      .select('property, expires_at')
+      .eq('cache_key', attomCacheKey(address))
+      .maybeSingle()
+    if (error || !data?.property || typeof data.property !== 'object') return null
+    if (new Date(String(data.expires_at)).getTime() <= Date.now()) return null
+    return data.property as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+async function writeAttomCache(address: ResolvedAddress, property: Record<string, unknown>) {
+  try {
+    const supabase = cacheAdminClient()
+    if (!supabase) return
+    const expiresAt = new Date(Date.now() + ATTOM_CACHE_TTL_MS).toISOString()
+    const keys = new Set([attomCacheKey(address)])
+    if (typeof property.address === 'string') {
+      keys.add(
+        attomCacheKey({
+          ...address,
+          street: property.address,
+          city: typeof property.city === 'string' ? property.city : address.city,
+          state: typeof property.state === 'string' ? property.state : address.state,
+          zipCode: typeof property.zipCode === 'string' ? property.zipCode : address.zipCode,
+        }),
+      )
+    }
+    await Promise.all(
+      [...keys].map((cache_key) =>
+        supabase.from('attom_lookup_cache').upsert({
+          cache_key,
+          property,
+          fetched_at: new Date().toISOString(),
+          expires_at: expiresAt,
+        }),
+      ),
+    )
+  } catch {
+    // Fail open: a cache write miss must never block a live lookup.
+  }
+}
+
+async function fetchAttomFactsCached(address: ResolvedAddress) {
+  const cached = await readAttomCache(address)
+  if (cached) {
+    return { factsStatus: 'live' as const, property: cached }
+  }
+  const live = await fetchAttomFacts(address)
+  if (live.property && live.factsStatus === 'live') {
+    await writeAttomCache(address, live.property)
+  }
+  return live
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -1632,7 +1716,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const attom = await fetchAttomFacts(match)
+    const attom = await fetchAttomFactsCached(match)
     if (attom.property) {
       const queryHouse = query.trim().match(/^(\d+[A-Za-z]?)\b/)?.[1]
       const attomStreet =

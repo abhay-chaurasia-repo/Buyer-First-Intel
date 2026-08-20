@@ -97,6 +97,7 @@ function blankCountyFacts(): Partial<MockProperty> {
   }
 }
 
+/** Browser-tab cache only. Shared 24h ATTOM reuse lives on the property-lookup Edge Function. */
 const LOOKUP_CACHE_KEY = 'bfi.propertyLookupCache.v18'
 const SELECTED_ADDRESS_KEY = 'bfi.selectedAddress.v1'
 const RECENT_ADDRESSES_KEY = 'bfi.recentAddressSuggestions.v1'

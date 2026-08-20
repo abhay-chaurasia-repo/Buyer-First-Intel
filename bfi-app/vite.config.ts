@@ -1514,6 +1514,44 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
   return { ok: true as const, property: fields }
 }
 
+const ATTOM_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+const attomMemoryCache = new Map<string, { property: Record<string, unknown>; expiresAt: number }>()
+
+function attomCacheKey(address: ResolvedAddress) {
+  return [
+    address.street.trim().toLowerCase(),
+    address.city.trim().toLowerCase(),
+    address.state.trim().toUpperCase(),
+    address.zipCode.replace(/\D/g, '').slice(0, 5),
+  ].join('|')
+}
+
+async function fetchAttomCached(address: ResolvedAddress, apiKey: string) {
+  const key = attomCacheKey(address)
+  const hit = attomMemoryCache.get(key)
+  if (hit && hit.expiresAt > Date.now()) {
+    return { ok: true as const, property: hit.property }
+  }
+  const live = await fetchAttom(address, apiKey)
+  if (live.ok) {
+    const expiresAt = Date.now() + ATTOM_CACHE_TTL_MS
+    attomMemoryCache.set(key, { property: live.property, expiresAt })
+    if (typeof live.property.address === 'string') {
+      attomMemoryCache.set(
+        attomCacheKey({
+          ...address,
+          street: live.property.address,
+          city: typeof live.property.city === 'string' ? live.property.city : address.city,
+          state: typeof live.property.state === 'string' ? live.property.state : address.state,
+          zipCode: typeof live.property.zipCode === 'string' ? live.property.zipCode : address.zipCode,
+        }),
+        { property: live.property, expiresAt },
+      )
+    }
+  }
+  return live
+}
+
 /**
  * Dev/preview proxy for property lookup + Google Places + ATTOM.
  * Keeps API keys on the server (never VITE_* / never in the browser bundle).
@@ -1584,7 +1622,7 @@ function propertyLookupApiPlugin(
     let attomError: string | null = null
 
     if (attomApiKey) {
-      const attom = await fetchAttom(match, attomApiKey)
+      const attom = await fetchAttomCached(match, attomApiKey)
       if (attom.ok) {
         property = attom.property
         factsStatus = 'live'

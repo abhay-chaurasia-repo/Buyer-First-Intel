@@ -37,6 +37,7 @@
 - Headers: `apikey`, `Accept: application/json`
 - Dev proxy: Vite `POST /api/property-lookup` + `.env.local` `ATTOM_API_KEY`
 - Production: Edge Function `property-lookup` + secret `ATTOM_API_KEY`
+- **Shared 24h cache:** after a live ATTOM hit, the mapped snapshot is stored in `attom_lookup_cache` (service role only). Another user searching the same normalized address within 24 hours reuses that row — ATTOM is not called again. After 24 hours the next search pays ATTOM once more. Local Vite uses an in-memory Map with the same TTL. Do not lengthen this without a written ATTOM bulk/data license.
 - Status chip: **Live county facts · ATTOM** when any package matches
 
 ### Local setup
