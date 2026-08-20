@@ -262,8 +262,8 @@ export function HomeScreen() {
               {APP_NAME}
             </h1>
             <p className="mx-auto mt-10 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
-              Search a US property address. Match public records before you commit — and before you
-              talk to an agent.
+              Search a US property address. Match public records before you commit more time or
+              money.
             </p>
           </div>
 
@@ -415,7 +415,7 @@ export function HomeScreen() {
                 className="animate-bfi-rise mt-5 text-center text-sm text-night-faint"
                 style={{ animationDelay: '140ms' }}
               >
-                No MLS. No prices. County records first.
+                County records, schools, and what buyers saw on site.
               </p>
 
               <section

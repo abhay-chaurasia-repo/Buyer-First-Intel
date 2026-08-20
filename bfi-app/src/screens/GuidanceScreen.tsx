@@ -30,11 +30,11 @@ export function GuidanceScreen() {
 
   const relatedId =
     doc.id === 'buyer-commission-brief'
-      ? 'before-you-talk-to-an-agent'
+      ? 'before-you-commit'
       : 'buyer-commission-brief'
   const relatedLabel =
     doc.id === 'buyer-commission-brief'
-      ? 'Before you talk to an agent'
+      ? 'Before you commit more time or money'
       : 'What the commission settlements mean for you'
 
   return (

@@ -69,7 +69,7 @@ export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
   {
     id: 'team',
     phaseId: 'prepare',
-    title: 'Line up buyer agent / attorney if you use one',
+    title: 'Line up a representative or attorney if you use one',
     detail: 'Decide who helps with offers, contracts, and disclosures.',
   },
 

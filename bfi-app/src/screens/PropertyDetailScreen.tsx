@@ -509,7 +509,7 @@ export function PropertyDetailScreen() {
                   </p>
                   <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
                     Everything else is visit-backed. Structured Plus/Watch labels from buyers who
-                    showed up — not listing hype.
+                    showed up on site.
                   </p>
                   <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-night-faint">
                     <Crosshair
