@@ -5,17 +5,23 @@ import {
   CalendarClock,
   Check,
   ChevronDown,
+  ClipboardCheck,
   Star,
   StickyNote,
   Trash2,
   Users,
 } from 'lucide-react'
 import { VisitPlanPicker } from '@/components/VisitPlanPicker'
+import { PropertyDiligenceChecklist } from '@/components/PropertyDiligenceChecklist'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/auth/AuthProvider'
 import { loadBuyerVoteState } from '@/data/buyerCommunityStorage'
 import { canContributeOnSite } from '@/data/ownerScope'
+import {
+  diligenceChecklistStats,
+  loadDiligenceChecklistProgress,
+} from '@/data/propertyDiligenceChecklist'
 import {
   loadNotePad,
   notesCount,
@@ -68,8 +74,11 @@ function WatchlistMetaRail({
   reminderEnabled = false,
   hasShared = false,
   contributeAvailable = false,
+  checklistDone = 0,
+  checklistTotal = 0,
   onContribute,
   onOpenNotes,
+  onOpenChecklist,
 }: {
   plannedVisitAt?: string | null
   visitedAt?: string | null
@@ -77,14 +86,18 @@ function WatchlistMetaRail({
   reminderEnabled?: boolean
   hasShared?: boolean
   contributeAvailable?: boolean
+  checklistDone?: number
+  checklistTotal?: number
   onContribute?: () => void
   onOpenNotes?: () => void
+  onOpenChecklist?: () => void
 }) {
   const hasPlanned = Boolean(plannedVisitAt)
   const hasVisited = Boolean(visitedAt)
   const hasNotes = noteCount > 0
   const canContribute = contributeAvailable && Boolean(onContribute)
-  if (!hasPlanned && !hasVisited && !hasNotes && !canContribute) return null
+  const hasChecklist = checklistTotal > 0
+  if (!hasPlanned && !hasVisited && !hasNotes && !canContribute && !hasChecklist) return null
 
   return (
     <div
@@ -155,6 +168,25 @@ function WatchlistMetaRail({
           <Users className="h-3 w-3 shrink-0" strokeWidth={2.25} aria-hidden />
           <span className="text-[8px] font-bold leading-none tracking-[0.12em] uppercase">
             {hasShared ? 'Shared' : 'Share'}
+          </span>
+        </button>
+      ) : null}
+
+      {hasChecklist ? (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onOpenChecklist?.()
+          }}
+          className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-saffron/30 bg-saffron/12 px-1.5 py-1 text-saffron-glow touch-manipulation"
+          title={`This home's checklist ${checklistDone}/${checklistTotal}`}
+          aria-label={`This home's checklist ${checklistDone} of ${checklistTotal}`}
+          data-testid="watchlist-checklist-chip"
+        >
+          <ClipboardCheck className="h-3 w-3 shrink-0" strokeWidth={2.25} aria-hidden />
+          <span className="text-[8px] font-bold leading-none tracking-[0.12em] uppercase">
+            {checklistDone}/{checklistTotal}
           </span>
         </button>
       ) : null}
@@ -334,6 +366,9 @@ function WatchlistRow({
   const [openNotesEditor, setOpenNotesEditor] = useState(false)
   const status = visitPlanStatus(item)
   const [noteCount, setNoteCount] = useState(() => notesCount(item.id))
+  const [checklistStats, setChecklistStats] = useState(() =>
+    diligenceChecklistStats(loadDiligenceChecklistProgress(item.id)),
+  )
   const [hasShared, setHasShared] = useState(
     () => loadBuyerVoteState(item.id).myVotes.length > 0,
   )
@@ -349,6 +384,7 @@ function WatchlistRow({
     const refreshShared = () => {
       setHasShared(loadBuyerVoteState(item.id).myVotes.length > 0)
       setGpsVerified(canContributeOnSite(item.id))
+      setChecklistStats(diligenceChecklistStats(loadDiligenceChecklistProgress(item.id)))
     }
     refreshShared()
     window.addEventListener('focus', refreshShared)
@@ -427,11 +463,17 @@ function WatchlistRow({
             reminderEnabled={Boolean(item.reminderEnabled)}
             hasShared={hasShared}
             contributeAvailable={gpsVerified}
+            checklistDone={checklistStats.done}
+            checklistTotal={checklistStats.total}
             onContribute={gpsVerified ? () => onContribute(item) : undefined}
             onOpenNotes={() => {
               setOpen(true)
               setPlanning(false)
               setOpenNotesEditor(true)
+            }}
+            onOpenChecklist={() => {
+              setOpen(true)
+              setPlanning(false)
             }}
           />
         </div>
@@ -491,6 +533,14 @@ function WatchlistRow({
             onOpenChange={setPlanning}
             testId={`plan-visit-${item.id}`}
           />
+
+          {!planning ? (
+            <PropertyDiligenceChecklist
+              propertyId={item.id}
+              compact
+              onProgressChange={(done, total) => setChecklistStats({ done, total, remaining: total - done })}
+            />
+          ) : null}
 
           {!planning ? (
             <PropertyNotes
@@ -557,7 +607,7 @@ export function WatchlistScreen() {
     <AppShell scene="watchlist" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <PageHeader
         title="Homes in Diligence"
-        description="Plan visits, mark visited, and keep private notes."
+        description="Plan visits, mark visited, keep private notes, and track this home's checklist."
         testId="watchlist-top-bar"
       />
 

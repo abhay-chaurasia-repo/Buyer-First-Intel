@@ -120,7 +120,7 @@ export function JourneyScreen() {
     <AppShell scene="journey" sceneIntensity="medium" contentClassName="min-h-0 text-night-ink">
       <PageHeader
         title="Journey"
-        description="Prepare → Diligence → Offer → Close. Tap to check off."
+        description="Your overall buying path — not this house's audit. Each saved home has its own diligence checklist."
         testId="journey-top-bar"
       />
 
@@ -133,6 +133,10 @@ export function JourneyScreen() {
               </p>
               <p className="mt-1 text-sm font-semibold text-night-ink">
                 {stats.done} of {stats.total} complete
+              </p>
+              <p className="mt-1.5 text-[11px] leading-snug text-night-faint">
+                For one address, open the property page or Homes in Diligence and use This
+                home&apos;s checklist.
               </p>
             </div>
             <p className="font-display text-2xl font-semibold text-saffron-glow">{percent}%</p>

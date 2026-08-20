@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { CatchUpFlow, type CatchUpSurface } from '@/components/catchup/CatchUpFlow'
+import { PropertyDiligenceChecklist } from '@/components/PropertyDiligenceChecklist'
 import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import { useAuth } from '@/auth/AuthProvider'
 import { fetchSurfaceApi } from '@/data/catchUpApi'
@@ -495,6 +496,10 @@ export function PropertyDetailScreen() {
                   )
                 })}
               </div>
+            </section>
+
+            <section className="px-3 pt-5" aria-label="This home's diligence checklist">
+              <PropertyDiligenceChecklist propertyId={property.id} />
             </section>
 
             <section

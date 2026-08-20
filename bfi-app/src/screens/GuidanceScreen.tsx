@@ -135,7 +135,7 @@ export function GuidanceScreen() {
                   to="/journey"
                   className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-saffron-glow touch-manipulation"
                 >
-                  Open Journey checklist
+                  Open Journey (overall buying path)
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>
               </div>

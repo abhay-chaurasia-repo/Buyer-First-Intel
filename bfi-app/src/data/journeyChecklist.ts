@@ -1,4 +1,5 @@
-/** Home-buying journey checklist for the Journey tab. */
+/** Home-buying journey checklist for the Journey tab.
+ *  Overall buying path — not the per-property diligence checklist. */
 
 import { readScopedItem, writeScopedItem } from './ownerScope'
 

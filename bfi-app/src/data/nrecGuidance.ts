@@ -83,7 +83,7 @@ export const BUYER_BEFORE_COMMIT_BRIEF: GuidanceDoc = {
       heading: '3. Decide what help you want to pay for',
       paragraphs: [
         'Negotiation, contract paperwork, scheduling access, and local custom still matter. You can still choose full-service, limited service, or (where lawful) represent yourself with other professional help.',
-        'Use Journey’s checklist so your timeline stays yours.',
+        'Use Journey for your overall buying path. Each saved home also has its own diligence checklist.',
       ],
     },
     {
