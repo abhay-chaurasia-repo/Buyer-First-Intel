@@ -15,7 +15,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/auth/AuthProvider'
 import { loadBuyerVoteState } from '@/data/buyerCommunityStorage'
-import { loadGpsVerified } from '@/data/ownerScope'
+import { canContributeOnSite } from '@/data/ownerScope'
 import {
   loadNotePad,
   notesCount,
@@ -141,11 +141,13 @@ function WatchlistMetaRail({
           )}
           title={
             hasShared
-              ? 'Shared with Buyer Community — tap to update'
-              : 'Share labels with Buyer Community'
+              ? 'Shared with Buyer Community — tap to update (open for 2 weeks)'
+              : 'Share labels with Buyer Community (open for 2 weeks)'
           }
           aria-label={
-            hasShared ? 'Shared with Buyer Community' : 'Share with Buyer Community'
+            hasShared
+              ? 'Shared with Buyer Community — tap to update'
+              : 'Share with Buyer Community'
           }
           data-testid="watchlist-contribute-chip"
           data-shared={hasShared ? '1' : '0'}
@@ -335,7 +337,7 @@ function WatchlistRow({
   const [hasShared, setHasShared] = useState(
     () => loadBuyerVoteState(item.id).myVotes.length > 0,
   )
-  const [gpsVerified, setGpsVerified] = useState(() => loadGpsVerified(item.id))
+  const [gpsVerified, setGpsVerified] = useState(() => canContributeOnSite(item.id))
   const rowRef = useRef<HTMLLIElement>(null)
 
   useEffect(() => {
@@ -346,7 +348,7 @@ function WatchlistRow({
   useEffect(() => {
     const refreshShared = () => {
       setHasShared(loadBuyerVoteState(item.id).myVotes.length > 0)
-      setGpsVerified(loadGpsVerified(item.id))
+      setGpsVerified(canContributeOnSite(item.id))
     }
     refreshShared()
     window.addEventListener('focus', refreshShared)
@@ -424,10 +426,8 @@ function WatchlistRow({
             noteCount={noteCount}
             reminderEnabled={Boolean(item.reminderEnabled)}
             hasShared={hasShared}
-            contributeAvailable={Boolean(item.visitedAt) || gpsVerified}
-            onContribute={
-              item.visitedAt || gpsVerified ? () => onContribute(item) : undefined
-            }
+            contributeAvailable={gpsVerified}
+            onContribute={gpsVerified ? () => onContribute(item) : undefined}
             onOpenNotes={() => {
               setOpen(true)
               setPlanning(false)

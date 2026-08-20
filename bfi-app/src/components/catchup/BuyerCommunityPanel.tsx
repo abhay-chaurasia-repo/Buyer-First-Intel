@@ -15,6 +15,7 @@ import {
   persistBuyerVoteState,
   type BuyerVoteState,
 } from '@/data/buyerCommunityStorage'
+import { formatPresenceDay, latestPresenceEvent } from '@/data/ownerScope'
 import { cn } from '@/lib/utils'
 
 function voteCount(label: BuyerCommunityLabel, state: BuyerVoteState) {
@@ -169,6 +170,7 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
   const { ownerId } = useAuth()
   const [voteState, setVoteState] = useState<BuyerVoteState>(() => loadBuyerVoteState(propertyId))
   const [verified, setVerified] = useState(() => loadBuyerVerified(propertyId))
+  const latestPresence = latestPresenceEvent(propertyId)
 
   useEffect(() => {
     setVoteState(loadBuyerVoteState(propertyId))
@@ -212,6 +214,17 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
           Buyer Community Insights
         </h2>
       </div>
+
+      {latestPresence ? (
+        <p
+          className="rounded-xl border border-white/20 bg-transparent px-3 py-2 text-[12px] leading-snug text-night-ink"
+          data-testid="buyer-community-window-note"
+        >
+          {verified
+            ? `You confirmed presence on ${formatPresenceDay(latestPresence.confirmedAt)}. That date stays. You can add or update on-site labels for 2 weeks — including after you already shared.`
+            : `You confirmed presence on ${formatPresenceDay(latestPresence.confirmedAt)}. That date stays on the log. The 2-week labeling window has ended — Confirm on site to add more.`}
+        </p>
+      ) : null}
 
       {BUYER_LABEL_CATEGORIES.map((category) => (
         <CategoryBlock

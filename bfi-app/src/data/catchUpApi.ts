@@ -438,7 +438,7 @@ export function fetchVerifiedVisitsApi(property: MockProperty): CatchUpApiRespon
       channel: 'verified-visits',
       unreadCount: property.verifiedVisits,
       headline: 'Presence Confirmed',
-      preview: `${property.verifiedVisits} logs within about 100m of the pin. Does not prove a tour or going inside. Tap Confirm on site.`,
+      preview: `${property.verifiedVisits} logs within about 100m of the pin. Dates stay on the log. Labeling is open for 2 weeks. Does not prove a tour or going inside.`,
       timestamp: isoMinutesAgo(8),
       source: 'GET /api/visits/:propertyId/count',
       fields: [
@@ -453,10 +453,13 @@ export function fetchVerifiedVisitsApi(property: MockProperty): CatchUpApiRespon
       channel: 'visit-weight',
       unreadCount: 1,
       headline: 'Why presence matters',
-      preview: 'A phone near the pin unlocks on-site Buyer Community labels. It is not a tour log.',
+      preview: 'A phone near the pin unlocks on-site labels for 2 weeks. The dated presence log is permanent. It is not a tour log.',
       timestamp: isoMinutesAgo(60),
       source: 'GET /api/visits/:propertyId',
-      fields: [{ label: 'Policy', value: 'Presence confirmation only' }],
+      fields: [
+        { label: 'Presence log', value: 'Permanent dated events' },
+        { label: 'Labeling window', value: '2 weeks from last Confirm' },
+      ],
     },
   ]
 

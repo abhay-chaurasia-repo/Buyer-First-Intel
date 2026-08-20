@@ -573,7 +573,7 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
       title: 'Presence Confirmed',
       subtitle: '~100m of pin',
       badge: String(property.verifiedVisits),
-      detail: 'Phone near the pin — not proof of a tour or going inside',
+      detail: 'Dated log stays · labeling open for 2 weeks',
       accent: 'verified-visits',
     },
     {

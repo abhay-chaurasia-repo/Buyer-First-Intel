@@ -181,9 +181,9 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
       <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
           Presence Confirmed means a phone was within about {bundle.radiusMeters}m of the property
-          pin — date and time only. It does not prove anyone entered the home or completed a tour.
-          Identities stay hidden. If that log also has Buyer Community labels, those Plus and Watch
-          labels show here.
+          pin — date and time only. That log stays even after the 2-week labeling window ends.
+          It does not prove anyone entered the home or completed a tour. Identities stay hidden.
+          If a log also has Buyer Community labels, those Plus and Watch labels show here.
         </p>
 
         <PlusWatchLegend
@@ -288,6 +288,14 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Identity</span>
             <span className="font-semibold">Hidden — counts and timing only</span>
+          </p>
+          <p className="flex min-h-11 items-center justify-between gap-3 py-1">
+            <span className="text-night-muted">Presence log</span>
+            <span className="text-right font-semibold">Permanent dated events</span>
+          </p>
+          <p className="flex min-h-11 items-center justify-between gap-3 py-1">
+            <span className="text-night-muted">Labeling window</span>
+            <span className="text-right font-semibold">2 weeks from last Confirm</span>
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Does not prove</span>

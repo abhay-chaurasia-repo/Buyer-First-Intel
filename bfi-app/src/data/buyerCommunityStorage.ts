@@ -1,9 +1,9 @@
-/** Shared Buyer Community vote persistence. On-site unlock comes from Presence Confirmed. */
+/** Shared Buyer Community vote persistence. On-site unlock is the 2-week contribution window. */
 
 import { loadGpsVerified, persistGpsVerified, readScopedItem, writeScopedItem } from './ownerScope'
 
 export const BUYER_VOTES_STORAGE_KEY = 'bfi.buyer-community-votes.v2'
-/** @deprecated Presence unlock is Presence Confirmed (`bfi.gpsVerified.*`). Kept for owner-scope migration lists. */
+/** @deprecated Presence events live in `bfi.presenceEvents.*`. Kept for owner-scope migration lists. */
 export const BUYER_VERIFIED_STORAGE_KEY = 'bfi.buyer-community-verified'
 
 export type BuyerVoteState = {
@@ -42,12 +42,12 @@ export function persistBuyerVoteState(propertyId: string, state: BuyerVoteState)
   }
 }
 
-/** True when this property has Presence Confirmed — unlocks on-site community votes. */
+/** True while the 2-week on-site contribution window is open. */
 export function loadBuyerVerified(propertyId: string): boolean {
   return loadGpsVerified(propertyId)
 }
 
-/** Prefer `persistGpsVerified` from the property Confirm control. Kept for call-site compatibility. */
+/** Prefer `appendPresenceEvent` from the property Confirm control. Kept for call-site compatibility. */
 export function persistBuyerVerified(propertyId: string, verified: boolean) {
   persistGpsVerified(propertyId, verified)
 }

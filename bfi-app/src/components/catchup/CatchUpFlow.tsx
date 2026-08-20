@@ -53,7 +53,7 @@ const surfaceMeta: Record<
     Icon: ShieldCheck,
     iconWrap: 'bg-night-ink/15 text-saffron-glow',
     blurb:
-      'Phone within ~100m of the pin — not proof of a tour or going inside',
+      'Phone within ~100m of the pin — dated log stays; labeling is open for 2 weeks',
   },
   'buyer-insights': {
     title: 'Buyer Community',

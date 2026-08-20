@@ -111,7 +111,7 @@ export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
     phaseId: 'diligence',
     title: 'Confirm presence at the pin',
     detail:
-      'Presence Confirmed is a phone within about 100m of the pin — not a tour or going inside.',
+      'Presence Confirmed logs the date your phone was near the pin. You can add Plus/Watch labels for 2 weeks after that. The date stays even after labeling ends.',
   },
   {
     id: 'community-labels',

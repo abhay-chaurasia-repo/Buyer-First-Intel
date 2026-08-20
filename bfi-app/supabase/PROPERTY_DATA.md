@@ -88,8 +88,9 @@ Some residential streets may return `SuccessWithoutResult` on the trial plan —
 - Property page **Confirm** uses `navigator.geolocation` vs `property.lat` / `property.lng`
 - Pass when distance ≤ ~100m and accuracy ≤ ~80m
 - Proves the device was near the pin — not that the buyer entered the home or completed a tour
-- Persists owner-scoped presence for 2 weeks (unlocks on-site Buyer Community votes)
+- **Permanent log:** each Confirm appends a dated presence event (`bfi.presenceEvents.{owner}.{propertyId}`) that is never deleted when the window ends
+- **2-week contribution window:** on-site Plus/Watch votes (and Homes in Diligence Share/Shared) stay available for 2 weeks from the latest Confirm, even after labels are already shared
 - Failures: no pin, permission denied, timeout, too far, poor accuracy
 - **Nearby nudge (setting, default on):** while the property page is open, watch location; within ~300m and not yet confirmed, pulse the Confirm control + banner to push the tap
-- Mapper: `src/lib/gpsVerify.ts` · storage: `bfi.gpsVerified.{owner}.{propertyId}` · setting: `bfi.gps-nearby-nudge`
-- Later: log real Presence Confirmed rows (replace stub visit list)
+- Mapper: `src/lib/gpsVerify.ts` · events: `bfi.presenceEvents.{owner}.{propertyId}` · legacy: `bfi.gpsVerified.{owner}.{propertyId}` · setting: `bfi.gps-nearby-nudge`
+- Live “You” rows in Presence Confirmed come from the events log

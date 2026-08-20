@@ -142,7 +142,7 @@ Paste the property’s latitude/longitude (from County’s Fact / the address pi
 | Sales History | Deed rows / amounts when live |
 | Tax History | Multi-year assessments when live |
 | Schools | District/campuses or ATTOM empty state |
-| Presence Confirmed / Community | Copy + ~100m pin gate (not a tour) |
+| Presence Confirmed / Community | Dated log stays; labeling 2 weeks even after Shared |
 | Confirm | Location permission → distance pass/fail |
 | Homes in Diligence / Journey / Rules | Nav + pages open |
 

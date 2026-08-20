@@ -47,7 +47,7 @@ export const IMPACT_PAGES: ImpactPage[] = [
     id: 'visits',
     eyebrow: 'Presence Confirmed',
     title: 'See how many phones were near the pin — and when.',
-    body: 'Presence Confirmed means a device was within about 100 meters of the property pin. It logs date and time. It does not prove anyone entered the home or completed a tour. Identities stay hidden.',
+    body: 'Presence Confirmed means a device was within about 100 meters of the property pin. It logs date and time, and that date stays. You can add labels for two weeks after Confirm. It does not prove anyone entered the home or completed a tour. Identities stay hidden.',
     snippet: 'visits',
     scene: 'journey',
     image: '/scenes/bg-journey.png?v=darkwarm',

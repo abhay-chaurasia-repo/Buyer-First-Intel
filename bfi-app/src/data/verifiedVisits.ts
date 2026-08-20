@@ -1,6 +1,7 @@
 import type { MockProperty } from './mockProperty'
 import { BUYER_COMMUNITY_LABELS } from './buyerCommunityLabels'
-import { loadBuyerVoteState, loadBuyerVerified } from './buyerCommunityStorage'
+import { loadBuyerVoteState } from './buyerCommunityStorage'
+import { loadPresenceEvents } from './ownerScope'
 
 /** One Presence Confirmed log: device within ~100m of the pin (not a tour). */
 export type VerifiedVisit = {
@@ -179,8 +180,8 @@ export function getVerifiedVisitsBundle(property: MockProperty): VerifiedVisitsB
 }
 
 /**
- * Overlay the current user's Buyer Community upvotes onto a "You" visit row
- * when they have verified presence and labelled.
+ * Overlay the current user's presence events as "You" rows.
+ * Votes attach to the latest You row. Events stay even after the 2-week window ends.
  */
 function mergeLiveCommunityLabels(
   propertyId: string,
@@ -188,35 +189,27 @@ function mergeLiveCommunityLabels(
 ): VerifiedVisit[] {
   if (typeof localStorage === 'undefined') return seed.map((v) => ({ ...v }))
 
-  const verified = loadBuyerVerified(propertyId)
   const { myVotes } = loadBuyerVoteState(propertyId)
+  const events = loadPresenceEvents(propertyId)
   const base = seed.map((v) => ({ ...v, communityLabelIds: [...v.communityLabelIds] }))
 
-  if (!verified || myVotes.length === 0) return base
+  const youVisits: VerifiedVisit[] = events.map((event) => ({
+    id: event.id,
+    visitedAt: event.confirmedAt,
+    visitorLabel: 'You',
+    accuracyMeters: event.accuracyMeters ?? 10,
+    distanceMeters: event.distanceMeters ?? 0,
+    withinRadius: true,
+    platform: 'iOS',
+    communityLabelIds: [],
+  }))
 
-  const youIndex = base.findIndex((v) => v.visitorLabel === 'You')
-  if (youIndex >= 0) {
-    const existing = base[youIndex]!
-    base[youIndex] = {
-      ...existing,
-      communityLabelIds: Array.from(new Set([...existing.communityLabelIds, ...myVotes])),
-    }
-    return base
+  if (youVisits.length > 0 && myVotes.length > 0) {
+    const latestYou = youVisits[youVisits.length - 1]!
+    latestYou.communityLabelIds = [...myVotes]
   }
 
-  return [
-    {
-      id: 'vv-you',
-      visitedAt: new Date().toISOString(),
-      visitorLabel: 'You',
-      accuracyMeters: 10,
-      distanceMeters: 20,
-      withinRadius: true,
-      platform: 'iOS',
-      communityLabelIds: [...myVotes],
-    },
-    ...base,
-  ]
+  return [...youVisits, ...base]
 }
 
 export function labelTextById(labelId: string) {
