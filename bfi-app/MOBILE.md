@@ -45,7 +45,7 @@ npx cap sync
 
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>Due Diligence uses your location to verify you are at a home before unlocking on-site buyer labels.</string>
+<string>Due Diligence uses your location to confirm your phone is within about 100 meters of a home pin. This does not prove you entered the home. It unlocks on-site buyer labels.</string>
 ```
 
 ## Daily develop loop
@@ -67,13 +67,13 @@ Then Run ▶ on a simulator or plugged-in phone.
 ## What already works in native shell
 
 - Same diligence UI (County’s Fact, Sales, Tax, Schools, Community)
-- **GPS Verify** via `@capacitor/geolocation` (native permission sheet)
-- Nearby Verify nudge while the property screen is open
+- **Presence Confirmed** via `@capacitor/geolocation` (native permission sheet; ~100m of pin)
+- Nearby Confirm nudge while the property screen is open
 - Status bar styling for the dark shell
 
 ## What comes next (native-only roadmap)
 
-1. Push + **geofence** around Homes in Diligence (background “tap Verify” when near)
+1. Push + **geofence** around Homes in Diligence (background “tap Confirm” when near)
 2. App icons / splash assets per store guidelines
 3. Production API: point the app at deployed Edge Functions (not Vite `/api` proxy)
 4. TestFlight + Play internal testing
@@ -125,12 +125,12 @@ In Xcode:
 2. Click **Run ▶** (or ⌘R)
 3. First run may ask to trust the Mac developer certificate — accept
 
-### Simulator GPS (for Verify testing)
+### Simulator GPS (for Presence Confirmed testing)
 
-The Simulator does **not** use your Mac’s location. Default Simulator GPS is usually Apple Park (California), so Verify on a Georgia home shows thousands of miles away.
+The Simulator does **not** use your Mac’s location. Default Simulator GPS is usually Apple Park (California), so Confirm on a Georgia home shows thousands of miles away.
 
 **Features → Location → Custom Location…**  
-Paste the property’s latitude/longitude (from County’s Fact / the address pin), then tap Verify. Or test Verify on a physical iPhone at the house.
+Paste the property’s latitude/longitude (from County’s Fact / the address pin), then tap Confirm. Or test Confirm on a physical iPhone at the house.
 
 ### Page checklist (same app as Android / web)
 
@@ -142,8 +142,8 @@ Paste the property’s latitude/longitude (from County’s Fact / the address pi
 | Sales History | Deed rows / amounts when live |
 | Tax History | Multi-year assessments when live |
 | Schools | District/campuses or ATTOM empty state |
-| Verified Visits / Community | Copy + GPS gate messaging |
-| Verify | Location permission → distance pass/fail |
+| Presence Confirmed / Community | Copy + ~100m pin gate (not a tour) |
+| Confirm | Location permission → distance pass/fail |
 | Homes in Diligence / Journey / Rules | Nav + pages open |
 
 ## Commands cheat sheet

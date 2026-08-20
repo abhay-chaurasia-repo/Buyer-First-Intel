@@ -73,10 +73,10 @@ function VisitsSnippet() {
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
             <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
-              Verified visits
+              Presence confirmed
             </p>
             <p className="mt-1 text-sm font-semibold text-night-ink">6</p>
-            <p className="text-[11px] text-night-muted">3 days · 6 visits</p>
+            <p className="text-[11px] text-night-muted">3 days · 6 logs</p>
           </div>
           <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
             <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
@@ -89,11 +89,11 @@ function VisitsSnippet() {
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-night-faint">
           <span className="inline-flex items-center gap-1">
             <CalendarClock className="h-3 w-3 text-saffron-glow" aria-hidden />
-            Date & time on every visit
+            Date & time on every log
           </span>
           <span className="inline-flex items-center gap-1">
             <Users className="h-3 w-3 text-saffron-glow" aria-hidden />
-            Anonymous visit counts
+            Anonymous presence counts
           </span>
         </div>
       </div>

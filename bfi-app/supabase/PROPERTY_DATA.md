@@ -84,11 +84,12 @@ Some residential streets may return `SuccessWithoutResult` on the trial plan —
 - Ratings stay hidden in the Schools tile
 - GreatSchools enrichment is deferred
 
-## Step 4 — Real GPS Verify (v1 done)
-- Property page **Verify** uses `navigator.geolocation` vs `property.lat` / `property.lng`
+## Step 4 — Presence Confirmed (v1 done)
+- Property page **Confirm** uses `navigator.geolocation` vs `property.lat` / `property.lng`
 - Pass when distance ≤ ~100m and accuracy ≤ ~80m
+- Proves the device was near the pin — not that the buyer entered the home or completed a tour
 - Persists owner-scoped presence for 2 weeks (unlocks on-site Buyer Community votes)
 - Failures: no pin, permission denied, timeout, too far, poor accuracy
-- **Nearby nudge (setting, default on):** while the property page is open, watch location; within ~300m and not yet verified, pulse the Verify control + banner to push the tap
+- **Nearby nudge (setting, default on):** while the property page is open, watch location; within ~300m and not yet confirmed, pulse the Confirm control + banner to push the tap
 - Mapper: `src/lib/gpsVerify.ts` · storage: `bfi.gpsVerified.{owner}.{propertyId}` · setting: `bfi.gps-nearby-nudge`
-- Later: log real Verified Visit rows (replace stub visit list)
+- Later: log real Presence Confirmed rows (replace stub visit list)

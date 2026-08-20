@@ -23,5 +23,5 @@
 1. Address search is live (Census + optional `/api/property-lookup` / Edge Function)
 2. ATTOM county facts: set `ATTOM_API_KEY` in `.env.local` (dev) or Supabase secrets (prod) — see **`PROPERTY_DATA.md`**
 3. Schools CatchUp: assigned via `/property/detailwithschools`, nearby via `/school/search` — confirm with the district
-4. Real GPS Verify v1 is live (device location vs property pin, 100m / 2 weeks)
+4. Presence Confirmed is live (device vs property pin, ~100m / 2 weeks — not a tour or interior check)
 5. GreatSchools enrichment is deferred

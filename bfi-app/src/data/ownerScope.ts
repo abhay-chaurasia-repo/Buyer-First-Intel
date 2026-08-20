@@ -101,7 +101,7 @@ function moveOwnerBucket(fromOwner: string, toOwner: string) {
     removeRaw(fromKey)
   }
 
-  // Move GPS verification flags: bfi.gpsVerified.{owner}.{propertyId}
+  // Move Presence Confirmed flags: bfi.gpsVerified.{owner}.{propertyId}
   try {
     const prefix = `bfi.gpsVerified.${fromOwner}.`
     const keys: string[] = []
@@ -171,7 +171,7 @@ export type GpsVerifyRecord = {
   accuracyMeters?: number
 }
 
-/** Visit-scoped GPS Verify window — keep in sync with GPS_VERIFY_TTL_MS. */
+/** Visit-scoped Presence Confirmed window — keep in sync with GPS_VERIFY_TTL_MS. */
 
 function parseGpsRecord(raw: string | null): GpsVerifyRecord | null {
   if (raw == null || raw === '0' || raw === '' || raw === '1') {

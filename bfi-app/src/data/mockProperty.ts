@@ -165,7 +165,7 @@ export type MockProperty = {
   city: string
   state: string
   zipCode: string
-  /** WGS84 from address match (GPS Verify will use these). */
+  /** WGS84 from address match (Presence Confirmed uses these). */
   lat?: number
   lng?: number
   /** How the street/city/state were obtained */
@@ -570,10 +570,10 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
     },
     {
       id: 'verified-visits',
-      title: 'Verified Visits',
-      subtitle: 'GPS presence',
+      title: 'Presence Confirmed',
+      subtitle: '~100m of pin',
       badge: String(property.verifiedVisits),
-          detail: 'Dated GPS presence · community labels when a visit has them',
+      detail: 'Phone near the pin — not proof of a tour or going inside',
       accent: 'verified-visits',
     },
     {
@@ -877,15 +877,15 @@ export function getChannelCanvas(
     },
     '07-verified-buyer-insights': {
       id: '07-verified-buyer-insights',
-      title: 'Verified Buyer Insights',
-      subtitle: 'Observations weighted by GPS-verified presence',
+      title: 'Presence-backed insights',
+      subtitle: 'Observations from buyers whose phones were near the pin',
       apiStub: {
         endpoint: '/api/flags/:propertyId',
         method: 'GET',
         resourceKey: 'property.verifiedInsights',
       },
       fields: [
-        { label: 'Verified visits', value: String(property.verifiedVisits), source: 'GPS' },
+        { label: 'Presence confirmed', value: String(property.verifiedVisits), source: 'GPS' },
         { label: 'Possible garage conversion', value: '1 verified buyer flagged', source: 'Insight' },
         { label: 'Ceiling height concern', value: '0 verified buyers', source: 'Insight' },
         { label: 'Basement present', value: '2 verified buyers confirmed', source: 'Insight' },

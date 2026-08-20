@@ -2,7 +2,7 @@ import type { MockProperty } from './mockProperty'
 import { BUYER_COMMUNITY_LABELS } from './buyerCommunityLabels'
 import { loadBuyerVoteState, loadBuyerVerified } from './buyerCommunityStorage'
 
-/** One GPS-verified presence confirmation at a property. */
+/** One Presence Confirmed log: device within ~100m of the pin (not a tour). */
 export type VerifiedVisit = {
   id: string
   /** ISO timestamp of the visit (local display derived in UI) */

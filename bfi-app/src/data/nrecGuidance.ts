@@ -48,9 +48,9 @@ export const BUYER_COMMISSION_BRIEF: GuidanceDoc = {
     {
       heading: 'Why Due Diligence puts facts first',
       paragraphs: [
-        'Writing an offer — or spending more time on a house — is easier when you already know the county record story: living area vs listing claims, tax history, sales history, schools, and what verified visitors labeled on site.',
+        'Writing an offer — or spending more time on a house — is easier when you already know the county record story: living area vs listing claims, tax history, sales history, schools, and what buyers labeled after confirming presence at the pin.',
         'Due Diligence is for home buyers: county records and diligence tools first, so you commit more time or money with questions answered.',
-        'Star homes into Homes in Diligence, verify visits on site, and use Journey to track Prepare → Diligence → Offer → Close.',
+        'Star homes into Homes in Diligence, confirm presence at the pin, and use Journey to track Prepare → Diligence → Offer → Close.',
       ],
     },
   ],
@@ -68,7 +68,7 @@ export const BUYER_BEFORE_COMMIT_BRIEF: GuidanceDoc = {
     {
       heading: '1. Diligence the address yourself',
       paragraphs: [
-        'Paste the address in Due Diligence. Compare County’s Fact to listing size. Read sales and tax history. Check schools and surroundings labels from verified visitors.',
+        'Paste the address in Due Diligence. Compare County’s Fact to listing size. Read sales and tax history. Check schools and surroundings labels from buyers who confirmed presence.',
         'Write private notes on what would change your mind. Star only the addresses worth a second look.',
       ],
     },
@@ -87,9 +87,9 @@ export const BUYER_BEFORE_COMMIT_BRIEF: GuidanceDoc = {
       ],
     },
     {
-      heading: '4. Visit with your eyes open',
+      heading: '4. Confirm presence at the pin',
       paragraphs: [
-        'Due Diligence’s Verify action logs GPS presence with date and time at no charge inside the app. Use that log — and Buyer Community Plus (upsides) / Watch (watch-outs) labels — to remember what you actually observed before you escalate to an offer.',
+        'Due Diligence’s Confirm action logs Presence Confirmed: your phone was within about 100 meters of the property pin, with date and time. It does not prove you entered the home or completed a tour. Use that log — and Buyer Community Plus (upsides) / Watch (watch-outs) labels — to remember what you actually observed before you escalate to an offer.',
       ],
     },
   ],

@@ -1,6 +1,6 @@
 /**
  * Buyer GPS preferences (owner-scoped).
- * Nearby nudge: soft push to tap Verify when approaching the property pin.
+ * Nearby nudge: soft push to tap Confirm when approaching the property pin.
  */
 
 import { currentOwnerId, readScopedItem, writeScopedItem } from '@/data/ownerScope'

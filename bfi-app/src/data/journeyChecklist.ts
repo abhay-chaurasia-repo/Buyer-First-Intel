@@ -109,14 +109,15 @@ export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
   {
     id: 'verified-visit',
     phaseId: 'diligence',
-    title: 'Complete a GPS verified visit',
-    detail: 'Confirm presence on site — unlocks stronger community votes.',
+    title: 'Confirm presence at the pin',
+    detail:
+      'Presence Confirmed is a phone within about 100m of the pin — not a tour or going inside.',
   },
   {
     id: 'community-labels',
     phaseId: 'diligence',
     title: 'Read and upvote Buyer Community labels',
-    detail: 'Plus (upsides) and Watch (watch-outs) from verified visitors on that address.',
+    detail: 'Plus (upsides) and Watch (watch-outs) from buyers who confirmed presence at that address.',
   },
   {
     id: 'schools-check',

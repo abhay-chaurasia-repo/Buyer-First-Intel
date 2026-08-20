@@ -190,7 +190,7 @@ export function alignWatchlistWithProperty(property: MockProperty): WatchlistIte
   return next
 }
 
-/** GPS Verify saves the home to Homes in Diligence and marks it visited. */
+/** Presence Confirmed saves the home to Homes in Diligence and marks it visited. */
 export function recordWatchlistVisitFromVerify(property: MockProperty): WatchlistItem[] {
   if (!findWatchlistMatch(property)) {
     addToWatchlist(property)

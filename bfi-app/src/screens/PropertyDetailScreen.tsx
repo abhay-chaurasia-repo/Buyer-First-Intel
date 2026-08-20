@@ -232,7 +232,7 @@ export function PropertyDetailScreen() {
       setStarred(true)
       setVerifyMessage({
         tone: 'ok',
-        text: `Verified within ${GPS_VERIFY_RADIUS_METERS}m (${result.distanceMeters}m away, ±${result.accuracyMeters}m). Saved to Homes in Diligence as visited. On-site labels unlocked for ${GPS_VERIFY_TTL_LABEL}.`,
+        text: `Presence confirmed within ${GPS_VERIFY_RADIUS_METERS}m of the pin (${result.distanceMeters}m away, ±${result.accuracyMeters}m). This does not prove you entered the home or completed a tour. Saved to Homes in Diligence. On-site labels unlocked for ${GPS_VERIFY_TTL_LABEL}.`,
       })
       notifyContributeAfterVerify(property.address)
     } else {
@@ -250,7 +250,7 @@ export function PropertyDetailScreen() {
       setVerified(false)
       setVerifyMessage({
         tone: 'ok',
-        text: 'GPS verification cleared. On-site Buyer Community votes are locked again.',
+        text: 'Presence confirmation cleared. On-site Buyer Community votes are locked again.',
       })
       return
     }
@@ -336,10 +336,10 @@ export function PropertyDetailScreen() {
                 )}
                 aria-label={
                   verified
-                    ? 'Clear GPS verification'
+                    ? 'Clear presence confirmation'
                     : nudgeVerify
-                      ? 'You are near this home — GPS Verify now'
-                      : 'GPS Verify on site'
+                      ? 'You are near this home — confirm presence now'
+                      : 'Confirm presence at this pin'
                 }
                 aria-pressed={verified}
                 aria-busy={verifyBusy}
@@ -348,7 +348,7 @@ export function PropertyDetailScreen() {
               >
                 <Crosshair className="h-4 w-4" strokeWidth={2.25} />
                 <span>
-                  {verifyBusy ? '…' : verified ? 'Verified' : nudgeVerify ? 'Tap Verify' : 'Verify'}
+                  {verifyBusy ? '…' : verified ? 'Confirmed' : 'Confirm'}
                 </span>
               </button>
             </div>
@@ -388,8 +388,10 @@ export function PropertyDetailScreen() {
                         {nearbyDistanceM != null ? ` · ~${nearbyDistanceM}m` : ''}
                       </span>
                       <span className="mt-0.5 block text-[11px] leading-snug text-night-ink">
-                        Tap Verify (within {GPS_VERIFY_RADIUS_METERS}m) to unlock on-site Buyer
-                        Community labels. Nudge zone is {GPS_NEARBY_NUDGE_METERS}m.
+                        Tap Confirm (within {GPS_VERIFY_RADIUS_METERS}m of the pin). This proves
+                        your phone was nearby — not that you entered the home or completed a tour.
+                        Unlocks on-site Buyer Community labels. Nudge zone is {GPS_NEARBY_NUDGE_METERS}
+                        m.
                       </span>
                     </span>
                   </button>
@@ -471,7 +473,7 @@ export function PropertyDetailScreen() {
                   </p>
                   <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
                     Living-area labels can be voted <span className="font-semibold">remotely</span>{' '}
-                    — no GPS visit required. Compare county gross living area to the published listing size,
+                    — no presence check required. Compare county gross living area to the published listing size,
                     then upvote whether it matches or looks overstated.
                   </p>
                   <ol className="mt-2 list-decimal space-y-1 pl-4 text-[11px] leading-snug text-night-faint">
@@ -485,8 +487,9 @@ export function PropertyDetailScreen() {
                       strokeWidth={2.25}
                     />
                     <span>
-                      GPS Verify is <span className="font-semibold text-night-ink">not needed</span>{' '}
-                      for this size check — it&apos;s the one remote exception.
+                      Presence Confirmed is{' '}
+                      <span className="font-semibold text-night-ink">not needed</span> for this size
+                      check — it&apos;s the one remote exception.
                     </span>
                   </p>
                   <button
@@ -508,8 +511,8 @@ export function PropertyDetailScreen() {
                     Buyer Community Insights
                   </p>
                   <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
-                    Everything else is visit-backed. Structured Plus/Watch labels from buyers who
-                    showed up on site.
+                    Everything else is presence-backed. Structured Plus/Watch labels from buyers whose
+                    phones were near the pin.
                   </p>
                   <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-night-faint">
                     <Crosshair
@@ -517,10 +520,10 @@ export function PropertyDetailScreen() {
                       strokeWidth={2.25}
                     />
                     <span>
-                      <span className="font-semibold text-night-ink">GPS verification:</span>{' '}
+                      <span className="font-semibold text-night-ink">Presence Confirmed:</span>{' '}
                       {verified
-                        ? `On-site labels are unlocked for ${GPS_VERIFY_TTL_LABEL}. Add a Plus or Watch while you are here.`
-                        : 'tap Verify on this header while at the home to unlock on-site community upvotes.'}
+                        ? `On-site labels are unlocked for ${GPS_VERIFY_TTL_LABEL}. Add a Plus or Watch while you are here. This only means your phone was within about ${GPS_VERIFY_RADIUS_METERS}m of the pin.`
+                        : `tap Confirm on this header while your phone is within about ${GPS_VERIFY_RADIUS_METERS}m of the pin. That is not proof you entered the home or completed a tour.`}
                     </span>
                   </p>
 
@@ -540,7 +543,7 @@ export function PropertyDetailScreen() {
                         Nudge me when I&apos;m near this home
                       </span>
                       <span className="mt-0.5 block text-[11px] leading-snug text-night-faint">
-                        Within ~{GPS_NEARBY_NUDGE_METERS}m, Verify pulses so you remember to confirm
+                        Within ~{GPS_NEARBY_NUDGE_METERS}m, Confirm pulses so you remember to log
                         presence. Uses location only while this property page is open.
                       </span>
                     </span>
@@ -593,14 +596,16 @@ export function PropertyDetailScreen() {
         >
           <div className="w-full max-w-md rounded-2xl border border-saffron/35 bg-[#2a1f20] p-4 shadow-[0_20px_48px_rgb(0_0_0/0.55)]">
             <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-              On-site verify
+              Presence Confirmed
             </p>
             <h2 className="mt-1.5 font-display text-[1.15rem] font-semibold text-night-ink">
               Allow location for Due Diligence
             </h2>
             <p className="mt-2 text-[13px] leading-snug text-night-muted">
-              We compare your phone GPS to this home&apos;s pin so on-site Buyer Community labels stay
-              visit-backed. Location is used only while you Verify — not in the background.
+              We compare your phone GPS to this home&apos;s pin. Presence Confirmed means you were
+              within about {GPS_VERIFY_RADIUS_METERS} meters of the pin — not that you entered the
+              home or completed a tour. Location is used only while you Confirm — not in the
+              background.
             </p>
             <p className="mt-2 text-[11px] leading-snug text-night-faint">
               The next sheet is from iOS/Android and cannot use this app&apos;s colors. Choose{' '}

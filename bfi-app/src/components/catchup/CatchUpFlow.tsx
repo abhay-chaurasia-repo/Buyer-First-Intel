@@ -49,16 +49,17 @@ const surfaceMeta: Record<
     blurb: 'Assessed value and tax bill history',
   },
   'verified-visits': {
-    title: 'Verified Visits',
+    title: 'Presence Confirmed',
     Icon: ShieldCheck,
     iconWrap: 'bg-night-ink/15 text-saffron-glow',
-    blurb: 'Dated GPS presence — Plus/Watch labels appear when a visit has labels',
+    blurb:
+      'Phone within ~100m of the pin — not proof of a tour or going inside',
   },
   'buyer-insights': {
     title: 'Buyer Community',
     Icon: Users,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'Fixed Plus & Watch labels — on-site votes after GPS Verify (size labels can be remote)',
+    blurb: 'Fixed Plus & Watch labels — on-site votes after Presence Confirmed (size labels can be remote)',
   },
   schools: {
     title: 'Schools',
@@ -208,7 +209,7 @@ export function CatchUpFlow({
       data-testid="catchup-flow"
       data-surface={surface}
     >
-      {/* Tile drill-in: back + address only — Verify stays on the property page */}
+      {/* Tile drill-in: back + address only — Confirm stays on the property page */}
       <header
         className="relative z-20 shrink-0 bfi-status-pad"
         data-testid="tile-detail-top-bar"

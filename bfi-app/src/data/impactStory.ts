@@ -45,9 +45,9 @@ export const IMPACT_PAGES: ImpactPage[] = [
   },
   {
     id: 'visits',
-    eyebrow: 'Verified Visits',
-    title: 'See how many buyers actually showed up — and when.',
-    body: 'Every GPS-verified visit logs date and time so you can spot natural diligence patterns, not manufactured urgency. Visitor identities stay hidden — buyers can’t contact each other.',
+    eyebrow: 'Presence Confirmed',
+    title: 'See how many phones were near the pin — and when.',
+    body: 'Presence Confirmed means a device was within about 100 meters of the property pin. It logs date and time. It does not prove anyone entered the home or completed a tour. Identities stay hidden.',
     snippet: 'visits',
     scene: 'journey',
     image: '/scenes/bg-journey.png?v=darkwarm',

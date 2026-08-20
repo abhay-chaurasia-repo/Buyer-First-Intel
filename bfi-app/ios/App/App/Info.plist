@@ -69,6 +69,6 @@
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleLightContent</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Due Diligence uses your location to verify you are at a home before unlocking on-site buyer labels.</string>
+	<string>Due Diligence uses your location to confirm your phone is within about 100 meters of a home pin. This does not prove you entered the home. It unlocks on-site buyer labels.</string>
 </dict>
 </plist>

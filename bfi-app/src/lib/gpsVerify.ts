@@ -1,5 +1,6 @@
 /**
- * On-site GPS Verify: compare device position to the property pin.
+ * Presence Confirmed: compare device position to the property pin (~100m).
+ * Proves the phone was near the pin — not that the user entered the home or toured.
  * Unlocks Buyer Community on-site votes when within radius.
  * Uses Capacitor Geolocation on iOS/Android, browser geolocation on web.
  */
@@ -10,7 +11,7 @@ import { Geolocation } from '@capacitor/geolocation'
 export const GPS_VERIFY_RADIUS_METERS = 100
 /** Reject fixes that are too imprecise to trust a 100m gate. */
 export const GPS_VERIFY_MAX_ACCURACY_METERS = 80
-/** Soft “you’re near — tap Verify” zone (wider than the pass radius). */
+/** Soft “you’re near — tap Confirm” zone (wider than the pass radius). */
 export const GPS_NEARBY_NUDGE_METERS = 300
 /** Verification expires so presence stays visit-scoped. */
 export const GPS_VERIFY_TTL_DAYS = 14
@@ -30,10 +31,10 @@ function formatDistanceFromPin(meters: number) {
 
 function tooFarMessage(distance: number) {
   if (distance >= FAR_FROM_HOME_METERS && Capacitor.isNativePlatform()) {
-    return `This GPS reading is ${formatDistanceFromPin(distance)} from the home — not at the house. The iOS Simulator does not use your laptop’s location. In Simulator: Features → Location → Custom Location, enter this home’s coordinates. Or tap Verify on an iPhone while you are at the property.`
+    return `This GPS reading is ${formatDistanceFromPin(distance)} from the home — not at the house. The iOS Simulator does not use your laptop’s location. In Simulator: Features → Location → Custom Location, enter this home’s coordinates. Or tap Confirm on an iPhone while you are at the property.`
   }
   if (distance >= FAR_FROM_HOME_METERS) {
-    return `This GPS reading is ${formatDistanceFromPin(distance)} from the home. A computer’s location is not the house pin. Open the app on your phone at the property, then tap Verify.`
+    return `This GPS reading is ${formatDistanceFromPin(distance)} from the home. A computer’s location is not the house pin. Open the app on your phone at the property, then tap Confirm.`
   }
   return `You are about ${Math.round(distance)}m from the home pin. Move within ${GPS_VERIFY_RADIUS_METERS}m and try again.`
 }
@@ -157,7 +158,7 @@ export async function attemptGpsVerify(property: {
       ok: false,
       reason: 'no_pin',
       message:
-        'This address has no map pin yet. Resolve the address again, then try GPS Verify on site.',
+        'This address has no map pin yet. Resolve the address again, then try Confirm on site.',
     }
   }
 
@@ -214,7 +215,7 @@ export async function attemptGpsVerify(property: {
       return {
         ok: false,
         reason: 'denied',
-        message: 'Location permission is off. Allow location for this app, then tap Verify again.',
+        message: 'Location permission is off. Allow location for this app, then tap Confirm again.',
       }
     }
     if (code === 3) {
@@ -241,7 +242,7 @@ export type NearbyWatchUpdate = {
 
 /**
  * Watch device position while the property page is open.
- * Used for the soft Verify nudge (not the pass/fail gate).
+ * Used for the soft Confirm nudge (not the pass/fail gate).
  */
 export function watchNearbyProperty(
   property: { lat?: number; lng?: number },

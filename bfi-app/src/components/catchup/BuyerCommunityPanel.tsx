@@ -137,7 +137,7 @@ function CategoryBlock({
                       ? voted
                         ? `Remove upvote from ${label.text}`
                         : `Upvote ${label.text}`
-                      : `GPS Verify on site to upvote ${label.text}`
+                      : `Confirm presence on site to upvote ${label.text}`
                   }
                   data-testid={`button-upvote-${label.id}`}
                 >
@@ -162,7 +162,8 @@ type BuyerCommunityPanelProps = {
 }
 
 /**
- * Buyer Community: fixed labels only. On-site votes require GPS Verify (not a manual confirm).
+ * Buyer Community: fixed labels only. On-site votes require Presence Confirmed
+ * (device within ~100m of the pin — not a manual check-in or proof of a tour).
  */
 export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
   const { ownerId } = useAuth()

@@ -1,6 +1,6 @@
 # Due Diligence · for home buyers
 
-Buyer due-diligence app (React + Vite + TypeScript). County facts, sales & tax history, schools, and on-site GPS Verify for Buyer Community labels.
+Buyer due-diligence app (React + Vite + TypeScript). County facts, sales & tax history, schools, and Presence Confirmed (~100m of the pin) for Buyer Community labels.
 
 ## Develop (web)
 

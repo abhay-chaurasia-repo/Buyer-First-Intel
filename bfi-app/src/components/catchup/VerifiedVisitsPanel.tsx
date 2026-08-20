@@ -154,7 +154,8 @@ type VerifiedVisitsPanelProps = {
 }
 
 /**
- * Verified Visits: dated GPS presence log. Buyers judge listing timing themselves.
+ * Presence Confirmed: dated log of phones within ~100m of the pin.
+ * Does not prove anyone entered the home or completed a tour.
  * Community labels from Buyer Community appear on visits when labeled.
  */
 export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
@@ -179,9 +180,10 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
     <div className="mt-3 space-y-4 px-3" data-testid="verified-visits-panel">
       <div className="rounded-2xl border border-white/25 bg-transparent p-3">
         <p className="text-[13px] leading-relaxed text-night-ink">
-          Each row is a GPS presence check within {bundle.radiusMeters}m — with date and time so you
-          can judge the pattern yourself. Visitor identities stay hidden. If a visit also has Buyer
-          Community labels, those Plus and Watch labels show here.
+          Presence Confirmed means a phone was within about {bundle.radiusMeters}m of the property
+          pin — date and time only. It does not prove anyone entered the home or completed a tour.
+          Identities stay hidden. If that log also has Buyer Community labels, those Plus and Watch
+          labels show here.
         </p>
 
         <PlusWatchLegend
@@ -192,11 +194,11 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
             <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
-              Verified visits
+              Presence confirmed
             </p>
             <p className="mt-1 text-sm font-semibold text-night-ink">{summary.total}</p>
             <p className="text-[11px] text-night-muted">
-              {summary.distinctDays} days · {summary.total} visits
+              {summary.distinctDays} days · {summary.total} logs
             </p>
           </div>
           <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
@@ -211,11 +213,11 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-night-faint">
           <span className="inline-flex items-center gap-1">
             <CalendarClock className="h-3 w-3 text-saffron-glow" aria-hidden />
-            Date & time on every visit
+            Date & time on every log
           </span>
           <span className="inline-flex items-center gap-1">
             <Users className="h-3 w-3 text-saffron-glow" aria-hidden />
-            Anonymous visit counts
+            Anonymous presence counts
           </span>
           <span className="inline-flex items-center gap-1">
             <ShieldCheck className="h-3 w-3 text-saffron-glow" aria-hidden />
@@ -226,9 +228,9 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
 
       <CollapsibleSection
         id="visit-log"
-        title="Visit log"
+        title="Presence log"
         count={sortedVisits.length}
-        blurb="Newest first. You decide how these dates/times relate to the sale posting."
+        blurb="Newest first. A log is a phone near the pin — not a tour. You decide how these dates/times relate to the sale posting."
       >
         <div className="space-y-2 px-0.5 pb-0.5">
           {sortedVisits.map((visit) => (
@@ -271,8 +273,8 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
 
       <CollapsibleSection
         id="how-it-works"
-        title="How verification works"
-        blurb="What counts as a verified visit in this demo shell."
+        title="How Presence Confirmed works"
+        blurb="What this check proves — and what it does not."
       >
         <div className="space-y-1 px-2 pb-2 text-[13px] text-night-ink">
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
@@ -281,15 +283,19 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Dwell</span>
-            <span className="font-semibold">Not required — presence confirm only</span>
+            <span className="font-semibold">Not required — phone near pin only</span>
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Identity</span>
             <span className="font-semibold">Hidden — counts and timing only</span>
           </p>
           <p className="flex min-h-11 items-center justify-between gap-3 py-1">
+            <span className="text-night-muted">Does not prove</span>
+            <span className="text-right font-semibold">Entering the home or completing a tour</span>
+          </p>
+          <p className="flex min-h-11 items-center justify-between gap-3 py-1">
             <span className="text-night-muted">Buyer Community</span>
-            <span className="font-semibold">Labels appear on visits when upvoted</span>
+            <span className="font-semibold">Labels appear on logs when upvoted</span>
           </p>
         </div>
       </CollapsibleSection>
