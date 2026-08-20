@@ -9,6 +9,13 @@
 2. Phone login → star homes / add notes → rows appear in `diligence_homes` and `property_notes`
 3. Sign out / in on another browser → Homes in Diligence should restore
 
+## Buyer Community (presence + votes)
+1. SQL Editor → run `migrations/005_community_presence_votes.sql`
+2. Phone login → Confirm on site → row in `presence_events`
+3. County’s Fact Gross living area upvote (no Confirm needed) or on-site Plus/Watch (needs Confirm) → `community_votes`
+4. Another signed-in buyer on a different phone increases the same label count
+5. Presence Confirmed list shows anonymous dates — no names or phones
+
 ## Stripe subscription
 1. SQL Editor → run `migrations/002_stripe_subscription_fields.sql`
 2. Follow **`STRIPE_SETUP.md`** (Stripe product, Edge Functions, webhook secrets)

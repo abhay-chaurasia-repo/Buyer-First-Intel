@@ -57,6 +57,7 @@ import {
   locationPermissionGranted,
   watchNearbyProperty,
 } from '@/lib/gpsVerify'
+import { recordPresenceRemote } from '@/lib/communityApi'
 import {
   loadPropertyFromQuery,
   type PropertyLookupStatus,
@@ -237,6 +238,21 @@ export function PropertyDetailScreen() {
       recordWatchlistVisitFromVerify(property)
       setVerified(true)
       setStarred(true)
+      if (
+        property.lat != null &&
+        property.lng != null &&
+        Number.isFinite(property.lat) &&
+        Number.isFinite(property.lng)
+      ) {
+        void recordPresenceRemote({
+          propertyId: property.id,
+          deviceLat: result.latitude,
+          deviceLng: result.longitude,
+          pinLat: property.lat,
+          pinLng: property.lng,
+          accuracyMeters: result.accuracyMeters,
+        })
+      }
       setVerifyMessage({
         tone: 'ok',
         text: `Presence logged ${formatPresenceDay(event.confirmedAt)} — within ${GPS_VERIFY_RADIUS_METERS}m of the pin (${result.distanceMeters}m away, ±${result.accuracyMeters}m). That date stays on the log. It does not prove you entered the home or completed a tour. Saved to Homes in Diligence. You can add or update Plus/Watch labels for ${GPS_VERIFY_TTL_LABEL}.`,

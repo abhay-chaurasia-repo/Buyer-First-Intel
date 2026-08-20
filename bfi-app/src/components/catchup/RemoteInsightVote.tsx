@@ -1,23 +1,12 @@
-import { useEffect, useState } from 'react'
 import { ThumbsUp } from 'lucide-react'
-import { useAuth } from '@/auth/AuthProvider'
 import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import {
   labelById,
   labelRequiresVisit,
   type BuyerCommunityLabel,
 } from '@/data/buyerCommunityLabels'
-import {
-  loadBuyerVerified,
-  loadBuyerVoteState,
-  persistBuyerVoteState,
-  type BuyerVoteState,
-} from '@/data/buyerCommunityStorage'
+import { useCommunityVotes } from '@/lib/useCommunityVotes'
 import { cn } from '@/lib/utils'
-
-function voteCount(label: BuyerCommunityLabel, state: BuyerVoteState) {
-  return label.seedVotes + (state.localBoosts[label.id] ?? 0)
-}
 
 type RemoteInsightVoteProps = {
   propertyId: string
@@ -27,56 +16,18 @@ type RemoteInsightVoteProps = {
 
 /**
  * Inline upvote for catalog labels — used in County Facts living area.
- * Labels with requiresVisit: false can be voted without an on-site visit.
+ * Gross living area (requiresVisit: false) can be voted without Confirm.
  * Within this group, choosing one clears the others (Plus vs Watch).
+ * Counts are live buyer totals when signed in to Supabase.
  */
 export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVoteProps) {
-  const { ownerId } = useAuth()
   const labels = labelIds
     .map((id) => labelById(id))
     .filter((label): label is BuyerCommunityLabel => Boolean(label))
 
-  const [voteState, setVoteState] = useState<BuyerVoteState>(() => loadBuyerVoteState(propertyId))
-  const [verified, setVerified] = useState(() => loadBuyerVerified(propertyId))
-
-  useEffect(() => {
-    setVoteState(loadBuyerVoteState(propertyId))
-    setVerified(loadBuyerVerified(propertyId))
-  }, [propertyId, ownerId])
+  const { voteState, onSiteOpen, voteCount, toggleVote } = useCommunityVotes(propertyId)
 
   if (labels.length === 0) return null
-
-  const groupIds = new Set(labels.map((label) => label.id))
-
-  function handleToggle(label: BuyerCommunityLabel) {
-    const canVote = verified || !labelRequiresVisit(label)
-    if (!canVote) return
-
-    setVoteState((prev) => {
-      const already = prev.myVotes.includes(label.id)
-      let myVotes = [...prev.myVotes]
-      const localBoosts = { ...prev.localBoosts }
-
-      if (already) {
-        myVotes = myVotes.filter((id) => id !== label.id)
-        localBoosts[label.id] = (localBoosts[label.id] ?? 0) - 1
-      } else {
-        // Mutual exclusion inside this remote pair/group
-        for (const otherId of groupIds) {
-          if (otherId === label.id) continue
-          if (!myVotes.includes(otherId)) continue
-          myVotes = myVotes.filter((id) => id !== otherId)
-          localBoosts[otherId] = (localBoosts[otherId] ?? 0) - 1
-        }
-        myVotes = [...myVotes, label.id]
-        localBoosts[label.id] = (localBoosts[label.id] ?? 0) + 1
-      }
-
-      const next = { myVotes, localBoosts }
-      persistBuyerVoteState(propertyId, next)
-      return next
-    })
-  }
 
   return (
     <div
@@ -87,13 +38,14 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
         Remote insight · no visit needed
       </p>
       <p className="mt-1 text-[10px] leading-snug text-night-faint">
-        Compare Gross living area to Zillow/Redfin, then upvote one.
+        Compare Gross living area to Zillow/Redfin, then upvote one. Counts are from signed-in
+        buyers, not this phone only.
       </p>
       <div className="mt-2 space-y-1">
         {labels.map((label) => {
-          const canVote = verified || !labelRequiresVisit(label)
+          const canVote = onSiteOpen || !labelRequiresVisit(label)
           const voted = voteState.myVotes.includes(label.id)
-          const count = voteCount(label, voteState)
+          const count = voteCount(label.id)
           return (
             <div
               key={label.id}
@@ -109,7 +61,7 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
               <button
                 type="button"
                 disabled={!canVote}
-                onClick={() => handleToggle(label)}
+                onClick={() => void toggleVote(label.id)}
                 className={cn(
                   'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold touch-manipulation',
                   voted

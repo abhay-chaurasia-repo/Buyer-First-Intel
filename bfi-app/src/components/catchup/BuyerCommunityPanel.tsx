@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ChevronDown, ThumbsUp } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { plusWatchChipClass } from '@/components/PlusWatchLegend'
@@ -9,23 +9,17 @@ import {
   type BuyerLabelCategoryId,
   type BuyerCommunityLabel,
 } from '@/data/buyerCommunityLabels'
-import {
-  loadBuyerVerified,
-  loadBuyerVoteState,
-  persistBuyerVoteState,
-  type BuyerVoteState,
-} from '@/data/buyerCommunityStorage'
+import type { BuyerVoteState } from '@/data/buyerCommunityStorage'
 import { formatPresenceDay, latestPresenceEvent } from '@/data/ownerScope'
+import { useCommunityVotes } from '@/lib/useCommunityVotes'
 import { cn } from '@/lib/utils'
 
-function voteCount(label: BuyerCommunityLabel, state: BuyerVoteState) {
-  const boost = state.localBoosts[label.id] ?? 0
-  return label.seedVotes + boost
-}
-
-function sortLabelsByVotes(labels: BuyerCommunityLabel[], voteState: BuyerVoteState) {
+function sortLabelsByVotes(
+  labels: BuyerCommunityLabel[],
+  voteCount: (labelId: string) => number,
+) {
   return [...labels].sort((a, b) => {
-    const voteDiff = voteCount(b, voteState) - voteCount(a, voteState)
+    const voteDiff = voteCount(b.id) - voteCount(a.id)
     if (voteDiff !== 0) return voteDiff
     if (a.tone !== b.tone) return a.tone === 'positive' ? -1 : 1
     return a.text.localeCompare(b.text)
@@ -55,6 +49,7 @@ function CategoryBlock({
   labels,
   voteState,
   verified,
+  voteCount,
   onToggleVote,
 }: {
   categoryId: BuyerLabelCategoryId
@@ -63,10 +58,11 @@ function CategoryBlock({
   labels: BuyerCommunityLabel[]
   voteState: BuyerVoteState
   verified: boolean
+  voteCount: (labelId: string) => number
   onToggleVote: (labelId: string) => void
 }) {
   const [open, setOpen] = useState(true)
-  const [frozenIds] = useState(() => sortLabelsByVotes(labels, voteState).map((label) => label.id))
+  const [frozenIds] = useState(() => sortLabelsByVotes(labels, voteCount).map((label) => label.id))
   const displayLabels = useMemo(
     () => labelsInFrozenOrder(labels, frozenIds),
     [labels, frozenIds],
@@ -96,7 +92,7 @@ function CategoryBlock({
         <div className="animate-bfi-fade mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
           <p className="px-2 pb-1 text-[11px] text-night-faint">{blurb}</p>
           {displayLabels.map((label) => {
-            const count = voteCount(label, voteState)
+            const count = voteCount(label.id)
             const voted = voteState.myVotes.includes(label.id)
             const needsVisit = labelRequiresVisit(label)
             const canVote = verified || !needsVisit
@@ -163,46 +159,14 @@ type BuyerCommunityPanelProps = {
 }
 
 /**
- * Buyer Community: fixed labels only. On-site votes require Presence Confirmed
- * (device within ~100m of the pin — not a manual check-in or proof of a tour).
+ * Buyer Community: fixed labels. Remote GLA votes need no presence.
+ * On-site votes need Presence Confirmed (~100m of pin — not a tour).
+ * Counts come from signed-in buyers on the server when available.
  */
 export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
   const { ownerId } = useAuth()
-  const [voteState, setVoteState] = useState<BuyerVoteState>(() => loadBuyerVoteState(propertyId))
-  const [verified, setVerified] = useState(() => loadBuyerVerified(propertyId))
+  const { voteState, onSiteOpen, voteCount, toggleVote } = useCommunityVotes(propertyId)
   const latestPresence = latestPresenceEvent(propertyId)
-
-  useEffect(() => {
-    setVoteState(loadBuyerVoteState(propertyId))
-    setVerified(loadBuyerVerified(propertyId))
-  }, [propertyId, ownerId])
-
-  useEffect(() => {
-    const refresh = () => setVerified(loadBuyerVerified(propertyId))
-    window.addEventListener('focus', refresh)
-    return () => window.removeEventListener('focus', refresh)
-  }, [propertyId])
-
-  function handleToggleVote(labelId: string) {
-    const label = BUYER_COMMUNITY_LABELS.find((entry) => entry.id === labelId)
-    if (!label) return
-    if (labelRequiresVisit(label) && !verified) return
-
-    setVoteState((prev) => {
-      const already = prev.myVotes.includes(labelId)
-      const myVotes = already
-        ? prev.myVotes.filter((id) => id !== labelId)
-        : [...prev.myVotes, labelId]
-      const currentBoost = prev.localBoosts[labelId] ?? 0
-      const localBoosts = {
-        ...prev.localBoosts,
-        [labelId]: already ? currentBoost - 1 : currentBoost + 1,
-      }
-      const next = { myVotes, localBoosts }
-      persistBuyerVoteState(propertyId, next)
-      return next
-    })
-  }
 
   return (
     <div className="mt-6 space-y-4 px-3 pt-1" data-testid="buyer-community-panel">
@@ -220,11 +184,19 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
           className="rounded-xl border border-white/20 bg-transparent px-3 py-2 text-[12px] leading-snug text-night-ink"
           data-testid="buyer-community-window-note"
         >
-          {verified
+          {onSiteOpen
             ? `You confirmed presence on ${formatPresenceDay(latestPresence.confirmedAt)}. That date stays. You can add or update on-site labels for 2 weeks — including after you already shared.`
             : `You confirmed presence on ${formatPresenceDay(latestPresence.confirmedAt)}. That date stays on the log. The 2-week labeling window has ended — Confirm on site to add more.`}
         </p>
-      ) : null}
+      ) : (
+        <p
+          className="rounded-xl border border-white/20 bg-transparent px-3 py-2 text-[12px] leading-snug text-night-ink"
+          data-testid="buyer-community-remote-note"
+        >
+          Gross living area labels can be voted remotely. Other Plus/Watch labels unlock after
+          Presence Confirmed at this pin.
+        </p>
+      )}
 
       {BUYER_LABEL_CATEGORIES.map((category) => (
         <CategoryBlock
@@ -234,8 +206,9 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
           blurb={category.blurb}
           labels={BUYER_COMMUNITY_LABELS.filter((label) => label.categoryId === category.id)}
           voteState={voteState}
-          verified={verified}
-          onToggleVote={handleToggleVote}
+          verified={onSiteOpen}
+          voteCount={voteCount}
+          onToggleVote={(labelId) => void toggleVote(labelId)}
         />
       ))}
     </div>

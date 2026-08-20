@@ -88,9 +88,11 @@ Some residential streets may return `SuccessWithoutResult` on the trial plan —
 - Property page **Confirm** uses `navigator.geolocation` vs `property.lat` / `property.lng`
 - Pass when distance ≤ ~100m and accuracy ≤ ~80m
 - Proves the device was near the pin — not that the buyer entered the home or completed a tour
-- **Permanent log:** each Confirm appends a dated presence event (`bfi.presenceEvents.{owner}.{propertyId}`) that is never deleted when the window ends
-- **2-week contribution window:** on-site Plus/Watch votes (and Homes in Diligence Share/Shared) stay available for 2 weeks from the latest Confirm, even after labels are already shared
+- **Permanent log:** each Confirm appends a dated presence event locally and, when signed in, in Supabase `presence_events`
+- **2-week contribution window:** on-site Plus/Watch votes stay available for 2 weeks from the latest Confirm
+- **Remote GLA:** Gross living area match/overstated votes do **not** need Confirm; they write to `community_votes` like other labels
+- **Counts:** signed-in buyers only (`get_community_summary`) — no demo seed totals
 - Failures: no pin, permission denied, timeout, too far, poor accuracy
 - **Nearby nudge (setting, default on):** while the property page is open, watch location; within ~300m and not yet confirmed, pulse the Confirm control + banner to push the tap
-- Mapper: `src/lib/gpsVerify.ts` · events: `bfi.presenceEvents.{owner}.{propertyId}` · legacy: `bfi.gpsVerified.{owner}.{propertyId}` · setting: `bfi.gps-nearby-nudge`
-- Live “You” rows in Presence Confirmed come from the events log
+- Mapper: `src/lib/gpsVerify.ts` · local: `bfi.presenceEvents.{owner}.{propertyId}` · cloud: `src/lib/communityApi.ts` · SQL: `migrations/005_community_presence_votes.sql`
+- Live Presence Confirmed rows come from the server log when signed in, otherwise local “You” events only

@@ -14,11 +14,14 @@ import {
   formatVisitDate,
   formatVisitTime,
   getVerifiedVisitsBundle,
+  bundleFromPresenceLog,
   labelTextById,
   visitSummary,
   type VisitPatternSignal,
   type VerifiedVisit,
+  type VerifiedVisitsBundle,
 } from '@/data/verifiedVisits'
+import { fetchPresenceLog } from '@/lib/communityApi'
 import { labelToneById } from '@/data/buyerCommunityLabels'
 import { cn } from '@/lib/utils'
 
@@ -159,18 +162,31 @@ type VerifiedVisitsPanelProps = {
  * Community labels from Buyer Community appear on visits when labeled.
  */
 export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
-  const [tick, setTick] = useState(0)
+  const [bundle, setBundle] = useState<VerifiedVisitsBundle>(() =>
+    getVerifiedVisitsBundle(property),
+  )
 
-  // Re-read live "You" labels when returning from Buyer Community in the same session
   useEffect(() => {
-    const onFocus = () => setTick((n) => n + 1)
+    setBundle(getVerifiedVisitsBundle(property))
+    let cancelled = false
+    void fetchPresenceLog(property.id).then((events) => {
+      if (cancelled || !events) return
+      setBundle(bundleFromPresenceLog(property.id, events))
+    })
+    const onFocus = () => {
+      setBundle(getVerifiedVisitsBundle(property))
+      void fetchPresenceLog(property.id).then((log) => {
+        if (!log) return
+        setBundle(bundleFromPresenceLog(property.id, log))
+      })
+    }
     window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [])
+    return () => {
+      cancelled = true
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [property.id])
 
-  const bundle = getVerifiedVisitsBundle(property)
-  // tick forces refresh after storage changes when remounting / focusing
-  void tick
   const summary = visitSummary(bundle)
   const sortedVisits = [...bundle.visits].sort(
     (a, b) => new Date(b.visitedAt).getTime() - new Date(a.visitedAt).getTime(),
@@ -233,9 +249,14 @@ export function VerifiedVisitsPanel({ property }: VerifiedVisitsPanelProps) {
         blurb="Newest first. A log is a phone near the pin — not a tour. You decide how these dates/times relate to the sale posting."
       >
         <div className="space-y-2 px-0.5 pb-0.5">
-          {sortedVisits.map((visit) => (
-            <VisitRow key={visit.id} visit={visit} />
-          ))}
+          {sortedVisits.length === 0 ? (
+            <p className="px-2 py-2 text-[12px] leading-snug text-night-faint">
+              No presence logs yet. Confirm on site while signed in so an anonymous date can be
+              counted for this home.
+            </p>
+          ) : (
+            sortedVisits.map((visit) => <VisitRow key={visit.id} visit={visit} />)
+          )}
         </div>
       </CollapsibleSection>
 

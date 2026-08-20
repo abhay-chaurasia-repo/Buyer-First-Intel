@@ -101,78 +101,51 @@ function buildSignals(visits: VerifiedVisit[]): VisitPatternSignal[] {
   ]
 }
 
-const SEED_VISITS: VerifiedVisit[] = [
-  {
-    id: 'vv-1',
-    visitedAt: '2026-07-14T10:22:00',
-    visitorLabel: 'Visitor A',
-    accuracyMeters: 8,
-    distanceMeters: 24,
-    withinRadius: true,
-    platform: 'iOS',
-    communityLabelIds: ['quiet-at-night', 'tight-driveway'],
-  },
-  {
-    id: 'vv-2',
-    visitedAt: '2026-07-18T16:05:00',
-    visitorLabel: 'Visitor B',
-    accuracyMeters: 12,
-    distanceMeters: 41,
-    withinRadius: true,
-    platform: 'Android',
-    communityLabelIds: ['mature-trees', 'easy-guest-parking', 'strong-curb-appeal'],
-  },
-  {
-    id: 'vv-3',
-    visitedAt: '2026-07-22T11:48:00',
-    visitorLabel: 'Visitor C',
-    accuracyMeters: 6,
-    distanceMeters: 18,
-    withinRadius: true,
-    platform: 'iOS',
-    communityLabelIds: ['finished-basement', 'updated-interior-feel', 'listing-differs-from-county'],
-  },
-  {
-    id: 'vv-4',
-    visitedAt: '2026-07-22T11:51:00',
-    visitorLabel: 'Visitor D',
-    accuracyMeters: 15,
-    distanceMeters: 62,
-    withinRadius: true,
-    platform: 'Android',
-    communityLabelIds: [],
-  },
-  {
-    id: 'vv-5',
-    visitedAt: '2026-08-01T18:15:00',
-    visitorLabel: 'Visitor A',
-    accuracyMeters: 9,
-    distanceMeters: 31,
-    withinRadius: true,
-    platform: 'iOS',
-    communityLabelIds: ['quiet-at-night', 'roomy-driveway', 'no-overhead-power-lines', 'possible-sqft-discrepancy'],
-  },
-  {
-    id: 'vv-6',
-    visitedAt: '2026-08-05T09:03:00',
-    visitorLabel: 'Visitor E',
-    accuracyMeters: 11,
-    distanceMeters: 47,
-    withinRadius: true,
-    platform: 'iOS',
-    communityLabelIds: ['exterior-deferred-maintenance', 'drainage-concern', 'high-tension-cables-nearby'],
-  },
-]
-
 /**
- * Demo visit log. Date/time only — buyers compare to listing timing themselves.
- * Community labels mirror Buyer Community upvotes for that visitor.
+ * Presence log. Local "You" events always show. Signed-in buyers also see
+ * anonymous dated events from the server. No demo visitors.
  */
 export function getVerifiedVisitsBundle(property: MockProperty): VerifiedVisitsBundle {
-  const visits = mergeLiveCommunityLabels(property.id, SEED_VISITS)
+  const visits = mergeLiveCommunityLabels(property.id, [])
 
   return {
     propertyId: property.id,
+    radiusMeters: 100,
+    visits,
+    signals: buildSignals(visits),
+  }
+}
+
+export function bundleFromPresenceLog(
+  propertyId: string,
+  events: Array<{
+    id: string
+    confirmedAt: string
+    distanceMeters: number
+    accuracyMeters: number
+    isYou: boolean
+    communityLabelIds: string[]
+  }>,
+): VerifiedVisitsBundle {
+  const sortedYou = [...events].filter((event) => event.isYou)
+  const latestYouId = sortedYou.sort(
+    (a, b) => Date.parse(b.confirmedAt) - Date.parse(a.confirmedAt),
+  )[0]?.id
+
+  const visits: VerifiedVisit[] = events.map((event) => ({
+    id: event.id,
+    visitedAt: event.confirmedAt,
+    visitorLabel: event.isYou ? 'You' : `anon-${event.id}`,
+    accuracyMeters: event.accuracyMeters,
+    distanceMeters: event.distanceMeters,
+    withinRadius: event.distanceMeters <= 100,
+    platform: 'iOS',
+    communityLabelIds:
+      event.isYou && event.id === latestYouId ? [...event.communityLabelIds] : [],
+  }))
+
+  return {
+    propertyId,
     radiusMeters: 100,
     visits,
     signals: buildSignals(visits),
