@@ -14,7 +14,7 @@ import { VisitPlanPicker } from '@/components/VisitPlanPicker'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/auth/AuthProvider'
-import { loadBuyerVoteState } from '@/data/buyerCommunityStorage'
+import { hasCommunityObservation } from '@/data/buyerCommunityStorage'
 import { canContributeOnSite } from '@/data/ownerScope'
 import {
   loadNotePad,
@@ -142,12 +142,12 @@ function WatchlistMetaRail({
           title={
             hasShared
               ? 'Shared with Buyer Community — tap to update (open for 2 weeks)'
-              : 'Share labels with Buyer Community (open for 2 weeks)'
+              : 'Share your observation with Buyer Community (open for 2 weeks)'
           }
           aria-label={
             hasShared
               ? 'Shared with Buyer Community — tap to update'
-              : 'Share with Buyer Community'
+              : 'Share observation with Buyer Community'
           }
           data-testid="watchlist-contribute-chip"
           data-shared={hasShared ? '1' : '0'}
@@ -334,9 +334,7 @@ function WatchlistRow({
   const [openNotesEditor, setOpenNotesEditor] = useState(false)
   const status = visitPlanStatus(item)
   const [noteCount, setNoteCount] = useState(() => notesCount(item.id))
-  const [hasShared, setHasShared] = useState(
-    () => loadBuyerVoteState(item.id).myVotes.length > 0,
-  )
+  const [hasShared, setHasShared] = useState(() => hasCommunityObservation(item.id))
   const [gpsVerified, setGpsVerified] = useState(() => canContributeOnSite(item.id))
   const rowRef = useRef<HTMLLIElement>(null)
 
@@ -347,7 +345,7 @@ function WatchlistRow({
 
   useEffect(() => {
     const refreshShared = () => {
-      setHasShared(loadBuyerVoteState(item.id).myVotes.length > 0)
+      setHasShared(hasCommunityObservation(item.id))
       setGpsVerified(canContributeOnSite(item.id))
     }
     refreshShared()

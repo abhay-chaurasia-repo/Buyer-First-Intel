@@ -112,13 +112,14 @@ export const JOURNEY_CHECKLIST: JourneyChecklistItem[] = [
     phaseId: 'diligence',
     title: 'Confirm presence at the pin',
     detail:
-      'Presence Confirmed logs the date your phone was near the pin. You can add Plus/Watch labels for 2 weeks after that. The date stays even after labeling ends.',
+      'Presence Confirmed logs the date your phone was near the pin. You can submit one observation form for 2 weeks after that. The date stays even after the window ends.',
   },
   {
     id: 'community-labels',
     phaseId: 'diligence',
-    title: 'Read and upvote Buyer Community labels',
-    detail: 'Plus (upsides) and Watch (watch-outs) from buyers who confirmed presence at that address.',
+    title: 'Read this home’s Buyer Community observations',
+    detail:
+      'Noise, parking, basement, and moisture tallies from buyers who confirmed presence at that address.',
   },
   {
     id: 'schools-check',

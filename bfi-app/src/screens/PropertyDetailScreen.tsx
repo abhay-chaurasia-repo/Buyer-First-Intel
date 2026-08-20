@@ -15,13 +15,8 @@ import {
 import { AppShell } from '@/components/layout/AppShell'
 import { CatchUpFlow, type CatchUpSurface } from '@/components/catchup/CatchUpFlow'
 import { PropertyDiligenceChecklist } from '@/components/PropertyDiligenceChecklist'
-import { plusWatchChipClass } from '@/components/PlusWatchLegend'
 import { useAuth } from '@/auth/AuthProvider'
 import { fetchSurfaceApi } from '@/data/catchUpApi'
-import {
-  PLUS_LABEL_SHORT,
-  WATCH_LABEL_SHORT,
-} from '@/data/buyerCommunityLabels'
 import {
   DEMO_PROPERTY,
   getMetricCards,
@@ -36,7 +31,7 @@ import {
   latestPresenceEvent,
 } from '@/data/ownerScope'
 import {
-  hasCommunityVotes,
+  hasCommunityObservation,
   notifyContributeAfterVerify,
 } from '@/data/communityReminders'
 import {
@@ -109,8 +104,8 @@ export function PropertyDetailScreen() {
 
   const [starred, setStarred] = useState(() => isPropertyOnWatchlist(property) || property.starred)
   const [verified, setVerified] = useState(() => canContributeOnSite(property.id))
-  const [hasSharedLabels, setHasSharedLabels] = useState(() =>
-    hasCommunityVotes(property.id),
+  const [hasSharedObservation, setHasSharedObservation] = useState(() =>
+    hasCommunityObservation(property.id),
   )
   const [verifyBusy, setVerifyBusy] = useState(false)
   const [verifyMessage, setVerifyMessage] = useState<{
@@ -202,7 +197,7 @@ export function PropertyDetailScreen() {
   const nudgeVerify = nearbyNudgeEnabled && nearby && !verified && !verifyBusy
 
   useEffect(() => {
-    setHasSharedLabels(hasCommunityVotes(property.id))
+    setHasSharedObservation(hasCommunityObservation(property.id))
   }, [property.id, verified, activeSurface])
 
   function handleToggleStar() {
@@ -255,7 +250,7 @@ export function PropertyDetailScreen() {
       }
       setVerifyMessage({
         tone: 'ok',
-        text: `Presence logged ${formatPresenceDay(event.confirmedAt)} — within ${GPS_VERIFY_RADIUS_METERS}m of the pin (${result.distanceMeters}m away, ±${result.accuracyMeters}m). That date stays on the log. It does not prove you entered the home or completed a tour. Saved to Homes in Diligence. You can add or update Plus/Watch labels for ${GPS_VERIFY_TTL_LABEL}.`,
+        text: `Presence logged ${formatPresenceDay(event.confirmedAt)} — within ${GPS_VERIFY_RADIUS_METERS}m of the pin (${result.distanceMeters}m away, ±${result.accuracyMeters}m). That date stays on the log. It does not prove you entered the home or completed a tour. Saved to Homes in Diligence. You can submit or update one observation form for ${GPS_VERIFY_TTL_LABEL}.`,
       })
       notifyContributeAfterVerify(property.address)
     } else {
@@ -273,8 +268,8 @@ export function PropertyDetailScreen() {
       setVerifyMessage({
         tone: 'ok',
         text: logged
-          ? `Presence logged ${formatPresenceDay(logged.confirmedAt)}. That date stays on the log. You can still add or update Plus/Watch labels for ${GPS_VERIFY_TTL_LABEL}.`
-          : `You can still add or update Plus/Watch labels for ${GPS_VERIFY_TTL_LABEL}. Your presence date stays on the log.`,
+          ? `Presence logged ${formatPresenceDay(logged.confirmedAt)}. That date stays on the log. You can still submit or update one observation form for ${GPS_VERIFY_TTL_LABEL}.`
+          : `You can still submit or update one observation form for ${GPS_VERIFY_TTL_LABEL}. Your presence date stays on the log.`,
       })
       return
     }
@@ -421,7 +416,7 @@ export function PropertyDetailScreen() {
                       <span className="mt-0.5 block text-[11px] leading-snug text-night-ink">
                         Tap Confirm (within {GPS_VERIFY_RADIUS_METERS}m of the pin). This proves
                         your phone was nearby — not that you entered the home or completed a tour.
-                        Unlocks on-site Buyer Community labels. Nudge zone is {GPS_NEARBY_NUDGE_METERS}
+                        Unlocks the on-site observation form. Nudge zone is {GPS_NEARBY_NUDGE_METERS}
                         m.
                       </span>
                     </span>
@@ -435,7 +430,7 @@ export function PropertyDetailScreen() {
                   >
                     You confirmed presence on {formatPresenceDay(latestPresence.confirmedAt)}.
                     That date stays on the log. The contribution window ended — Confirm on site
-                    to add more Plus/Watch labels.
+                    to submit or update your observation.
                   </p>
                 ) : null}
                 {verifyMessage ? (
@@ -459,9 +454,9 @@ export function PropertyDetailScreen() {
                         data-testid="button-contribute-after-verify"
                       >
                         <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
-                        {hasSharedLabels
-                          ? 'Update Plus / Watch labels'
-                          : 'Add Plus / Watch labels'}
+                        {hasSharedObservation
+                          ? 'Update observation'
+                          : 'Add observation'}
                       </button>
                     ) : null}
                   </div>
@@ -473,7 +468,7 @@ export function PropertyDetailScreen() {
                     data-testid="button-contribute-after-verify"
                   >
                     <Users className="h-3.5 w-3.5" strokeWidth={2.25} />
-                    {hasSharedLabels ? 'Update Plus / Watch labels' : 'Add Plus / Watch labels'}
+                    {hasSharedObservation ? 'Update observation' : 'Add observation'}
                   </button>
                 ) : null}
               </div>
@@ -520,35 +515,17 @@ export function PropertyDetailScreen() {
 
             <section
               className="px-3 pt-5 pb-2"
-              aria-label="How diligence voting works"
+              aria-label="How Buyer Community observations work"
               data-testid="buyer-community-promo"
             >
               <div className="rounded-2xl border border-white/20 bg-night-elevated/45 px-3.5 py-3.5">
-                {/* 1 — County's Fact remote path */}
                 <div data-testid="promo-county-fact">
                   <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
                     County&apos;s Fact
                   </p>
                   <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
-                    Living-area labels can be voted <span className="font-semibold">remotely</span>{' '}
-                    — no presence check required. Compare county gross living area to the published listing size,
-                    then upvote whether it matches or looks overstated.
-                  </p>
-                  <ol className="mt-2 list-decimal space-y-1 pl-4 text-[11px] leading-snug text-night-faint">
-                    <li>Open County&apos;s Fact and read Gross living area.</li>
-                    <li>Check the published size on Zillow or Redfin.</li>
-                    <li>Upvote Match or Overstated in the remote insight panel.</li>
-                  </ol>
-                  <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-night-faint">
-                    <Crosshair
-                      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-glow"
-                      strokeWidth={2.25}
-                    />
-                    <span>
-                      Presence Confirmed is{' '}
-                      <span className="font-semibold text-night-ink">not needed</span> for this size
-                      check — it&apos;s the one remote exception.
-                    </span>
+                    County gross living area is a record, not a vote. Compare it with the listing
+                    yourself. Square-footage notes belong on this home&apos;s checklist.
                   </p>
                   <button
                     type="button"
@@ -563,14 +540,14 @@ export function PropertyDetailScreen() {
 
                 <div className="my-3.5 border-t border-white/12" />
 
-                {/* 2 — Community insights + GPS + Plus/Watch */}
                 <div data-testid="promo-community-insights">
                   <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
-                    Buyer Community Insights
+                    Buyer Community
                   </p>
                   <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
-                    Everything else is presence-backed. Structured Plus/Watch labels from buyers whose
-                    phones were near the pin.
+                    After Confirm, submit one structured observation for this address: noise,
+                    parking, basement, and moisture. Fields are fixed. There is no free text,
+                    rating, or Plus/Watch vote.
                   </p>
                   <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-night-faint">
                     <Crosshair
@@ -584,9 +561,9 @@ export function PropertyDetailScreen() {
                             latestPresence
                               ? ` ${formatPresenceDay(latestPresence.confirmedAt)}`
                               : ''
-                          }. That date stays. On-site labels stay open for ${GPS_VERIFY_TTL_LABEL} — add or update Plus/Watch, including after you already shared. This only means your phone was within about ${GPS_VERIFY_RADIUS_METERS}m of the pin.`
+                          }. That date stays. The observation form stays open for ${GPS_VERIFY_TTL_LABEL} — submit or update, including after you already shared. This only means your phone was within about ${GPS_VERIFY_RADIUS_METERS}m of the pin.`
                         : latestPresence
-                          ? `you confirmed presence on ${formatPresenceDay(latestPresence.confirmedAt)}. That date stays on the log. Tap Confirm on site to open ${GPS_VERIFY_TTL_LABEL} of labeling again. That is not proof you entered the home or completed a tour.`
+                          ? `you confirmed presence on ${formatPresenceDay(latestPresence.confirmedAt)}. That date stays on the log. Tap Confirm on site to open ${GPS_VERIFY_TTL_LABEL} of observation again. That is not proof you entered the home or completed a tour.`
                           : `tap Confirm on this header while your phone is within about ${GPS_VERIFY_RADIUS_METERS}m of the pin. That is not proof you entered the home or completed a tour.`}
                     </span>
                   </p>
@@ -612,30 +589,6 @@ export function PropertyDetailScreen() {
                       </span>
                     </span>
                   </label>
-
-                  <div
-                    className="mt-3 space-y-2 rounded-xl border border-white/12 bg-black/20 px-3 py-2.5"
-                    data-testid="promo-plus-watch"
-                  >
-                    <div className="grid items-start gap-x-3" style={{ gridTemplateColumns: '3.6rem 1fr' }}>
-                      <span className={cn('justify-self-start', plusWatchChipClass('plus'))}>
-                        Plus
-                      </span>
-                      <p className="min-w-0 text-[11px] leading-snug text-night-ink">
-                        <span className="font-semibold text-plus-glow">Upsides</span>
-                        <span className="text-night-faint"> — {PLUS_LABEL_SHORT}.</span>
-                      </p>
-                    </div>
-                    <div className="grid items-start gap-x-3" style={{ gridTemplateColumns: '3.6rem 1fr' }}>
-                      <span className={cn('justify-self-start', plusWatchChipClass('watch'))}>
-                        Watch
-                      </span>
-                      <p className="min-w-0 text-[11px] leading-snug text-night-ink">
-                        <span className="font-semibold text-watch-glow">Watch-outs</span>
-                        <span className="text-night-faint"> — {WATCH_LABEL_SHORT}.</span>
-                      </p>
-                    </div>
-                  </div>
 
                   <button
                     type="button"
@@ -668,7 +621,7 @@ export function PropertyDetailScreen() {
             <p className="mt-2 text-[13px] leading-snug text-night-muted">
               We compare your phone GPS to this home&apos;s pin. Presence Confirmed logs the date
               your phone was within about {GPS_VERIFY_RADIUS_METERS} meters of the pin. That date
-              stays. You can add labels for {GPS_VERIFY_TTL_LABEL}. It does not prove you entered
+              stays. You can submit one observation form for {GPS_VERIFY_TTL_LABEL}. It does not prove you entered
               the home or completed a tour. Location is used only while you Confirm — not in the
               background.
             </p>

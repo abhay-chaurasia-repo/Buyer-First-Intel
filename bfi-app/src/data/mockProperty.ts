@@ -1,4 +1,3 @@
-import { BUYER_LABEL_CATEGORIES } from '@/data/buyerCommunityLabels'
 import {
   formatCountyLot,
   formatCountyNumber,
@@ -573,15 +572,15 @@ export function getMetricCards(property: MockProperty): MetricCard[] {
       title: 'Presence Confirmed',
       subtitle: '~100m of pin',
       badge: String(property.verifiedVisits),
-      detail: 'Dated log stays · labeling open for 2 weeks',
+      detail: 'Dated log stays · observation form open for 2 weeks',
       accent: 'verified-visits',
     },
     {
       id: 'buyer-insights',
       title: 'Buyer Community',
-      subtitle: 'Label votes',
-      badge: String(BUYER_LABEL_CATEGORIES.length),
-      detail: 'Plus = upsides · Watch = watch-outs · buyers upvote fixed labels',
+      subtitle: 'On-site form',
+      badge: '1',
+      detail: 'One structured observation per buyer — noise, parking, basement, moisture',
       accent: 'buyer-insights',
     },
     {
@@ -886,11 +885,12 @@ export function getChannelCanvas(
       },
       fields: [
         { label: 'Presence confirmed', value: String(property.verifiedVisits), source: 'GPS' },
-        { label: 'Possible garage conversion', value: '1 verified buyer flagged', source: 'Insight' },
-        { label: 'Ceiling height concern', value: '0 verified buyers', source: 'Insight' },
-        { label: 'Basement present', value: '2 verified buyers confirmed', source: 'Insight' },
+        { label: 'Noise during visit', value: 'Property-level tally', source: 'Observation' },
+        { label: 'Parking', value: 'Property-level tally', source: 'Observation' },
+        { label: 'Basement', value: 'Property-level tally', source: 'Observation' },
+        { label: 'Moisture or musty odor', value: 'Property-level tally', source: 'Observation' },
       ],
-      notes: ['Insights stay structured. No ratings, upvotes, or public comment feed.'],
+      notes: ['One structured form per buyer. No ratings, upvotes, or public comment feed.'],
     },
     '08-personal-notes': {
       id: '08-personal-notes',

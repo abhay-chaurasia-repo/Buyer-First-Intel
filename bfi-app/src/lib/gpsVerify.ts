@@ -1,7 +1,7 @@
 /**
  * Presence Confirmed: compare device position to the property pin (~100m).
  * Proves the phone was near the pin — not that the user entered the home or toured.
- * Unlocks Buyer Community on-site votes when within radius.
+ * Unlocks the Buyer Community observation form when within radius.
  * Uses Capacitor Geolocation on iOS/Android, browser geolocation on web.
  */
 

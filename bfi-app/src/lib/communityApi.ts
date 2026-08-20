@@ -1,35 +1,28 @@
 /**
- * Server-backed Buyer Community: presence events + structured label votes.
- * Local storage is a cache. After a successful pull, Supabase is source of truth.
- * Remote GLA labels do not need Presence Confirmed; on-site labels do.
+ * Server-backed Buyer Community: presence events + one structured observation
+ * per signed-in buyer per property. Local storage is a cache.
  */
 
-import { persistBuyerVoteState } from '@/data/buyerCommunityStorage'
+import { persistCommunityObservation } from '@/data/buyerCommunityStorage'
+import {
+  parseObservationAnswers,
+  type ObservationAnswers,
+  type ObservationFieldId,
+} from '@/data/observationFields'
 import { loadAuthSession } from '@/data/authSession'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 import { isSupabaseOwnerId } from '@/lib/searchQuotaApi'
 
-export const REMOTE_GLA_LABEL_IDS = [
-  'published-listing-size-matches-county',
-  'published-listing-size-overstated',
-] as const
-
-export function isRemoteGlaLabel(labelId: string) {
-  return (REMOTE_GLA_LABEL_IDS as readonly string[]).includes(labelId)
-}
-
-export type CommunityLabelTally = {
-  id: string
-  count: number
-  mine: boolean
-}
+export type ObservationTallies = Record<ObservationFieldId, Record<string, number>>
 
 export type CommunitySummary = {
   propertyId: string
   canContribute: boolean
   myLatestPresence: string | null
   presenceCount: number
-  labels: Record<string, CommunityLabelTally>
+  observationCount: number
+  myObservation: ObservationAnswers | null
+  fields: ObservationTallies
 }
 
 export type PresenceLogEvent = {
@@ -38,7 +31,7 @@ export type PresenceLogEvent = {
   distanceMeters: number
   accuracyMeters: number
   isYou: boolean
-  communityLabelIds: string[]
+  observation: ObservationAnswers | null
 }
 
 type RpcSummary = {
@@ -46,7 +39,13 @@ type RpcSummary = {
   canContribute?: boolean
   myLatestPresence?: string | null
   presenceCount?: number
-  labels?: Array<{ id?: string; count?: number; mine?: boolean }>
+  observationCount?: number
+  myObservation?: ObservationAnswers | null
+  fields?: Partial<Record<ObservationFieldId, Record<string, number>>>
+}
+
+function emptyTallies(): ObservationTallies {
+  return { noise: {}, parking: {}, basement: {}, moisture: {} }
 }
 
 function canUseCommunityRemote() {
@@ -54,64 +53,39 @@ function canUseCommunityRemote() {
   return isSupabaseConfigured() && isSupabaseOwnerId(session?.userId)
 }
 
-function parseSummary(propertyId: string, raw: RpcSummary | null | undefined): CommunitySummary {
-  const labels: Record<string, CommunityLabelTally> = {}
-  for (const row of raw?.labels ?? []) {
-    if (!row?.id) continue
-    labels[row.id] = {
-      id: row.id,
-      count: Number(row.count ?? 0),
-      mine: Boolean(row.mine),
+function parseTallies(raw: RpcSummary['fields']): ObservationTallies {
+  const next = emptyTallies()
+  for (const fieldId of Object.keys(next) as ObservationFieldId[]) {
+    const row = raw?.[fieldId]
+    if (!row || typeof row !== 'object') continue
+    const counts: Record<string, number> = {}
+    for (const [optionId, count] of Object.entries(row)) {
+      counts[optionId] = Number(count ?? 0)
     }
+    next[fieldId] = counts
   }
+  return next
+}
+
+function parseSummary(propertyId: string, raw: RpcSummary | null | undefined): CommunitySummary {
+  const myObservation = parseObservationAnswers(raw?.myObservation)
   return {
     propertyId: raw?.propertyId || propertyId,
     canContribute: Boolean(raw?.canContribute),
     myLatestPresence: raw?.myLatestPresence ?? null,
     presenceCount: Number(raw?.presenceCount ?? 0),
-    labels,
+    observationCount: Number(raw?.observationCount ?? 0),
+    myObservation,
+    fields: parseTallies(raw?.fields),
   }
 }
 
 function cacheSummary(summary: CommunitySummary) {
-  const myVotes = Object.values(summary.labels)
-    .filter((row) => row.mine)
-    .map((row) => row.id)
-  persistBuyerVoteState(summary.propertyId, { myVotes, localBoosts: {} })
-}
-
-export function displayedVoteCount(
-  labelId: string,
-  myVotes: string[],
-  summary: CommunitySummary | null,
-) {
-  const tally = summary?.labels[labelId]
-  const mineNow = myVotes.includes(labelId)
-  if (tally) {
-    if (mineNow && !tally.mine) return tally.count + 1
-    if (!mineNow && tally.mine) return Math.max(0, tally.count - 1)
-    return tally.count
-  }
-  return mineNow ? 1 : 0
-}
-
-function applyExclusiveGla(myVotes: string[], labelId: string, turningOn: boolean) {
-  if (!turningOn || !isRemoteGlaLabel(labelId)) return myVotes
-  return myVotes.filter((id) => !isRemoteGlaLabel(id) || id === labelId)
-}
-
-export function optimisticToggleVotes(
-  myVotes: string[],
-  labelId: string,
-): { myVotes: string[]; turningOn: boolean } {
-  const already = myVotes.includes(labelId)
-  if (already) {
-    return { myVotes: myVotes.filter((id) => id !== labelId), turningOn: false }
-  }
-  return {
-    myVotes: applyExclusiveGla([...myVotes, labelId], labelId, true),
-    turningOn: true,
-  }
+  if (!summary.myObservation) return
+  persistCommunityObservation(summary.propertyId, {
+    answers: summary.myObservation,
+    submittedAt: new Date().toISOString(),
+  })
 }
 
 export async function fetchCommunitySummary(
@@ -133,9 +107,9 @@ export async function fetchCommunitySummary(
   return summary
 }
 
-export async function toggleCommunityVote(
+export async function upsertCommunityObservation(
   propertyId: string,
-  labelId: string,
+  answers: ObservationAnswers,
 ): Promise<{ ok: boolean; reason?: string; summary: CommunitySummary | null }> {
   if (!canUseCommunityRemote()) {
     return { ok: false, reason: 'local_only', summary: null }
@@ -143,12 +117,15 @@ export async function toggleCommunityVote(
   const supabase = getSupabase()
   if (!supabase) return { ok: false, reason: 'unavailable', summary: null }
 
-  const { data, error } = await supabase.rpc('toggle_community_vote', {
+  const { data, error } = await supabase.rpc('upsert_community_observation', {
     p_property_id: propertyId,
-    p_label_id: labelId,
+    p_noise: answers.noise,
+    p_parking: answers.parking,
+    p_basement: answers.basement,
+    p_moisture: answers.moisture,
   })
   if (error) {
-    console.warn('toggle_community_vote failed', error.message)
+    console.warn('upsert_community_observation failed', error.message)
     return { ok: false, reason: error.message, summary: null }
   }
   const raw = data as { ok?: boolean; reason?: string; summary?: RpcSummary } | null
@@ -209,7 +186,7 @@ export async function fetchPresenceLog(propertyId: string): Promise<PresenceLogE
     console.warn('get_presence_log failed', error.message)
     return null
   }
-  const raw = data as { ok?: boolean; events?: PresenceLogEvent[] } | null
+  const raw = data as { ok?: boolean; events?: Array<PresenceLogEvent & { observation?: unknown }> } | null
   if (!raw || raw.ok === false || !Array.isArray(raw.events)) return []
 
   return raw.events.map((event, index) => ({
@@ -218,9 +195,7 @@ export async function fetchPresenceLog(propertyId: string): Promise<PresenceLogE
     distanceMeters: Number(event.distanceMeters ?? 0),
     accuracyMeters: Number(event.accuracyMeters ?? 0),
     isYou: Boolean(event.isYou),
-    communityLabelIds: Array.isArray(event.communityLabelIds)
-      ? event.communityLabelIds.map(String)
-      : [],
+    observation: parseObservationAnswers(event.observation),
   }))
 }
 
