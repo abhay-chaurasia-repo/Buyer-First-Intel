@@ -129,7 +129,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
       preview: live
         ? isMissingCountyNumber(property.sqft)
           ? 'Gross living area is not published in county records for this parcel. Compare listing size on Zillow or Redfin when available.'
-          : `Gross living area is ${property.sqft.toLocaleString()} sqft. Compare with the published size on Zillow or Redfin, then upvote whether it matches or looks overstated.`
+          : `Gross living area is ${property.sqft.toLocaleString()} sqft. Compare with the published size on Zillow or Redfin. Flag only if it looks overstated.`
         : `Demo shell shows ${property.sqft.toLocaleString()} sqft — replace by searching a live address with ATTOM bound.`,
       timestamp: isoMinutesAgo(18),
       source,
@@ -139,10 +139,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
           value: sqftLabel,
         },
       ],
-      insightLabelIds: [
-        'published-listing-size-matches-county',
-        'published-listing-size-overstated',
-      ],
+      insightLabelIds: ['published-listing-size-overstated'],
     },
     {
       id: 'cf-rooms',

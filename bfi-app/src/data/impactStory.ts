@@ -37,8 +37,8 @@ export const IMPACT_PAGES: ImpactPage[] = [
   {
     id: 'size',
     eyebrow: "County's Fact",
-    title: 'Compare county size with the listing — then help the next buyer.',
-    body: 'Open County’s Fact, check Gross living area against Zillow or Redfin, then upvote. Your vote is for the next buyer walking this address — no typed numbers.',
+    title: 'Compare county size with the listing — flag it only if it looks off.',
+    body: 'Open County’s Fact, check Gross living area against Zillow or Redfin, and flag if the published size looks larger than county. No flag means the next buyer treats it as a match.',
     snippet: 'size',
     scene: 'property',
     image: '/scenes/bg-property.png?v=darkwarm',

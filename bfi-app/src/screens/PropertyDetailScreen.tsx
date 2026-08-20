@@ -530,14 +530,14 @@ export function PropertyDetailScreen() {
                     County&apos;s Fact
                   </p>
                   <p className="mt-1.5 text-[12px] leading-snug text-night-ink">
-                    Living-area labels can be voted <span className="font-semibold">remotely</span>{' '}
-                    — no presence check required. Compare county gross living area to the published listing size,
-                    then upvote whether it matches or looks overstated.
+                    Compare county gross living area to the published listing size{' '}
+                    <span className="font-semibold">remotely</span> — no presence check. Flag only
+                    if it looks overstated. No flag means buyers treat it as a match.
                   </p>
                   <ol className="mt-2 list-decimal space-y-1 pl-4 text-[11px] leading-snug text-night-faint">
                     <li>Open County&apos;s Fact and read Gross living area.</li>
                     <li>Check the published size on Zillow or Redfin.</li>
-                    <li>Upvote Match or Overstated in the remote insight panel.</li>
+                    <li>Flag Overstated only if the listing looks larger than county.</li>
                   </ol>
                   <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-night-faint">
                     <Crosshair

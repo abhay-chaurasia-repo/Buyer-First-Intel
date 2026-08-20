@@ -59,7 +59,7 @@ const surfaceMeta: Record<
     title: 'Buyer Community',
     Icon: Users,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'Fixed Plus & Watch labels — on-site votes after Presence Confirmed (size labels can be remote)',
+    blurb: 'Remote Watch first — flag what looks off. No vote means buyers treat that item as fine.',
   },
   schools: {
     title: 'Schools',

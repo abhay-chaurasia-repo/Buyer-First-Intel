@@ -17,8 +17,7 @@ type RemoteInsightVoteProps = {
 /**
  * Inline upvote for catalog labels — used in County Facts living area.
  * Gross living area (requiresVisit: false) can be voted without Confirm.
- * Within this group, choosing one clears the others (Plus vs Watch).
- * Counts are live buyer totals when signed in to Supabase.
+ * Flag only the Watch — no vote means buyers treat listing size as matching.
  */
 export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVoteProps) {
   const labels = labelIds
@@ -38,8 +37,8 @@ export function RemoteInsightVote({ propertyId, labelIds }: RemoteInsightVotePro
         Remote insight · no visit needed
       </p>
       <p className="mt-1 text-[10px] leading-snug text-night-faint">
-        Compare Gross living area to Zillow/Redfin, then upvote one. Counts are from signed-in
-        buyers, not this phone only.
+        Compare Gross living area to Zillow/Redfin. Flag only if it looks overstated. No vote means
+        buyers treat it as a match. Counts are from signed-in buyers, not this phone only.
       </p>
       <div className="mt-2 space-y-1">
         {labels.map((label) => {

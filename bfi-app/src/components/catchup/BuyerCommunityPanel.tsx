@@ -19,9 +19,12 @@ function sortLabelsByVotes(
   voteCount: (labelId: string) => number,
 ) {
   return [...labels].sort((a, b) => {
+    const aRemote = a.requiresVisit === false
+    const bRemote = b.requiresVisit === false
+    if (aRemote !== bRemote) return aRemote ? -1 : 1
     const voteDiff = voteCount(b.id) - voteCount(a.id)
     if (voteDiff !== 0) return voteDiff
-    if (a.tone !== b.tone) return a.tone === 'positive' ? -1 : 1
+    if (a.tone !== b.tone) return a.tone === 'negative' ? -1 : 1
     return a.text.localeCompare(b.text)
   })
 }
@@ -193,8 +196,9 @@ export function BuyerCommunityPanel({ propertyId }: BuyerCommunityPanelProps) {
           className="rounded-xl border border-white/20 bg-transparent px-3 py-2 text-[12px] leading-snug text-night-ink"
           data-testid="buyer-community-remote-note"
         >
-          Gross living area labels can be voted remotely. Other Plus/Watch labels unlock after
-          Presence Confirmed at this pin.
+          Gross living area can be flagged remotely if the listing looks larger than county. On-site
+          Watch labels unlock after Presence Confirmed at this pin. No vote on a Watch means buyers
+          treat that item as fine.
         </p>
       )}
 

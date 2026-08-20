@@ -35,11 +35,10 @@ function SizeSnippet() {
             Remote insight · no visit needed
           </p>
           <p className="mt-1 text-[10px] leading-snug text-night-faint">
-            Compare with the listing, then upvote to help each other.
+            Flag only if the published size looks larger than county.
           </p>
           <div className="mt-2 space-y-1">
             {[
-              { text: 'Published listing size matches county', tone: 'plus' as const, votes: 4 },
               {
                 text: 'Published listing size looks larger than county',
                 tone: 'watch' as const,
@@ -48,7 +47,7 @@ function SizeSnippet() {
             ].map((label) => (
               <div key={label.text} className="flex items-center gap-2 rounded-lg px-0.5 py-1">
                 <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
-                  {label.tone === 'plus' ? 'Plus' : 'Watch'}
+                  Watch
                 </span>
                 <span className="min-w-0 flex-1 text-[12px] leading-snug text-night-ink">
                   {label.text}
@@ -128,7 +127,7 @@ function CommunitySnippet() {
           Surroundings & utilities
         </span>
         <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
-          3
+          2
         </span>
       </div>
       <div className="mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
@@ -139,8 +138,7 @@ function CommunitySnippet() {
             votes: 6,
             featured: true,
           },
-          { text: 'No overhead power lines in view', tone: 'plus' as const, votes: 3 },
-          { text: 'Clean air feel on site', tone: 'plus' as const, votes: 2 },
+          { text: 'Power lines over or beside lot', tone: 'watch' as const, votes: 3 },
         ].map((label) => (
           <div
             key={label.text}
@@ -151,7 +149,7 @@ function CommunitySnippet() {
             data-testid={label.featured ? 'impact-label-high-tension' : undefined}
           >
             <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
-              {label.tone === 'plus' ? 'Plus' : 'Watch'}
+              Watch
             </span>
             <span className="min-w-0 flex-1 text-[13px] leading-snug text-night-ink">
               {label.text}

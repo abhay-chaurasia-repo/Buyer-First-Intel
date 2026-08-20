@@ -9,10 +9,7 @@ import { loadAuthSession } from '@/data/authSession'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 import { isSupabaseOwnerId } from '@/lib/searchQuotaApi'
 
-export const REMOTE_GLA_LABEL_IDS = [
-  'published-listing-size-matches-county',
-  'published-listing-size-overstated',
-] as const
+export const REMOTE_GLA_LABEL_IDS = ['published-listing-size-overstated'] as const
 
 export function isRemoteGlaLabel(labelId: string) {
   return (REMOTE_GLA_LABEL_IDS as readonly string[]).includes(labelId)
