@@ -1,0 +1,326 @@
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowRight, CalendarClock, MapPin, ThumbsUp, Users } from 'lucide-react'
+import { useAuth } from '@/auth/AuthProvider'
+import { BrandLogo } from '@/components/BrandLogo'
+import { plusWatchChipClass } from '@/components/PlusWatchLegend'
+import { SceneBackdrop } from '@/components/layout/SceneBackdrop'
+import { APP_NAME, APP_TAGLINE } from '@/data/brand'
+import { IMPACT_PAGES, markImpactSeen, type ImpactPage } from '@/data/impactStory'
+import { cn } from '@/lib/utils'
+
+const AUTO_MS = 3500
+
+function SizeSnippet() {
+  return (
+    <div className="text-night-ink" data-testid="impact-snippet-size">
+      <div
+        className="flex w-full min-h-11 items-center gap-2 px-2 py-1.5"
+        data-testid="section-heading-cf-living-area"
+      >
+        <span className="min-w-0 flex-1 font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+          Gross living area
+        </span>
+      </div>
+      <div className="mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
+        <div className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-2 py-2">
+          <span className="text-[13px] text-night-muted">Gross living area</span>
+          <span className="text-right text-sm font-semibold text-night-ink">2,509 sqft</span>
+        </div>
+        <div
+          className="mt-2 rounded-xl border border-white/15 bg-night-elevated/55 px-3 py-2.5 shadow-[inset_0_1px_0_rgb(246_231_200_/0.06)]"
+          data-testid="remote-insight-preview"
+        >
+          <p className="text-[10px] font-bold tracking-[0.14em] text-saffron-glow/90 uppercase">
+            Remote insight · no visit needed
+          </p>
+          <p className="mt-1 text-[10px] leading-snug text-night-faint">
+            Flag only if the published size looks larger than county.
+          </p>
+          <div className="mt-2 space-y-1">
+            {[
+              {
+                text: 'Published listing size looks larger than county',
+                tone: 'watch' as const,
+                votes: 5,
+              },
+            ].map((label) => (
+              <div key={label.text} className="flex items-center gap-2 rounded-lg px-0.5 py-1">
+                <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
+                  Watch
+                </span>
+                <span className="min-w-0 flex-1 text-[12px] leading-snug text-night-ink">
+                  {label.text}
+                </span>
+                <span className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.04] px-2.5 text-xs font-semibold text-night-muted">
+                  <ThumbsUp className="h-3.5 w-3.5" strokeWidth={2.25} />
+                  <span className="tabular-nums">{label.votes}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VisitsSnippet() {
+  return (
+    <div className="text-night-ink" data-testid="impact-snippet-visits">
+      <div className="rounded-2xl border border-white/25 bg-transparent p-3">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
+            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
+              Presence confirmed
+            </p>
+            <p className="mt-1 text-sm font-semibold text-night-ink">6</p>
+            <p className="text-[11px] text-night-muted">3 days · 6 logs</p>
+          </div>
+          <div className="rounded-xl border border-white/25 bg-transparent px-3 py-2">
+            <p className="text-[10px] font-bold tracking-wide text-night-faint uppercase">
+              With labels
+            </p>
+            <p className="mt-1 text-sm font-semibold text-night-ink">5</p>
+            <p className="text-[11px] text-night-muted">From Buyer Community</p>
+          </div>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-night-faint">
+          <span className="inline-flex items-center gap-1">
+            <CalendarClock className="h-3 w-3 text-saffron-glow" aria-hidden />
+            Date & time on every log
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Users className="h-3 w-3 text-saffron-glow" aria-hidden />
+            Anonymous presence counts
+          </span>
+        </div>
+      </div>
+
+      <article className="mt-2 rounded-xl border border-white/25 bg-transparent px-3 py-2.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-night-ink">Tue, Aug 5, 2025</p>
+            <p className="mt-0.5 text-[13px] text-night-muted">9:03 AM</p>
+          </div>
+          <span className="shrink-0 rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-saffron-glow uppercase">
+            2 labels
+          </span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-night-muted">
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="h-3 w-3 text-saffron-glow" aria-hidden />
+            42m from pin · ±8m
+          </span>
+          <span className="text-saffron-glow">Inside 100m</span>
+        </div>
+      </article>
+    </div>
+  )
+}
+
+function CommunitySnippet() {
+  return (
+    <div className="text-night-ink" data-testid="impact-snippet-community">
+      <div className="flex w-full min-h-11 items-center gap-2 px-2 py-1.5">
+        <span className="min-w-0 flex-1 truncate font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+          Surroundings & utilities
+        </span>
+        <span className="ml-auto rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron-glow">
+          2
+        </span>
+      </div>
+      <div className="mt-1 space-y-0.5 rounded-2xl border border-white/25 bg-transparent p-2">
+        {[
+          {
+            text: 'High-tension cables nearby',
+            tone: 'watch' as const,
+            votes: 6,
+            featured: true,
+          },
+          { text: 'Power lines over or beside lot', tone: 'watch' as const, votes: 3 },
+        ].map((label) => (
+          <div
+            key={label.text}
+            className={cn(
+              'flex min-h-11 items-center gap-2 rounded-xl px-2 py-2',
+              label.featured && 'border border-watch/45 bg-watch-soft/40',
+            )}
+            data-testid={label.featured ? 'impact-label-high-tension' : undefined}
+          >
+            <span className={cn('shrink-0', plusWatchChipClass(label.tone))}>
+              Watch
+            </span>
+            <span className="min-w-0 flex-1 text-[13px] leading-snug text-night-ink">
+              {label.text}
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-saffron-glow">
+              <ThumbsUp className="h-3.5 w-3.5" strokeWidth={2.25} />
+              <span className="tabular-nums">{label.votes}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Snippet({ kind }: { kind: ImpactPage['snippet'] }) {
+  if (kind === 'size') return <SizeSnippet />
+  if (kind === 'visits') return <VisitsSnippet />
+  return <CommunitySnippet />
+}
+
+function StorySlide({ page }: { page: ImpactPage }) {
+  return (
+    <div className="relative flex h-full w-full shrink-0 flex-col overflow-hidden">
+      <SceneBackdrop scene={page.scene} src={page.image} intensity="medium" />
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-[max(5.5rem,calc(var(--bfi-status-pad)+4rem))] pb-[9rem]">
+        <p className="font-display text-[11px] font-bold tracking-[0.16em] text-saffron-glow uppercase">
+          {page.eyebrow}
+        </p>
+        <h1 className="mt-3.5 max-w-[20rem] font-display text-[1.35rem] font-semibold leading-snug tracking-tight text-night-ink">
+          {page.title}
+        </h1>
+        <p className="mt-3.5 max-w-[20rem] text-[0.9rem] leading-relaxed text-night-muted">
+          {page.body}
+        </p>
+        <div className="mt-5 max-w-sm animate-bfi-rise">
+          <Snippet kind={page.snippet} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Welcome impact story — same scene wash and CatchUp chrome as inner screens.
+ */
+export function ImpactStoryScreen() {
+  const navigate = useNavigate()
+  const { isSignedIn } = useAuth()
+  const [index, setIndex] = useState(0)
+  const [holding, setHolding] = useState(false)
+  const touchStartX = useRef<number | null>(null)
+  const page = IMPACT_PAGES[index]!
+
+  useEffect(() => {
+    if (holding) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const timer = window.setInterval(() => {
+      setIndex((i) => (i + 1) % IMPACT_PAGES.length)
+    }, AUTO_MS)
+
+    return () => window.clearInterval(timer)
+  }, [holding, index])
+
+  function goTo(next: number) {
+    setIndex(next)
+  }
+
+  function onPointerDown(clientX: number) {
+    touchStartX.current = clientX
+    setHolding(true)
+  }
+
+  function onPointerUp(clientX: number) {
+    const start = touchStartX.current
+    touchStartX.current = null
+    setHolding(false)
+    if (start == null) return
+    const delta = clientX - start
+    if (Math.abs(delta) < 48) return
+    if (delta < 0) {
+      goTo((index + 1) % IMPACT_PAGES.length)
+    } else {
+      goTo((index - 1 + IMPACT_PAGES.length) % IMPACT_PAGES.length)
+    }
+  }
+
+  return (
+    <div
+      className="relative flex h-full min-h-0 w-full flex-col overflow-hidden text-night-ink bfi-scene-type"
+      data-testid="impact-story"
+      data-page={page.id}
+      onPointerDown={(event) => {
+        const target = event.target as HTMLElement
+        if (target.closest('button, a')) return
+        onPointerDown(event.clientX)
+      }}
+      onPointerUp={(event) => {
+        if (touchStartX.current == null) return
+        onPointerUp(event.clientX)
+      }}
+      onPointerCancel={() => {
+        touchStartX.current = null
+        setHolding(false)
+      }}
+    >
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+          data-testid="impact-carousel"
+        >
+          {IMPACT_PAGES.map((slide) => (
+            <div key={slide.id} className="h-full w-full shrink-0">
+              <StorySlide page={slide} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 px-5 bfi-status-pad">
+        <div className="pointer-events-auto flex items-center gap-2 pb-2 pt-1">
+          <BrandLogo size={36} />
+          <p className="font-display text-[1.05rem] font-bold tracking-tight text-night-ink">
+            {APP_NAME}
+          </p>
+        </div>
+        <span className="pointer-events-none shrink-0 rounded-full border border-saffron/40 bg-saffron/20 px-3 py-1 text-xs font-medium text-saffron-glow">
+          {APP_TAGLINE}
+        </span>
+      </header>
+
+      <div className="absolute inset-x-0 bottom-0 z-20 space-y-3 bg-gradient-to-t from-ink/80 via-ink/35 to-transparent px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
+        <div className="flex items-center justify-center gap-2" aria-label="Story progress">
+          {IMPACT_PAGES.map((item, i) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => goTo(i)}
+              className="relative h-1.5 w-10 overflow-hidden rounded-full bg-white/25 touch-manipulation"
+              aria-label={`Go to story ${i + 1}`}
+              aria-current={i === index}
+            >
+              {i < index ? <span className="absolute inset-0 rounded-full bg-saffron" /> : null}
+              {i === index ? (
+                <span
+                  key={index}
+                  className={cn(
+                    'absolute inset-y-0 left-0 w-full rounded-full bg-saffron animate-impact-progress',
+                    holding && 'is-paused',
+                  )}
+                />
+              ) : null}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            markImpactSeen()
+            navigate(isSignedIn ? '/' : '/signup')
+          }}
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-saffron text-base font-semibold text-white shadow-[0_6px_16px_rgb(232_145_58/0.3)] transition-colors hover:bg-saffron-deep touch-manipulation"
+          data-testid="button-impact-continue"
+        >
+          Start Due Diligence
+          <ArrowRight className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  )
+}

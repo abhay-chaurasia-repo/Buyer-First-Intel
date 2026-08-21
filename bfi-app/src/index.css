@@ -1,0 +1,356 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Outfit", ui-sans-serif, sans-serif;
+  --font-sans: "Source Sans 3", ui-sans-serif, sans-serif;
+
+  /* Canvas — matches welcome impact story */
+  --color-ink: #2a1f20;
+  --color-ink-muted: #d4b8b9;
+  --color-ink-faint: #b89899;
+  --color-paper: #342628;
+  --color-paper-elevated: #905d5f;
+  --color-line: rgb(255 248 247 / 0.18);
+  --color-line-strong: rgb(255 248 247 / 0.28);
+
+  /*
+   * Saffron accents
+   * Logo fill stays #e8913a; glow/bright are lighter same-hue shines for text.
+   */
+  --color-saffron: #e8913a;
+  --color-saffron-bright: #ffc266;
+  --color-saffron-deep: #c46a1b;
+  --color-saffron-soft: rgb(232 145 58 / 0.22);
+  --color-saffron-mist: rgb(232 145 58 / 0.14);
+  --color-saffron-glow: #ffb14d;
+
+  /*
+   * Plus / Watch signal colors — distinct from brand saffron so buyers
+   * read them as diligence signals, not chrome.
+   * Plus = calm teal (upside). Watch = warm coral (dig deeper).
+   */
+  --color-plus: #5aab96;
+  --color-plus-glow: #8fd4c0;
+  --color-plus-soft: rgb(90 171 150 / 0.24);
+  --color-watch: #c96b5c;
+  --color-watch-glow: #e59a8e;
+  --color-watch-soft: rgb(201 107 92 / 0.24);
+
+  --color-action: #e8913a;
+  --color-action-hover: #c46a1b;
+  --color-action-soft: rgb(232 145 58 / 0.22);
+
+  --color-verified: #2f7d5b;
+  --color-verified-soft: #e4f6ec;
+  --color-alert: #c45c1b;
+  --color-alert-soft: #ffe8d6;
+
+  /*
+   * Spiced Potpourri surfaces (Behr S130-6 ≈ #905D5F)
+   * Champagne parchment type — warmer than stark white, easier on house scenes.
+   */
+  --color-night: #2a1f20;
+  --color-night-elevated: #3a2a2b;
+  --color-night-card: #905d5f;
+  --color-night-line: rgb(246 231 200 / 0.22);
+  --color-night-ink: #f6e7c8;
+  --color-night-muted: #e8d4a8;
+  --color-night-faint: #c9b48a;
+  --color-coastal: #905d5f;
+  --color-coastal-deep: #73484a;
+  --color-coastal-soft: #a87274;
+  --color-coastal-mist: #c49a9b;
+
+  --shadow-search: 0 1px 2px rgb(0 0 0 / 0.2), 0 12px 32px rgb(42 31 32 / 0.45);
+  --shadow-shell: 0 -1px 0 rgb(246 231 200 / 0.08), 0 -10px 28px rgb(0 0 0 / 0.35);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    min-height: 100%;
+    min-height: 100dvh;
+  }
+
+  html {
+    overflow: hidden;
+    background: #2a1f20;
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    overflow: hidden;
+    font-family: var(--font-sans);
+    color: var(--color-night-ink);
+    background: #2a1f20;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  #root {
+    height: 100dvh;
+    overflow: hidden;
+    background: #2a1f20;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+}
+
+@layer utilities {
+  .safe-area-pb {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-pt {
+    padding-top: max(0.25rem, env(safe-area-inset-top));
+  }
+
+  /* Clear Dynamic Island / notch / status area on all screens */
+  :root {
+    --bfi-status-pad: max(0.9rem, env(safe-area-inset-top, 0px));
+  }
+
+  .bfi-status-pad {
+    padding-top: var(--bfi-status-pad);
+  }
+
+  /*
+   * Modern mobile app shell:
+   * - Phones: edge-to-edge screen
+   * - Larger viewports: centered phone screen (modern device look)
+   */
+  .bfi-phone-stage {
+    display: flex;
+    height: 100dvh;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgb(232 145 58 / 0.08), transparent 55%),
+      #141010;
+  }
+
+  .bfi-phone-frame {
+    position: relative;
+    display: flex;
+    width: 100%;
+    max-width: 430px;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    background: #1f1617;
+  }
+
+  @media (min-width: 480px) {
+    .bfi-phone-stage {
+      padding: 1.25rem;
+    }
+
+    .bfi-phone-frame {
+      width: min(390px, 100%);
+      height: min(844px, calc(100dvh - 2.5rem));
+      border-radius: 2.25rem;
+      border: 3px solid #2a2223;
+      box-shadow:
+        0 0 0 1px rgb(255 248 247 / 0.06),
+        0 28px 80px rgb(0 0 0 / 0.55),
+        inset 0 0 0 1px rgb(255 248 247 / 0.04);
+      --bfi-status-pad: 2.55rem;
+    }
+
+    .bfi-phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0.55rem;
+      left: 50%;
+      z-index: 60;
+      width: 5.5rem;
+      height: 1.15rem;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #0d0a0a;
+      pointer-events: none;
+    }
+  }
+
+  /* Natural mobile scroll — no desktop scrollbar gutters */
+  .bfi-phone-frame,
+  .bfi-phone-frame * {
+    scrollbar-width: none;
+  }
+
+  .bfi-phone-frame::-webkit-scrollbar,
+  .bfi-phone-frame *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+
+  /* Same canvas as welcome — used across every app screen */
+  .bfi-ink-wash,
+  .bfi-night-wash {
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgb(232 145 58 / 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 40% at 100% 0%, rgb(144 93 95 / 0.28) 0%, transparent 50%),
+      linear-gradient(180deg, #3a2a2b 0%, #2a1f20 45%, #1f1617 100%);
+  }
+
+  .bfi-grid-wash {
+    background-image:
+      linear-gradient(rgb(255 248 247 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 248 247 / 0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+  }
+
+  /* Welcome glass card recipe */
+  .bfi-glass-card {
+    border: 1px solid rgb(246 231 200 / 0.25);
+    background: rgb(144 93 95 / 0.9);
+    border-radius: 1rem;
+    color: var(--color-night-ink);
+    box-shadow: 0 16px 40px rgb(42 31 32 / 0.35);
+    backdrop-filter: blur(12px);
+  }
+
+  .bfi-glass-row {
+    border-radius: 0.75rem;
+    background: rgb(115 72 74 / 0.7);
+  }
+}
+
+@keyframes bfi-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bfi-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bfi-channel-in {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes impact-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Share chip: soft “blow out” pulse until the buyer has contributed */
+@keyframes bfi-share-blow {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(232 93 93 / 0.45);
+  }
+  55% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgb(232 93 93 / 0);
+  }
+}
+
+.animate-bfi-share-blow {
+  animation: bfi-share-blow 1.35s ease-out infinite;
+  transform-origin: center;
+}
+
+@keyframes bfi-verify-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(232 145 58 / 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgb(232 145 58 / 0);
+    transform: scale(1.06);
+  }
+}
+
+.animate-bfi-verify-pulse {
+  animation: bfi-verify-pulse 1.4s ease-out infinite;
+}
+
+.animate-bfi-rise {
+  animation: bfi-rise 0.45s ease-out both;
+}
+
+.animate-bfi-fade {
+  animation: bfi-fade 0.35s ease-out both;
+}
+
+.animate-bfi-channel-in {
+  animation: bfi-channel-in 0.28s ease-out both;
+}
+
+.animate-impact-progress {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: impact-progress 3.5s linear forwards;
+}
+
+/* Champagne type sits cleaner on house photography */
+.bfi-scene-type {
+  color: var(--color-night-ink);
+  text-shadow:
+    0 1px 2px rgb(20 12 12 / 0.55),
+    0 0 14px rgb(20 12 12 / 0.28);
+}
+
+.animate-impact-progress.is-paused {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-impact-progress {
+    animation: none;
+    transform: scaleX(1);
+  }
+
+  .animate-bfi-share-blow {
+    animation: none;
+  }
+
+  .animate-bfi-verify-pulse {
+    animation: none;
+  }
+}
