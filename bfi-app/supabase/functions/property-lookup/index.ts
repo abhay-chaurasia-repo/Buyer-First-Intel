@@ -576,103 +576,6 @@ function addressQueryVariants(query: string): string[] {
   return expanded === trimmed ? [trimmed] : [trimmed, expanded]
 }
 
-function splitAddressQuery(query: string): { address1: string; address2: string } | null {
-  const expanded = expandAddressQuery(query)
-  const parts = expanded
-    .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean)
-  if (parts.length < 2) return null
-  const address1 = parts[0]!
-  if (!/^\d/.test(address1)) return null
-  return { address1, address2: parts.slice(1).join(', ') }
-}
-
-function attomHitToResolved(attom: Record<string, unknown>): ResolvedAddress | null {
-  const address = (attom.address || {}) as Record<string, unknown>
-  const location = (attom.location || {}) as Record<string, unknown>
-  const street =
-    typeof address.line1 === 'string' && address.line1.trim()
-      ? titleCaseStreet(address.line1)
-      : ''
-  const city =
-    typeof address.locality === 'string' && address.locality.trim()
-      ? titleCaseStreet(address.locality)
-      : ''
-  const state =
-    typeof address.countrySubd === 'string' && address.countrySubd.trim()
-      ? String(address.countrySubd).toUpperCase().slice(0, 2)
-      : ''
-  const zipCode =
-    typeof address.postal1 === 'string' ? String(address.postal1).split('-')[0]!.trim() : ''
-  const lat = Number(location.latitude)
-  const lng = Number(location.longitude)
-  if (!street || !city || !state || !Number.isFinite(lat) || !Number.isFinite(lng)) return null
-  const formatted = zipCode ? `${street}, ${city}, ${state} ${zipCode}` : `${street}, ${city}, ${state}`
-  return {
-    id: stableAddressId({ street, city, state, zipCode }),
-    formatted,
-    street,
-    city,
-    state,
-    zipCode,
-    lat,
-    lng,
-    source: 'edge',
-    matchedAddress: typeof address.oneLine === 'string' ? address.oneLine : formatted,
-  }
-}
-
-function streetLineVariants(street: string): string[] {
-  const values = [street]
-  if (/\bDrive$/i.test(street)) values.push(street.replace(/\bDrive$/i, 'Dr'))
-  if (/\bDr$/i.test(street)) values.push(street.replace(/\bDr$/i, 'Drive'))
-  return [...new Set(values)]
-}
-
-function address2Variants(address2: string): string[] {
-  const values = [address2]
-  const strippedZip = address2.replace(/\s+\d{5}(?:-\d{4})?$/, '').trim()
-  if (strippedZip && strippedZip !== address2) values.push(strippedZip)
-  return [...new Set(values)]
-}
-
-async function searchAttomAddress(query: string): Promise<ResolvedAddress[]> {
-  const key = Deno.env.get('ATTOM_API_KEY')
-  const parsed = splitAddressQuery(query)
-  if (!key || !parsed) return []
-
-  async function load(packagePath: string, address1: string, address2: string) {
-    const url = new URL(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/${packagePath}`)
-    url.searchParams.set('address1', address1)
-    url.searchParams.set('address2', address2)
-    try {
-      const res = await fetch(url.toString(), {
-        headers: { Accept: 'application/json', apikey: key },
-      })
-      const raw = await res.json().catch(() => null)
-      const code = raw?.status?.code
-      const okEmpty =
-        raw?.status?.msg === 'SuccessWithoutResult' || code === 400 || code === '400'
-      if (!res.ok && !okEmpty) return null
-      return Array.isArray(raw?.property) ? raw.property[0] ?? null : null
-    } catch {
-      return null
-    }
-  }
-
-  for (const address1 of streetLineVariants(parsed.address1)) {
-    for (const address2 of address2Variants(parsed.address2)) {
-      const hit =
-        (await load('property/basicprofile', address1, address2)) ||
-        (await load('property/address', address1, address2))
-      if (!hit || typeof hit !== 'object') continue
-      const resolved = attomHitToResolved(hit as Record<string, unknown>)
-      if (resolved) return [resolved]
-    }
-  }
-  return []
-}
 
 async function geocodeCity(city: string, state: string): Promise<{ lat: number; lng: number } | null> {
   try {
@@ -782,14 +685,7 @@ async function searchAddressesForQuery(query: string): Promise<{
         return { matches: census, googleConfigured: Boolean(googleKey), googleError }
       }
     } catch {
-      // try ATTOM — newer streets are often missing from Census
-    }
-  }
-
-  for (const variant of variants) {
-    const attom = await searchAttomAddress(variant)
-    if (attom.length > 0) {
-      return { matches: attom, googleConfigured: Boolean(googleKey), googleError }
+      // newer streets are often missing from Census
     }
   }
 

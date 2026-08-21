@@ -5,6 +5,7 @@
  * 1) Edge Function / Vite `/api/property-lookup` (Google Places when keyed, else Census)
  * 2) Nominatim / Photon (CORS-friendly fallback)
  * 3) Census Geocoder (no CORS in browsers — only succeeds via same-origin proxy)
+ * ATTOM is never used to find the address.
  */
 
 import type { AddressSearchResult, ResolvedAddress } from '@/data/addressTypes'

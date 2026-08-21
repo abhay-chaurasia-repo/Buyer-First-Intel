@@ -8,8 +8,8 @@
   - Key must allow server calls: Application restriction **None** (or IP), **not Websites**
   - Enable: **Places API (New)**, **Geocoding API**, **Address Validation API**
   - Billing required on the Google Cloud project
-- Fallbacks: Census Geocoder, ATTOM address, then a typed US street + city + state
-- After an address is chosen, Step 2 (ATTOM) still loads County’s Fact / tax / sales
+- Fallbacks: Census Geocoder, then a typed US street + city + state. **ATTOM is not used to find the address.**
+- After an address is chosen, Step 2 (ATTOM) loads County’s Fact / tax / sales / schools
 
 ## Step 2 — ATTOM county facts (basicprofile first)
 - Mapper: `src/lib/attomMap.ts` · field inventory: `src/lib/attomBasicProfile.ts`
