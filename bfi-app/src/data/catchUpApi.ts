@@ -7,6 +7,10 @@ import {
   isMissingCountyNumber,
 } from '@/lib/formatCountyFact'
 import { isOwnershipSaleRow } from '@/lib/formatSaleHistory'
+import {
+  basicProfileGroupOrder,
+  buildBasicProfileFacts,
+} from '@/lib/attomBasicProfile'
 
 /** API-shaped payloads ready for future fetch() binding */
 
@@ -30,7 +34,7 @@ export type CatchUpCard = {
   preview: string
   timestamp: string
   source: string
-  fields?: Array<{ label: string; value: string }>
+  fields?: Array<{ label: string; value: string; path?: string }>
   /** Optional Buyer Community label id for an inline remote upvote */
   insightLabelId?: string
   /** Optional set of Buyer Community label ids for a remote Plus/Watch pair */
@@ -137,10 +141,38 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
         {
           label: live ? 'Gross living area' : 'Gross living area (demo)',
           value: sqftLabel,
+          path: live ? 'building.size.grossSizeAdjusted' : undefined,
         },
       ],
       insightLabelIds: ['published-listing-size-overstated'],
     },
+  ]
+
+  if (live && property.attomBasicProfile) {
+    const facts = buildBasicProfileFacts(property.attomBasicProfile)
+    for (const group of basicProfileGroupOrder(facts)) {
+      const rows = facts.filter((row) => row.groupId === group.id)
+      const published = rows.filter((row) => row.published).length
+      items.push({
+        id: `cf-basic-${group.id}`,
+        type: 'spec',
+        channel: `county-basic-${group.id}`,
+        unreadCount: published,
+        headline: group.label,
+        preview: `${published} of ${rows.length} fields published on this parcel.`,
+        timestamp: isoMinutesAgo(40),
+        source: 'ATTOM /property/basicprofile',
+        fields: rows.map((row) => ({
+          label: row.label,
+          value: row.value,
+          path: row.path,
+        })),
+      })
+    }
+    return wrapResponse(property.id, `/api/properties/${property.id}/county-facts`, items)
+  }
+
+  items.push(
     {
       id: 'cf-rooms',
       type: 'spec',
@@ -188,7 +220,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
         .filter(Boolean)
         .join(' · ') || 'County identity fields when published.',
       timestamp: isoMinutesAgo(55),
-      source: live ? 'ATTOM basicprofile / expandedprofile' : 'Demo county shell',
+      source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
       fields: [
         ...(property.propertyTypeLabel
           ? [{ label: 'Property type', value: property.propertyTypeLabel }]
@@ -221,7 +253,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
         .filter(Boolean)
         .join(' · ') || 'Utility and shell facts when published.',
       timestamp: isoMinutesAgo(70),
-      source: live ? 'ATTOM basicprofile / expandedprofile' : 'Demo county shell',
+      source: live ? 'ATTOM /property/basicprofile' : 'Demo county shell',
       fields: [
         ...(property.garageType
           ? [
@@ -274,7 +306,7 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
             : [{ label: 'Mailing', value: 'Same as property (demo)' }]),
       ],
     },
-  ]
+  )
 
   return wrapResponse(property.id, `/api/properties/${property.id}/county-facts`, items)
 }

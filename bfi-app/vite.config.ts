@@ -57,68 +57,11 @@ function inferSchoolLevel(gradeLow?: string, gradeHigh?: string) {
   return 'middle'
 }
 
-function nearbySchoolLevel(instructionalLevel?: string, gradeLow?: string, gradeHigh?: string) {
-  const t = String(instructionalLevel || '').toLowerCase()
-  if (t.includes('elem') || t.includes('primary')) return 'elementary'
-  if (t.includes('middle') || t.includes('junior') || t.includes('intermed')) return 'middle'
-  if (t.includes('high') || t.includes('senior')) return 'high'
-  return inferSchoolLevel(gradeLow, gradeHigh)
-}
-
 function isPublishedAssignedSchool(name: string, geoIdV4?: string) {
   const n = name.toLowerCase()
   if (!n || n.includes('unassigned')) return false
   if (geoIdV4 && /^G\d/i.test(geoIdV4)) return false
   return true
-}
-
-function mapNearbySchoolSearch(rows: unknown[]) {
-  const schools: Array<{
-    id: string
-    name: string
-    gradeLow?: string
-    gradeHigh?: string
-    level: string
-    type?: string
-    distanceMiles?: number
-    lat?: number
-    lng?: number
-    geoIdV4?: string
-  }> = []
-  for (const [index, row] of rows.entries()) {
-    if (!row || typeof row !== 'object') continue
-    const item = row as Record<string, unknown>
-    const location = (item.location || {}) as Record<string, unknown>
-    const detail = (item.detail || {}) as Record<string, unknown>
-    const status = String(detail.status || '').toLowerCase()
-    if (status.includes('closed') || status.includes('inactive')) continue
-    const nameRaw = detail.schoolName || item.schoolName
-    if (!nameRaw || !String(nameRaw).trim()) continue
-    const name = titleCaseStreet(String(nameRaw))
-    const gradeLow = String(detail.gradeSpanLow || '').trim()
-    const gradeHigh = String(detail.gradeSpanHigh || '').trim()
-    const geoIdV4 = location.geoIdV4 ? String(location.geoIdV4) : undefined
-    const distanceRaw = detail.distance != null ? Number(detail.distance) : undefined
-    const lat = location.latitude != null ? Number(location.latitude) : undefined
-    const lng = location.longitude != null ? Number(location.longitude) : undefined
-    const typeRaw = detail.institutionType || detail.schoolType
-    schools.push({
-      id: `near-${geoIdV4 || index}`,
-      name,
-      gradeLow: gradeLow || undefined,
-      gradeHigh: gradeHigh || undefined,
-      level: nearbySchoolLevel(String(detail.instructionalLevel || ''), gradeLow, gradeHigh),
-      type: typeRaw ? titleCaseStreet(String(typeRaw)) : undefined,
-      distanceMiles:
-        distanceRaw != null && Number.isFinite(distanceRaw) ? distanceRaw : undefined,
-      lat: lat != null && Number.isFinite(lat) ? lat : undefined,
-      lng: lng != null && Number.isFinite(lng) ? lng : undefined,
-      geoIdV4,
-    })
-  }
-  return schools
-    .sort((a, b) => (a.distanceMiles ?? 99) - (b.distanceMiles ?? 99))
-    .slice(0, 8)
 }
 
 function stableAddressId(parts: {
@@ -1320,197 +1263,16 @@ async function fetchAttom(match: ResolvedAddress, apiKey: string) {
     }
   }
 
-  async function loadNearby() {
-    if (!Number.isFinite(match.lat) || !Number.isFinite(match.lng)) return []
-    const url = new URL('https://api.gateway.attomdata.com/propertyapi/v4/school/search')
-    url.searchParams.set('latitude', String(match.lat))
-    url.searchParams.set('longitude', String(match.lng))
-    url.searchParams.set('radius', '5')
-    try {
-      const res = await fetch(url, {
-        headers: { Accept: 'application/json', apikey: apiKey },
-      })
-      const raw = (await res.json().catch(() => null)) as {
-        schools?: unknown[]
-        status?: { msg?: string; code?: number | string }
-      } | null
-      if (!res.ok) return []
-      return Array.isArray(raw?.schools) ? raw.schools : []
-    } catch {
-      return []
-    }
-  }
-
-  const [profile, expanded, assessment, sale, history, permits, schools, assessmentHistory, nearbyRows] =
-    await Promise.all([
-      load('property/basicprofile'),
-      load('property/expandedprofile'),
-      load('assessment/detail'),
-      load('sale/detail'),
-      load('saleshistory/expandedhistory'),
-      load('property/buildingpermits'),
-      load('property/detailwithschools', 'v4'),
-      load('assessmenthistory/detail'),
-      loadNearby(),
-    ])
-
-  if (
-    !profile &&
-    !expanded &&
-    !assessment &&
-    !sale &&
-    !history &&
-    !permits &&
-    !schools &&
-    !assessmentHistory
-  ) {
+  const profile = await load('property/basicprofile')
+  if (!profile) {
     return {
       ok: false as const,
-      error:
-        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, schools, or tax history',
+      error: 'No ATTOM match for property/basicprofile',
     }
   }
 
-  const merged: Record<string, unknown> = {
-    ...(profile || {}),
-    ...(expanded || {}),
-  }
-  const baseBuilding = (profile?.building || {}) as Record<string, unknown>
-  const expandedBuilding = (expanded?.building || {}) as Record<string, unknown>
-  const permitBuilding = (permits?.building || {}) as Record<string, unknown>
-  merged.building = {
-    ...baseBuilding,
-    ...expandedBuilding,
-    ...permitBuilding,
-    size: {
-      ...((baseBuilding.size || {}) as object),
-      ...((expandedBuilding.size || {}) as object),
-      ...((permitBuilding.size || {}) as object),
-    },
-    rooms: {
-      ...((baseBuilding.rooms || {}) as object),
-      ...((expandedBuilding.rooms || {}) as object),
-    },
-    construction: {
-      ...((baseBuilding.construction || {}) as object),
-      ...((expandedBuilding.construction || {}) as object),
-    },
-    parking: {
-      ...((baseBuilding.parking || {}) as object),
-      ...((expandedBuilding.parking || {}) as object),
-    },
-    interior: {
-      ...((baseBuilding.interior || {}) as object),
-      ...((expandedBuilding.interior || {}) as object),
-    },
-    summary: {
-      ...((baseBuilding.summary || {}) as object),
-      ...((expandedBuilding.summary || {}) as object),
-    },
-  }
-  merged.summary = {
-    ...((profile?.summary || {}) as object),
-    ...((expanded?.summary || {}) as object),
-    ...((permits?.summary || {}) as object),
-  }
-  merged.area = {
-    ...((profile?.area || {}) as object),
-    ...((expanded?.area || {}) as object),
-  }
-  merged.lot = {
-    ...((profile?.lot || {}) as object),
-    ...((expanded?.lot || {}) as object),
-    ...((permits?.lot || {}) as object),
-  }
-  merged.utilities = {
-    ...((profile?.utilities || {}) as object),
-    ...((expanded?.utilities || {}) as object),
-  }
-  const baseAssessment = (profile?.assessment || {}) as Record<string, unknown>
-  const expandedAssessment = (expanded?.assessment || {}) as Record<string, unknown>
-  const nextAssessment = (assessment?.assessment || {}) as Record<string, unknown>
-  if (
-    Object.keys(baseAssessment).length ||
-    Object.keys(expandedAssessment).length ||
-    Object.keys(nextAssessment).length
-  ) {
-    merged.assessment = {
-      ...baseAssessment,
-      ...expandedAssessment,
-      ...nextAssessment,
-      owner: nextAssessment.owner || expandedAssessment.owner || baseAssessment.owner,
-      assessed: nextAssessment.assessed || expandedAssessment.assessed || baseAssessment.assessed,
-      market: nextAssessment.market || expandedAssessment.market || baseAssessment.market,
-      tax: nextAssessment.tax || expandedAssessment.tax || baseAssessment.tax,
-      mortgage: nextAssessment.mortgage || expandedAssessment.mortgage || baseAssessment.mortgage,
-    }
-  }
-  if (sale?.sale || expanded?.sale || profile?.sale) {
-    merged.sale = {
-      ...((profile?.sale || {}) as object),
-      ...((expanded?.sale || {}) as object),
-      ...((sale?.sale || {}) as object),
-    }
-  }
-  if (history?.saleHistory || history?.salehistory) {
-    merged.saleHistory = history.saleHistory ?? history.salehistory
-  }
-  if (permits?.buildingPermits || permits?.buildingpermits) {
-    merged.buildingPermits = permits.buildingPermits ?? permits.buildingpermits
-  }
-  if (Array.isArray(schools?.school)) {
-    merged.school = schools.school
-  }
-  if (schools?.schoolDistrict) {
-    merged.schoolDistrict = schools.schoolDistrict
-  }
-  if (assessmentHistory?.assessmentHistory || assessmentHistory?.assessmenthistory) {
-    merged.assessmentHistory =
-      assessmentHistory.assessmentHistory ?? assessmentHistory.assessmenthistory
-  }
-  if (history?.owner && !(merged.assessment as { owner?: unknown } | undefined)?.owner) {
-    merged.assessment = {
-      ...((merged.assessment as Record<string, unknown> | undefined) || {}),
-      owner: history.owner,
-    }
-  }
-  if (!merged.identifier) {
-    merged.identifier =
-      profile?.identifier ||
-      expanded?.identifier ||
-      assessment?.identifier ||
-      sale?.identifier ||
-      history?.identifier ||
-      permits?.identifier ||
-      schools?.identifier ||
-      assessmentHistory?.identifier
-  }
-  if (!merged.address) {
-    merged.address =
-      profile?.address ||
-      expanded?.address ||
-      assessment?.address ||
-      sale?.address ||
-      history?.address ||
-      permits?.address ||
-      schools?.address ||
-      assessmentHistory?.address
-  }
-  if (!merged.location) {
-    merged.location =
-      profile?.location ||
-      expanded?.location ||
-      assessment?.location ||
-      sale?.location ||
-      history?.location ||
-      permits?.location ||
-      schools?.location ||
-      assessmentHistory?.location
-  }
-
-  const fields = mapAttomProperty(merged)
-  const nearbySchools = mapNearbySchoolSearch(nearbyRows)
-  if (nearbySchools.length > 0) fields.nearbySchools = nearbySchools
+  const fields = mapAttomProperty(profile)
+  fields.attomBasicProfile = profile
   return { ok: true as const, property: fields }
 }
 
@@ -1529,7 +1291,7 @@ function attomCacheKey(address: ResolvedAddress) {
 async function fetchAttomCached(address: ResolvedAddress, apiKey: string) {
   const key = attomCacheKey(address)
   const hit = attomMemoryCache.get(key)
-  if (hit && hit.expiresAt > Date.now()) {
+  if (hit && hit.expiresAt > Date.now() && hit.property.attomBasicProfile) {
     return { ok: true as const, property: hit.property }
   }
   const live = await fetchAttom(address, apiKey)

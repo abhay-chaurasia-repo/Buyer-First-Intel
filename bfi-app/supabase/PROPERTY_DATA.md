@@ -11,34 +11,19 @@
 - Fallbacks: Census Geocoder, ATTOM address, then a typed US street + city + state
 - After an address is chosen, Step 2 (ATTOM) still loads County’s Fact / tax / sales
 
-## Step 2 — ATTOM county facts + tax + sales (done in code)
-- Mapper: `src/lib/attomMap.ts`
-- Parallel packages on resolve:
-- [`GET /property/basicprofile`](https://api.developer.attomdata.com/docs#!/Property32V1/propertyBasicProfile) — County’s Fact
-    - Core: `yearBuilt`, `grossSizeAdjusted`, `beds`, `bathsFull` / `bathsPartial` / `bathsTotal`, `assessment.owner`
-    - High-value: property type, legal/subdivision/county, lot acres+sqft, levels/rooms/fireplace, garage, utilities, construction, geo accuracy, vintage dates
-    - Sale amounts shown when published; mortgage **amounts** stay hidden (buyer-first)
-  - [`GET /property/expandedprofile`](https://api.developer.attomdata.com/docs) — County’s Fact extras
-    - Architecture, roof shape, major improvements year, gross/ground-floor size, parking spaces
-    - Municipality / tax code area / lot #, quitclaim & REO flags, last seller
-    - Mortgage metadata only (lender, loan type, dates) — **amounts hidden**
-  - [`GET /property/buildingpermits`](https://api.developer.attomdata.com/docs) — Building permits on County’s Fact
-    - `effectiveDate`, `permitNumber`, `status`, `type` / `subType`, `description`, `projectName`, `fees`, `homeOwnerName`, `classifiers`
-  - `GET /assessment/detail` — Tax History (tax year, assessed, land, improvement, annual tax, market value)
-  - `GET /assessmenthistory/detail` — multi-year Tax History table (year / tax / assessment + land/improvement/market)
-  - `GET /sale/detail` — latest transfer (date, deed type, document #, **sale amount** when published)
-  - `GET /saleshistory/expandedhistory` — Sales History deed chain
-    - Transfer type, deed code (LW/QC/GD), buyer/seller, doc #, deed-in-lieu, seller carry-back, **sale amount**
-    - Title company + per-event lender / loan type / term / due date / loan doc # (mortgage **amounts hidden**)
-  - [`GET /property/detailwithschools`](https://api.developer.attomdata.com/docs) (v4) — Schools CatchUp
-    - District name/type + assigned campuses (name, letter rating, grades, public/private, distance, lat/lng)
-    - Property block overlaps basicprofile — used only for `school` + `schoolDistrict`
+## Step 2 — ATTOM county facts (basicprofile first)
+- Mapper: `src/lib/attomMap.ts` · field inventory: `src/lib/attomBasicProfile.ts`
+- On resolve we call **one** package: [`GET /property/basicprofile`](https://api.developer.attomdata.com/docs#!/Property32V1/propertyBasicProfile)
+- County’s Fact shows **every field** from that payload (published or “Not published”) so we can trim the list next
+- Gross living area vote stays at the top
+- The raw payload is stored on the property as `attomBasicProfile` and in the 24h shared cache
+- Later packages (expandedprofile, tax history, sales history, permits, schools) are not called yet
 - Query: `address1` + `address2` (or `attomid`) — e.g. `address1=3147 SWALLOW DR&address2=Marietta, GA`
 - Headers: `apikey`, `Accept: application/json`
 - Dev proxy: Vite `POST /api/property-lookup` + `.env.local` `ATTOM_API_KEY`
 - Production: Edge Function `property-lookup` + secret `ATTOM_API_KEY`
 - **Shared 24h cache:** after a live ATTOM hit, the mapped snapshot is stored in `attom_lookup_cache` (service role only). Another user searching the same normalized address within 24 hours reuses that row — ATTOM is not called again. After 24 hours the next search pays ATTOM once more. Local Vite uses an in-memory Map with the same TTL. Do not lengthen this without a written ATTOM bulk/data license.
-- Status chip: **Live county facts · ATTOM** when any package matches
+- Status chip: **Live county facts · ATTOM** when basicprofile matches
 
 ### Local setup
 ```bash

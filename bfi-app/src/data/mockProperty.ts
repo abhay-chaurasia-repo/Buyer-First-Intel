@@ -273,6 +273,8 @@ export type MockProperty = {
   factsLastModified?: string
   /** vintage.pubDate */
   factsPubDate?: string
+  /** Raw ATTOM /property/basicprofile payload — County’s Fact shows every field. */
+  attomBasicProfile?: Record<string, unknown>
   starred: boolean
 }
 

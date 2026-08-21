@@ -223,51 +223,6 @@ function flagBool(value: unknown): boolean | undefined {
   return undefined
 }
 
-function mergeAttomObjects<T extends Record<string, unknown>>(
-  base?: T | null,
-  overlay?: T | null,
-): T | undefined {
-  if (!base && !overlay) return undefined
-  return { ...(base || {}), ...(overlay || {}) } as T
-}
-
-function mergeAttomBuilding(
-  base?: AttomProperty['building'],
-  overlay?: AttomProperty['building'],
-): AttomProperty['building'] | undefined {
-  if (!base && !overlay) return undefined
-  return {
-    ...(base || {}),
-    ...(overlay || {}),
-    size: mergeAttomObjects(base?.size as Record<string, unknown>, overlay?.size as Record<string, unknown>) as AttomProperty['building'] extends {
-      size?: infer S
-    }
-      ? S
-      : never,
-    rooms: mergeAttomObjects(base?.rooms as Record<string, unknown>, overlay?.rooms as Record<string, unknown>) as AttomProperty['building'] extends {
-      rooms?: infer R
-    }
-      ? R
-      : never,
-    interior: mergeAttomObjects(
-      base?.interior as Record<string, unknown>,
-      overlay?.interior as Record<string, unknown>,
-    ) as AttomProperty['building'] extends { interior?: infer I } ? I : never,
-    construction: mergeAttomObjects(
-      base?.construction as Record<string, unknown>,
-      overlay?.construction as Record<string, unknown>,
-    ) as AttomProperty['building'] extends { construction?: infer C } ? C : never,
-    parking: mergeAttomObjects(
-      base?.parking as Record<string, unknown>,
-      overlay?.parking as Record<string, unknown>,
-    ) as AttomProperty['building'] extends { parking?: infer P } ? P : never,
-    summary: mergeAttomObjects(
-      base?.summary as Record<string, unknown>,
-      overlay?.summary as Record<string, unknown>,
-    ) as AttomProperty['building'] extends { summary?: infer S } ? S : never,
-  }
-}
-
 function num(value: unknown): number | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) {
@@ -1028,29 +983,6 @@ async function fetchAttomPackage(
   }
 }
 
-async function fetchAttomNearbySchools(params: {
-  apiKey: string
-  lat?: number
-  lng?: number
-}): Promise<unknown[]> {
-  if (params.lat == null || params.lng == null) return []
-  if (!Number.isFinite(params.lat) || !Number.isFinite(params.lng)) return []
-  const url = new URL('https://api.gateway.attomdata.com/propertyapi/v4/school/search')
-  url.searchParams.set('latitude', String(params.lat))
-  url.searchParams.set('longitude', String(params.lng))
-  url.searchParams.set('radius', '5')
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { Accept: 'application/json', apikey: params.apiKey },
-    })
-    const raw = (await res.json().catch(() => null)) as { schools?: unknown[] } | null
-    if (!res.ok) return []
-    return Array.isArray(raw?.schools) ? raw.schools : []
-  } catch {
-    return []
-  }
-}
-
 export async function fetchAttomIdByAddress(params: {
   apiKey: string
   street: string
@@ -1134,14 +1066,8 @@ export async function fetchAttomPropertyDetail(params: {
 }
 
 /**
- * County facts + tax assessment + sale / sales history.
- * Parallel ATTOM packages per interactive docs:
- * - /property/basicprofile  (County’s Fact: yearBuilt, grossSizeAdjusted, beds/baths, owner)
- * - /property/expandedprofile (style, roof, parking spaces, title flags, mortgage meta)
- * - /property/buildingpermits (County’s Fact permits)
- * - /assessment/detail
- * - /sale/detail
- * - /saleshistory/expandedhistory
+ * County facts from ATTOM /property/basicprofile only.
+ * Other packages (expanded, tax history, sales history, permits, schools) are added one by one later.
  */
 export async function fetchAttomCountyFacts(params: {
   apiKey: string
@@ -1169,179 +1095,20 @@ export async function fetchAttomCountyFacts(params: {
     zipCode: params.zipCode,
   }
 
-  const [profile, expanded, assessment, sale, history, permits, schools, assessmentHistory] =
-    await Promise.all([
-      fetchAttomPackage('property/basicprofile', lookup),
-      fetchAttomPackage('property/expandedprofile', lookup),
-      fetchAttomPackage('assessment/detail', lookup),
-      fetchAttomPackage('sale/detail', lookup),
-      fetchAttomPackage('saleshistory/expandedhistory', lookup),
-      fetchAttomPackage('property/buildingpermits', lookup),
-      fetchAttomPackage('property/detailwithschools', lookup, 'v4'),
-      fetchAttomPackage('assessmenthistory/detail', lookup),
-    ])
-
-  if (
-    !profile &&
-    !expanded &&
-    !assessment &&
-    !sale &&
-    !history &&
-    !permits &&
-    !schools &&
-    !assessmentHistory
-  ) {
-    return {
-      ok: false,
-      error:
-        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, schools, or tax history',
-    }
+  const profile = await fetchAttomPackage('property/basicprofile', lookup)
+  if (!profile) {
+    return { ok: false, error: 'No ATTOM match for property/basicprofile' }
   }
 
-  const merged: AttomProperty = {
-    ...(profile || {}),
-    ...(expanded || {}),
-    address:
-      profile?.address ||
-      expanded?.address ||
-      assessment?.address ||
-      sale?.address ||
-      history?.address ||
-      permits?.address ||
-      schools?.address,
-    location:
-      profile?.location ||
-      expanded?.location ||
-      assessment?.location ||
-      sale?.location ||
-      history?.location ||
-      permits?.location ||
-      schools?.location,
-    building: mergeAttomBuilding(
-      profile?.building,
-      mergeAttomBuilding(expanded?.building, permits?.building),
-    ),
-    lot: mergeAttomObjects(
-      profile?.lot as Record<string, unknown>,
-      mergeAttomObjects(
-        expanded?.lot as Record<string, unknown>,
-        permits?.lot as Record<string, unknown>,
-      ),
-    ) as AttomProperty['lot'],
-    area: mergeAttomObjects(
-      profile?.area as Record<string, unknown>,
-      expanded?.area as Record<string, unknown>,
-    ) as AttomProperty['area'],
-    summary: mergeAttomObjects(
-      profile?.summary as Record<string, unknown>,
-      mergeAttomObjects(
-        expanded?.summary as Record<string, unknown>,
-        permits?.summary as Record<string, unknown>,
-      ),
-    ) as AttomProperty['summary'],
-    utilities: mergeAttomObjects(
-      profile?.utilities as Record<string, unknown>,
-      expanded?.utilities as Record<string, unknown>,
-    ) as AttomProperty['utilities'],
-    identifier:
-      profile?.identifier ||
-      expanded?.identifier ||
-      assessment?.identifier ||
-      sale?.identifier ||
-      history?.identifier ||
-      permits?.identifier ||
-      schools?.identifier,
-  }
-
-  // Deep-merge assessment so basicprofile owner is kept when assessment/detail lacks it
-  if (profile?.assessment || expanded?.assessment || assessment?.assessment) {
-    const baseAssessment = (profile?.assessment ||
-      expanded?.assessment ||
-      {}) as NonNullable<AttomProperty['assessment']>
-    const expandedAssessment = (expanded?.assessment || {}) as NonNullable<
-      AttomProperty['assessment']
-    >
-    const nextAssessment = (assessment?.assessment || {}) as NonNullable<
-      AttomProperty['assessment']
-    >
-    merged.assessment = {
-      ...baseAssessment,
-      ...expandedAssessment,
-      ...nextAssessment,
-      owner: nextAssessment.owner || expandedAssessment.owner || baseAssessment.owner,
-      assessed: nextAssessment.assessed || expandedAssessment.assessed || baseAssessment.assessed,
-      market: nextAssessment.market || expandedAssessment.market || baseAssessment.market,
-      tax: nextAssessment.tax || expandedAssessment.tax || baseAssessment.tax,
-      mortgage: nextAssessment.mortgage || expandedAssessment.mortgage || baseAssessment.mortgage,
-    }
-  }
-
-  if (sale?.sale || expanded?.sale || profile?.sale) {
-    merged.sale = {
-      ...(profile?.sale || {}),
-      ...(expanded?.sale || {}),
-      ...(sale?.sale || {}),
-    }
-  }
-
-  if (history) {
-    merged.saleHistory = history.saleHistory ?? history.salehistory
-  }
-
-  if (permits?.buildingPermits || permits?.buildingpermits) {
-    merged.buildingPermits = permits.buildingPermits ?? permits.buildingpermits
-  }
-
-  if (schools?.school) {
-    merged.school = schools.school
-  }
-  if (schools?.schoolDistrict) {
-    merged.schoolDistrict = schools.schoolDistrict
-  }
-
-  if (assessmentHistory?.assessmentHistory || assessmentHistory?.assessmenthistory) {
-    merged.assessmentHistory =
-      assessmentHistory.assessmentHistory ?? assessmentHistory.assessmenthistory
-  }
-
-  // Prefer owner names from expanded sales history only when assessment has none
-  const historyOwner = (history as { owner?: NonNullable<AttomProperty['assessment']>['owner'] } | null)
-    ?.owner
-  if (historyOwner && !merged.assessment?.owner) {
-    merged.assessment = {
-      ...(merged.assessment || {}),
-      owner: historyOwner,
-    }
-  }
-
-  const loc = merged.location
-  const lat = loc?.latitude != null ? Number(loc.latitude) : undefined
-  const lng = loc?.longitude != null ? Number(loc.longitude) : undefined
-  const nearbySearch = await fetchAttomNearbySchools({
-    apiKey: params.apiKey,
-    lat,
-    lng,
-  })
-  const fields = mapAttomToPropertyFields({
-    ...merged,
-    nearbySearch,
-  } as AttomProperty & { nearbySearch?: unknown[] })
-  const warnings: string[] = []
-  if (!profile) warnings.push('property/basicprofile unavailable')
-  if (!expanded) warnings.push('property/expandedprofile unavailable')
-  if (!assessment) warnings.push('assessment/detail unavailable')
-  if (!sale && !history) warnings.push('sale/saleshistory unavailable')
-  if (!permits) warnings.push('property/buildingpermits unavailable')
-  if (!schools) warnings.push('property/detailwithschools unavailable')
-  if (!assessmentHistory) warnings.push('assessmenthistory/detail unavailable')
-
-  const attomId = merged.identifier?.attomId ?? merged.identifier?.Id
+  const fields = mapAttomToPropertyFields(profile)
+  fields.attomBasicProfile = profile as unknown as Record<string, unknown>
+  const attomId = profile.identifier?.attomId ?? profile.identifier?.Id
   return {
     ok: true,
-    property: merged,
+    property: profile,
     fields,
     attomId: attomId != null ? Number(attomId) : undefined,
-    warnings,
+    warnings: [],
   }
 }
 

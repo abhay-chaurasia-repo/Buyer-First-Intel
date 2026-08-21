@@ -34,7 +34,7 @@ const surfaceMeta: Record<
     title: "County's Fact",
     Icon: FileText,
     iconWrap: 'bg-saffron/25 text-saffron-glow',
-    blurb: 'County records and living-area facts for this address',
+    blurb: 'Every field from ATTOM basicprofile — we will trim this list next',
   },
   'sales-history': {
     title: 'Sales History',
@@ -136,12 +136,19 @@ function DetailSection({
           {hasFields
             ? card.fields!.map((field) => (
                 <div
-                  key={`${field.label}-${field.value}`}
-                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-2 py-2"
-                  data-testid={`field-${card.id}-${field.label}`}
+                  key={field.path ?? `${field.label}-${field.value}`}
+                  className="flex min-h-11 items-start justify-between gap-3 rounded-xl px-2 py-2"
+                  data-testid={`field-${card.id}-${field.path ?? field.label}`}
                 >
-                  <span className="text-[13px] text-night-muted">{stripHash(field.label)}</span>
-                  <span className="text-right text-sm font-semibold text-night-ink">
+                  <span className="min-w-0 text-[13px] text-night-muted">
+                    {stripHash(field.label)}
+                    {field.path ? (
+                      <span className="mt-0.5 block font-mono text-[10px] font-normal tracking-normal text-night-muted/70 normal-case">
+                        {field.path}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="max-w-[55%] text-right text-sm font-semibold break-words text-night-ink">
                     {stripHash(field.value)}
                   </span>
                 </div>
@@ -270,7 +277,7 @@ export function CatchUpFlow({
                   key={card.id}
                   card={card}
                   propertyId={propertyId}
-                  collapsible={!isCountyFacts}
+                  collapsible={isCountyFacts ? card.id !== 'cf-living-area' : !isCountyFacts}
                 />
               ))
             ) : (

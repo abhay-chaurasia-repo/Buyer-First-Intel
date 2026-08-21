@@ -1385,194 +1385,16 @@ async function fetchAttomFacts(match: ResolvedAddress): Promise<{
     }
   }
 
-  async function loadNearby() {
-    if (!Number.isFinite(match.lat) || !Number.isFinite(match.lng)) return []
-    const url = new URL('https://api.gateway.attomdata.com/propertyapi/v4/school/search')
-    url.searchParams.set('latitude', String(match.lat))
-    url.searchParams.set('longitude', String(match.lng))
-    url.searchParams.set('radius', '5')
-    try {
-      const res = await fetch(url.toString(), {
-        headers: { Accept: 'application/json', apikey: key },
-      })
-      const raw = await res.json().catch(() => null)
-      if (!res.ok) return []
-      return Array.isArray(raw?.schools) ? raw.schools : []
-    } catch {
-      return []
-    }
-  }
-
-  const [profile, expanded, assessment, sale, history, permits, schools, assessmentHistory, nearbyRows] =
-    await Promise.all([
-      load('property/basicprofile'),
-      load('property/expandedprofile'),
-      load('assessment/detail'),
-      load('sale/detail'),
-      load('saleshistory/expandedhistory'),
-      load('property/buildingpermits'),
-      load('property/detailwithschools', 'v4'),
-      load('assessmenthistory/detail'),
-      loadNearby(),
-    ])
-
-  if (
-    !profile &&
-    !expanded &&
-    !assessment &&
-    !sale &&
-    !history &&
-    !permits &&
-    !schools &&
-    !assessmentHistory
-  ) {
+  const profile = await load('property/basicprofile')
+  if (!profile) {
     return {
       factsStatus: 'pending',
-      attomError:
-        'No ATTOM match for basicprofile, expandedprofile, assessment, sales, permits, schools, or tax history',
+      attomError: 'No ATTOM match for property/basicprofile',
     }
   }
 
-  const merged: Record<string, unknown> = {
-    ...(profile || {}),
-    ...(expanded || {}),
-  }
-  const baseBuilding = (profile?.building || {}) as Record<string, unknown>
-  const expandedBuilding = (expanded?.building || {}) as Record<string, unknown>
-  const permitBuilding = (permits?.building || {}) as Record<string, unknown>
-  merged.building = {
-    ...baseBuilding,
-    ...expandedBuilding,
-    ...permitBuilding,
-    size: {
-      ...((baseBuilding.size || {}) as object),
-      ...((expandedBuilding.size || {}) as object),
-      ...((permitBuilding.size || {}) as object),
-    },
-    rooms: {
-      ...((baseBuilding.rooms || {}) as object),
-      ...((expandedBuilding.rooms || {}) as object),
-    },
-    construction: {
-      ...((baseBuilding.construction || {}) as object),
-      ...((expandedBuilding.construction || {}) as object),
-    },
-    parking: {
-      ...((baseBuilding.parking || {}) as object),
-      ...((expandedBuilding.parking || {}) as object),
-    },
-    interior: {
-      ...((baseBuilding.interior || {}) as object),
-      ...((expandedBuilding.interior || {}) as object),
-    },
-    summary: {
-      ...((baseBuilding.summary || {}) as object),
-      ...((expandedBuilding.summary || {}) as object),
-    },
-  }
-  merged.summary = {
-    ...((profile?.summary || {}) as object),
-    ...((expanded?.summary || {}) as object),
-    ...((permits?.summary || {}) as object),
-  }
-  merged.area = {
-    ...((profile?.area || {}) as object),
-    ...((expanded?.area || {}) as object),
-  }
-  merged.lot = {
-    ...((profile?.lot || {}) as object),
-    ...((expanded?.lot || {}) as object),
-    ...((permits?.lot || {}) as object),
-  }
-  merged.utilities = {
-    ...((profile?.utilities || {}) as object),
-    ...((expanded?.utilities || {}) as object),
-  }
-  const baseAssessment = (profile?.assessment || {}) as Record<string, unknown>
-  const expandedAssessment = (expanded?.assessment || {}) as Record<string, unknown>
-  const nextAssessment = (assessment?.assessment || {}) as Record<string, unknown>
-  if (
-    Object.keys(baseAssessment).length ||
-    Object.keys(expandedAssessment).length ||
-    Object.keys(nextAssessment).length
-  ) {
-    merged.assessment = {
-      ...baseAssessment,
-      ...expandedAssessment,
-      ...nextAssessment,
-      owner: nextAssessment.owner || expandedAssessment.owner || baseAssessment.owner,
-      assessed: nextAssessment.assessed || expandedAssessment.assessed || baseAssessment.assessed,
-      market: nextAssessment.market || expandedAssessment.market || baseAssessment.market,
-      tax: nextAssessment.tax || expandedAssessment.tax || baseAssessment.tax,
-      mortgage: nextAssessment.mortgage || expandedAssessment.mortgage || baseAssessment.mortgage,
-    }
-  }
-  if (sale?.sale || expanded?.sale || profile?.sale) {
-    merged.sale = {
-      ...((profile?.sale || {}) as object),
-      ...((expanded?.sale || {}) as object),
-      ...((sale?.sale || {}) as object),
-    }
-  }
-  if (history?.saleHistory || history?.salehistory) {
-    merged.saleHistory = history.saleHistory ?? history.salehistory
-  }
-  if (permits?.buildingPermits || permits?.buildingpermits) {
-    merged.buildingPermits = permits.buildingPermits ?? permits.buildingpermits
-  }
-  if (Array.isArray(schools?.school)) {
-    merged.school = schools.school
-  }
-  if (schools?.schoolDistrict) {
-    merged.schoolDistrict = schools.schoolDistrict
-  }
-  if (assessmentHistory?.assessmentHistory || assessmentHistory?.assessmenthistory) {
-    merged.assessmentHistory =
-      assessmentHistory.assessmentHistory ?? assessmentHistory.assessmenthistory
-  }
-  if (history?.owner && !(merged.assessment as { owner?: unknown } | undefined)?.owner) {
-    merged.assessment = {
-      ...((merged.assessment as Record<string, unknown> | undefined) || {}),
-      owner: history.owner,
-    }
-  }
-  if (!merged.identifier) {
-    merged.identifier =
-      profile?.identifier ||
-      expanded?.identifier ||
-      assessment?.identifier ||
-      sale?.identifier ||
-      history?.identifier ||
-      permits?.identifier ||
-      schools?.identifier ||
-      assessmentHistory?.identifier
-  }
-  if (!merged.address) {
-    merged.address =
-      profile?.address ||
-      expanded?.address ||
-      assessment?.address ||
-      sale?.address ||
-      history?.address ||
-      permits?.address ||
-      schools?.address ||
-      assessmentHistory?.address
-  }
-  if (!merged.location) {
-    merged.location =
-      profile?.location ||
-      expanded?.location ||
-      assessment?.location ||
-      sale?.location ||
-      history?.location ||
-      permits?.location ||
-      schools?.location ||
-      assessmentHistory?.location
-  }
-
-  const fields = mapAttomProperty(merged)
-  const nearbySchools = mapNearbySchoolSearch(nearbyRows)
-  if (nearbySchools.length > 0) fields.nearbySchools = nearbySchools
+  const fields = mapAttomProperty(profile)
+  fields.attomBasicProfile = profile
   return {
     factsStatus: 'live',
     property: fields,
@@ -1648,7 +1470,7 @@ async function writeAttomCache(address: ResolvedAddress, property: Record<string
 
 async function fetchAttomFactsCached(address: ResolvedAddress) {
   const cached = await readAttomCache(address)
-  if (cached) {
+  if (cached?.attomBasicProfile && typeof cached.attomBasicProfile === 'object') {
     return { factsStatus: 'live' as const, property: cached }
   }
   const live = await fetchAttomFacts(address)
