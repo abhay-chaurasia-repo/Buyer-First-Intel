@@ -1314,6 +1314,87 @@ async function fetchAttomCached(address: ResolvedAddress, apiKey: string) {
   return live
 }
 
+const ATTOM_LAZY_PACKAGES: Record<string, { path: string; version: 'v1.0.0' | 'v4' }> = {
+  assessmenthistory: { path: 'assessmenthistory/detail', version: 'v1.0.0' },
+  saleshistory: { path: 'saleshistory/expandedhistory', version: 'v1.0.0' },
+  detailwithschools: { path: 'property/detailwithschools', version: 'v4' },
+}
+
+const attomPackageMemoryCache = new Map<string, { payload: Record<string, unknown>; expiresAt: number }>()
+
+function packageCacheKey(packageName: string, address: ResolvedAddress, attomId?: number) {
+  if (attomId != null && Number.isFinite(attomId)) return `pkg:${packageName}|id|${attomId}`
+  return `pkg:${packageName}|${attomCacheKey(address)}`
+}
+
+async function fetchAttomRawPackage(
+  match: ResolvedAddress,
+  apiKey: string,
+  spec: { path: string; version: 'v1.0.0' | 'v4' },
+  attomId?: number,
+) {
+  const url = new URL(`https://api.gateway.attomdata.com/propertyapi/${spec.version}/${spec.path}`)
+  if (attomId != null && Number.isFinite(attomId)) {
+    url.searchParams.set('attomid', String(attomId))
+  } else {
+    url.searchParams.set('address1', match.street)
+    url.searchParams.set(
+      'address2',
+      [match.city, match.state, match.zipCode].filter(Boolean).join(', '),
+    )
+  }
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json', apikey: apiKey },
+    })
+    const raw = (await res.json().catch(() => null)) as {
+      property?: Record<string, unknown>[]
+      status?: { msg?: string; code?: number | string }
+    } | null
+    const code = raw?.status?.code
+    const okEmpty =
+      raw?.status?.msg === 'SuccessWithoutResult' || code === 400 || code === '400'
+    if (!res.ok && !okEmpty) {
+      return { payload: null as Record<string, unknown> | null, error: raw?.status?.msg || `ATTOM HTTP ${res.status}` }
+    }
+    const payload = Array.isArray(raw?.property) ? raw.property[0] ?? null : null
+    if (!payload) {
+      return { payload: null, error: raw?.status?.msg || 'No ATTOM rows for this package' }
+    }
+    return { payload }
+  } catch (error) {
+    return {
+      payload: null as Record<string, unknown> | null,
+      error: error instanceof Error ? error.message : 'ATTOM package request failed',
+    }
+  }
+}
+
+async function fetchAttomPackageCached(
+  match: ResolvedAddress,
+  apiKey: string,
+  packageName: string,
+  attomId?: number,
+) {
+  const spec = ATTOM_LAZY_PACKAGES[packageName]
+  if (!spec) return { payload: null as Record<string, unknown> | null, error: 'Unknown ATTOM package' }
+  const keys = [packageCacheKey(packageName, match, attomId)]
+  if (attomId != null) keys.push(packageCacheKey(packageName, match))
+  const now = Date.now()
+  for (const cacheKey of keys) {
+    const hit = attomPackageMemoryCache.get(cacheKey)
+    if (hit && hit.expiresAt > now) return { payload: hit.payload }
+  }
+  const live = await fetchAttomRawPackage(match, apiKey, spec, attomId)
+  if (live.payload) {
+    const expiresAt = now + ATTOM_CACHE_TTL_MS
+    for (const cacheKey of keys) {
+      attomPackageMemoryCache.set(cacheKey, { payload: live.payload, expiresAt })
+    }
+  }
+  return live
+}
+
 /**
  * Dev/preview proxy for property lookup + Google Places + ATTOM.
  * Keeps API keys on the server (never VITE_* / never in the browser bundle).
@@ -1339,7 +1420,12 @@ function propertyLookupApiPlugin(
     for await (const chunk of req) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
     }
-    let body: { query?: string; mode?: string } = {}
+    let body: {
+      query?: string
+      mode?: string
+      attomPackage?: string
+      attomId?: number
+    } = {}
     try {
       body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') as typeof body
     } catch {
@@ -1347,7 +1433,7 @@ function propertyLookupApiPlugin(
     }
 
     const query = (body.query || '').trim()
-    const mode = body.mode === 'resolve' ? 'resolve' : 'search'
+    const mode = body.mode === 'resolve' || body.mode === 'package' ? body.mode : 'search'
     // Google handles shorter partials better than Census (min 3).
     if (query.length < 3) {
       res.statusCode = 200
@@ -1376,6 +1462,39 @@ function propertyLookupApiPlugin(
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify({ match: null, matches: [], factsStatus: 'pending' }))
+      return
+    }
+
+    if (mode === 'package') {
+      const packageName = String(body.attomPackage || '')
+      const attomId =
+        typeof body.attomId === 'number' && Number.isFinite(body.attomId) ? body.attomId : undefined
+      if (!attomApiKey) {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.end(
+          JSON.stringify({
+            match,
+            matches,
+            packageId: packageName,
+            packagePayload: null,
+            attomError: 'ATTOM_API_KEY not set',
+          }),
+        )
+        return
+      }
+      const packed = await fetchAttomPackageCached(match, attomApiKey, packageName, attomId)
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.end(
+        JSON.stringify({
+          match,
+          matches,
+          packageId: packageName,
+          packagePayload: packed.payload,
+          attomError: packed.error ?? null,
+        }),
+      )
       return
     }
 

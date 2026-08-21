@@ -445,7 +445,7 @@ export async function typedAddressMatch(query: string): Promise<ResolvedAddress 
 
 async function searchViaEdge(query: string): Promise<ResolvedAddress[] | null> {
   try {
-    const payload = await invokePropertyLookup(query, 'search')
+    const payload = await invokePropertyLookup({ query, mode: 'search' })
     if (!payload || payload.error || !Array.isArray(payload.matches)) return null
     return payload.matches.map((m) => ({ ...m, source: 'edge' as const }))
   } catch {

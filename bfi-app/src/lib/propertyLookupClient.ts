@@ -23,6 +23,15 @@ export type PropertyLookupPayload = {
   error?: string
   googleConfigured?: boolean
   googleError?: string
+  packageId?: string
+  packagePayload?: Record<string, unknown> | null
+}
+
+export type PropertyLookupRequest = {
+  query: string
+  mode: 'search' | 'resolve' | 'package'
+  attomPackage?: string
+  attomId?: number
 }
 
 /**
@@ -88,8 +97,7 @@ async function bearerToken(anonKey: string) {
 }
 
 async function invokeViaNativeHttp(
-  query: string,
-  mode: 'search' | 'resolve',
+  request: PropertyLookupRequest,
 ): Promise<PropertyLookupPayload | null> {
   const url = edgeFunctionUrl()
   const key = getSupabaseAnonKey()
@@ -108,7 +116,7 @@ async function invokeViaNativeHttp(
         Authorization: `Bearer ${token}`,
         'x-client-info': 'due-diligence-native',
       },
-      data: { query, mode },
+      data: request,
     })
 
     if (res.status < 200 || res.status >= 300) {
@@ -143,8 +151,7 @@ async function invokeViaNativeHttp(
 }
 
 async function invokeViaSupabaseJs(
-  query: string,
-  mode: 'search' | 'resolve',
+  request: PropertyLookupRequest,
 ): Promise<PropertyLookupPayload | null> {
   if (!isSupabaseConfigured()) {
     lastDiagnostic = { kind: 'no_keys' }
@@ -158,7 +165,7 @@ async function invokeViaSupabaseJs(
   try {
     const { data, error } = await supabase.functions.invoke('property-lookup', {
       method: 'POST',
-      body: { query, mode },
+      body: request,
     })
     if (error) {
       lastDiagnostic = { kind: 'edge_error', message: error.message }
@@ -174,13 +181,12 @@ async function invokeViaSupabaseJs(
   }
 }
 
-/** Resolve / search via Edge. Native uses CapacitorHttp first. */
+/** Resolve / search / lazy ATTOM package via Edge. Native uses CapacitorHttp first. */
 export async function invokePropertyLookup(
-  query: string,
-  mode: 'search' | 'resolve',
+  request: PropertyLookupRequest,
 ): Promise<PropertyLookupPayload | null> {
   if (Capacitor.isNativePlatform()) {
-    const native = await invokeViaNativeHttp(query, mode)
+    const native = await invokeViaNativeHttp(request)
     if (native && !native.error) {
       lastDiagnostic = null
       return native
@@ -190,7 +196,7 @@ export async function invokePropertyLookup(
     }
   }
 
-  const viaJs = await invokeViaSupabaseJs(query, mode)
+  const viaJs = await invokeViaSupabaseJs(request)
   if (viaJs && !viaJs.error) {
     lastDiagnostic = null
     return viaJs

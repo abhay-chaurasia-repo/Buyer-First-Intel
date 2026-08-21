@@ -19,7 +19,15 @@ import {
   getLastLookupDiagnostic,
   invokePropertyLookup,
   type PropertyLookupPayload,
+  type PropertyLookupRequest,
 } from '@/lib/propertyLookupClient'
+import { ATTOM_LAZY_PACKAGES, type AttomLazySurface } from '@/data/attomPackages'
+import {
+  mapAttomSalesHistory,
+  mapAttomSchoolDistrict,
+  mapAttomSchools,
+  mapAttomTaxHistory,
+} from '@/lib/attomMap'
 
 /**
  * Demo county/tax/sale fields must never ride along on a real address shell.
@@ -95,6 +103,9 @@ function blankCountyFacts(): Partial<MockProperty> {
     schoolDistrict: undefined,
     taxHistory: undefined,
     attomBasicProfile: undefined,
+    attomAssessmentHistory: undefined,
+    attomSalesHistory: undefined,
+    attomSchoolsProfile: undefined,
   }
 }
 
@@ -402,26 +413,94 @@ function resultFromPayload(
   }
 }
 
-async function lookupViaLocalApi(query: string, mode: 'search' | 'resolve') {
+async function lookupViaLocalApi(request: PropertyLookupRequest) {
   // Native shells load static dist/ — Vite's /api proxy does not exist there.
   if (Capacitor.isNativePlatform()) return null
   try {
     const res = await fetch('/api/property-lookup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, mode }),
+      body: JSON.stringify(request),
     })
     if (!res.ok) return null
     const contentType = res.headers.get('content-type') || ''
-    if (!contentType.includes('application/json')) return null
+    if (!contentType.includes('json')) return null
     return (await res.json()) as LookupPayload
   } catch {
     return null
   }
 }
 
-async function lookupViaEdge(query: string, mode: 'search' | 'resolve') {
-  return invokePropertyLookup(query, mode)
+async function lookupViaEdge(request: PropertyLookupRequest) {
+  return invokePropertyLookup(request)
+}
+
+function propertyQuery(property: MockProperty) {
+  return property.zipCode
+    ? `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`
+    : `${property.address}, ${property.city}, ${property.state}`
+}
+
+function extrasFromPackage(surface: AttomLazySurface, payload: Record<string, unknown>): Partial<MockProperty> {
+  if (surface === 'tax-history') {
+    const taxHistory = mapAttomTaxHistory(payload)
+    return {
+      attomAssessmentHistory: payload,
+      ...(taxHistory.length > 0 ? { taxHistory } : {}),
+    }
+  }
+  if (surface === 'sales-history') {
+    const salesHistory = mapAttomSalesHistory(payload)
+    return {
+      attomSalesHistory: payload,
+      ...(salesHistory.length > 0 ? { salesHistory } : {}),
+    }
+  }
+  const schools = mapAttomSchools(payload)
+  const schoolDistrict = mapAttomSchoolDistrict(payload)
+  return {
+    attomSchoolsProfile: payload,
+    ...(schools.length > 0 ? { schools } : {}),
+    ...(schoolDistrict ? { schoolDistrict } : {}),
+  }
+}
+
+function alreadyHasPackage(property: MockProperty, surface: AttomLazySurface) {
+  if (surface === 'tax-history') return Boolean(property.attomAssessmentHistory)
+  if (surface === 'sales-history') return Boolean(property.attomSalesHistory)
+  return Boolean(property.attomSchoolsProfile)
+}
+
+/** Fetch one ATTOM package when the buyer opens Tax, Sales, or Schools. */
+export async function loadAttomPackageForProperty(
+  property: MockProperty,
+  surface: AttomLazySurface,
+): Promise<Partial<MockProperty> | null> {
+  if (alreadyHasPackage(property, surface)) return null
+  const query = propertyQuery(property).trim()
+  if (query.length < 3) return null
+  const request: PropertyLookupRequest = {
+    query,
+    mode: 'package',
+    attomPackage: ATTOM_LAZY_PACKAGES[surface].attomPackage,
+    attomId: property.attomId,
+  }
+  const local = await lookupViaLocalApi(request)
+  const payload = local && !local.error ? local : await lookupViaEdge(request)
+  if (!payload) return null
+  const raw =
+    payload.packagePayload && typeof payload.packagePayload === 'object'
+      ? payload.packagePayload
+      : {}
+  const extras = extrasFromPackage(surface, raw)
+  const cached = readCache(query)
+  if (cached) {
+    writeCache(query, {
+      ...cached,
+      property: { ...cached.property, ...extras },
+    })
+  }
+  return extras
 }
 
 export async function loadPropertyFromQuery(query: string): Promise<PropertyLookupResult> {
@@ -465,7 +544,7 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
 
   // Prefer the exact suggestion the buyer tapped; still try ATTOM enrichment.
   if (selected) {
-    const local = await lookupViaLocalApi(selected.formatted, 'resolve')
+    const local = await lookupViaLocalApi({ query: selected.formatted, mode: 'resolve' })
     if (local && !local.error) {
       const fromLocal = resultFromPayload(trimmed, local, selected)
       if (fromLocal) {
@@ -473,7 +552,7 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
         return fromLocal
       }
     }
-    const edge = await lookupViaEdge(selected.formatted, 'resolve')
+    const edge = await lookupViaEdge({ query: selected.formatted, mode: 'resolve' })
     if (edge && !edge.error) {
       const fromEdge = resultFromPayload(trimmed, edge, selected)
       if (fromEdge) {
@@ -491,7 +570,7 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
     return result
   }
 
-  const local = await lookupViaLocalApi(trimmed, 'resolve')
+  const local = await lookupViaLocalApi({ query: trimmed, mode: 'resolve' })
   if (local && !local.error) {
     const fromLocal = resultFromPayload(trimmed, local)
     if (fromLocal) {
@@ -500,7 +579,7 @@ export async function loadPropertyFromQuery(query: string): Promise<PropertyLook
     }
   }
 
-  const edge = await lookupViaEdge(trimmed, 'resolve')
+  const edge = await lookupViaEdge({ query: trimmed, mode: 'resolve' })
   if (edge && !edge.error) {
     const fromEdge = resultFromPayload(trimmed, edge)
     if (fromEdge) {
@@ -580,7 +659,7 @@ export async function suggestAddresses(query: string) {
   let googleHint: string | undefined
 
   for (const variant of addressQueryVariants(trimmed)) {
-    const local = await lookupViaLocalApi(variant, 'search')
+    const local = await lookupViaLocalApi({ query: variant, mode: 'search' })
     googleHint = googleHintFromPayload(local) ?? googleHint
     if (local?.matches && local.matches.length > 0) {
       const matches = dedupeMatches([
@@ -596,7 +675,7 @@ export async function suggestAddresses(query: string) {
   }
 
   for (const variant of addressQueryVariants(trimmed)) {
-    const edge = await lookupViaEdge(variant, 'search')
+    const edge = await lookupViaEdge({ query: variant, mode: 'search' })
     googleHint = googleHintFromPayload(edge) ?? googleHint
     if (edge?.matches && edge.matches.length > 0) {
       const matches = dedupeMatches([

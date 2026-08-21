@@ -275,6 +275,12 @@ export type MockProperty = {
   factsPubDate?: string
   /** Raw ATTOM /property/basicprofile payload — County’s Fact shows every field. */
   attomBasicProfile?: Record<string, unknown>
+  /** Raw ATTOM /assessmenthistory/detail payload */
+  attomAssessmentHistory?: Record<string, unknown>
+  /** Raw ATTOM /saleshistory/expandedhistory payload */
+  attomSalesHistory?: Record<string, unknown>
+  /** Raw ATTOM /property/detailwithschools payload */
+  attomSchoolsProfile?: Record<string, unknown>
   starred: boolean
 }
 

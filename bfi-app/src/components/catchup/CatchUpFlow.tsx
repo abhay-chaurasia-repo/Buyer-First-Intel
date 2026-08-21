@@ -40,13 +40,13 @@ const surfaceMeta: Record<
     title: 'Sales History',
     Icon: History,
     iconWrap: 'bg-saffron-bright/25 text-saffron-glow',
-    blurb: 'Recorded home sales for this address',
+    blurb: 'Every field from ATTOM saleshistory/expandedhistory — we will trim this list next',
   },
   'tax-history': {
     title: 'Tax History',
     Icon: Receipt,
     iconWrap: 'bg-saffron/20 text-saffron-glow',
-    blurb: 'Assessed value and tax bill history',
+    blurb: 'Every field from ATTOM assessmenthistory/detail — we will trim this list next',
   },
   'verified-visits': {
     title: 'Presence Confirmed',
@@ -65,7 +65,7 @@ const surfaceMeta: Record<
     title: 'Schools',
     Icon: School,
     iconWrap: 'bg-saffron-bright/20 text-saffron-glow',
-    blurb: 'Assigned when published · nearby when not · confirm with the district',
+    blurb: 'Every field from ATTOM detailwithschools — confirm with the district. We will trim this list next',
   },
 }
 
@@ -180,6 +180,7 @@ type CatchUpFlowProps = {
   propertyId: string
   property: MockProperty
   onClose: () => void
+  packageBusy?: boolean
 }
 
 /**
@@ -193,13 +194,19 @@ export function CatchUpFlow({
   propertyId,
   property,
   onClose,
+  packageBusy = false,
 }: CatchUpFlowProps) {
   const meta = surfaceMeta[surface]
   const items = response.items
   const isBuyerCommunity = surface === 'buyer-insights'
   const isVerifiedVisits = surface === 'verified-visits'
   const isCountyFacts = surface === 'county-facts'
-  const isSalesTaxHistory = surface === 'sales-history' || surface === 'tax-history'
+  const hasPackageInventory =
+    (surface === 'tax-history' && Boolean(property.attomAssessmentHistory)) ||
+    (surface === 'sales-history' && Boolean(property.attomSalesHistory)) ||
+    (surface === 'schools' && Boolean(property.attomSchoolsProfile))
+  const isSalesTaxHistory =
+    (surface === 'sales-history' || surface === 'tax-history') && !hasPackageInventory && !packageBusy
   const headerCount = isVerifiedVisits
     ? getVerifiedVisitsBundle(property).visits.length
     : surface === 'sales-history'
@@ -270,14 +277,18 @@ export function CatchUpFlow({
             mode={surface === 'tax-history' ? 'tax' : 'sales'}
           />
         ) : (
-          <div className={cn('space-y-4 px-3', isCountyFacts ? 'mt-6 pt-1' : 'mt-3')}>
-            {items.length > 0 ? (
+          <div className={cn('space-y-4 px-3', isCountyFacts || hasPackageInventory ? 'mt-6 pt-1' : 'mt-3')}>
+            {packageBusy ? (
+              <p className="px-2 py-6 text-center text-sm text-night-muted">
+                Loading every field from ATTOM for this tile…
+              </p>
+            ) : items.length > 0 ? (
               items.map((card) => (
                 <DetailSection
                   key={card.id}
                   card={card}
                   propertyId={propertyId}
-                  collapsible={isCountyFacts ? card.id !== 'cf-living-area' : !isCountyFacts}
+                  collapsible={card.id !== 'cf-living-area' && card.id !== 'sc-verify'}
                 />
               ))
             ) : (

@@ -11,6 +11,7 @@ import {
   basicProfileGroupOrder,
   buildBasicProfileFacts,
 } from '@/lib/attomBasicProfile'
+import { inventoryCardsFromAttomPayload } from '@/lib/attomFlatten'
 
 /** API-shaped payloads ready for future fetch() binding */
 
@@ -77,6 +78,45 @@ function wrapResponse(
     remaining: items.length,
     items,
   }
+}
+
+function inventoryCatchUpCards(
+  payload: Record<string, unknown>,
+  source: string,
+  type: CatchUpItemType,
+  idPrefix: string,
+): CatchUpCard[] {
+  const cards = inventoryCardsFromAttomPayload(payload)
+  if (cards.length === 0) {
+    return [
+      {
+        id: `${idPrefix}-empty`,
+        type,
+        channel: `${idPrefix}-empty`,
+        unreadCount: 0,
+        headline: 'No rows published',
+        preview: 'ATTOM returned no fields for this package on this address.',
+        timestamp: isoMinutesAgo(4),
+        source,
+        fields: [{ label: 'Status', value: 'Not published' }],
+      },
+    ]
+  }
+  return cards.map((card, index) => ({
+    id: `${idPrefix}-${card.id}`,
+    type,
+    channel: `${idPrefix}-${card.id}`,
+    unreadCount: card.rows.length,
+    headline: card.headline,
+    preview: `${card.rows.length} fields`,
+    timestamp: isoMinutesAgo(8 + index),
+    source,
+    fields: card.rows.map((row) => ({
+      label: row.label,
+      value: row.value,
+      path: row.path,
+    })),
+  }))
 }
 
 /** GET /api/properties/:id/county-facts */
@@ -313,6 +353,19 @@ export function fetchCountyFactsApi(property: MockProperty): CatchUpApiResponse 
 
 /** GET /api/properties/:id/sales-history */
 export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse {
+  if (property.attomSalesHistory) {
+    return wrapResponse(
+      property.id,
+      `/api/properties/${property.id}/sales-history`,
+      inventoryCatchUpCards(
+        property.attomSalesHistory,
+        'ATTOM /saleshistory/expandedhistory',
+        'legal',
+        'sh',
+      ),
+    )
+  }
+
   const live = property.factsStatus === 'live'
   const history = (property.salesHistory || []).filter(isOwnershipSaleRow)
   const items: CatchUpCard[] = [
@@ -380,6 +433,19 @@ export function fetchSalesHistoryApi(property: MockProperty): CatchUpApiResponse
 
 /** GET /api/properties/:id/tax-history */
 export function fetchTaxHistoryApi(property: MockProperty): CatchUpApiResponse {
+  if (property.attomAssessmentHistory) {
+    return wrapResponse(
+      property.id,
+      `/api/properties/${property.id}/tax-history`,
+      inventoryCatchUpCards(
+        property.attomAssessmentHistory,
+        'ATTOM /assessmenthistory/detail',
+        'tax',
+        'th',
+      ),
+    )
+  }
+
   const live = property.factsStatus === 'live'
   const history = property.taxHistory || []
   const items: CatchUpCard[] = []
@@ -547,6 +613,25 @@ export function fetchBuyerInsightsApi(property: MockProperty): CatchUpApiRespons
 
 /** GET /api/properties/:id/schools */
 export function fetchSchoolsApi(property: MockProperty): CatchUpApiResponse {
+  if (property.attomSchoolsProfile) {
+    const source = 'ATTOM /property/detailwithschools'
+    const items: CatchUpCard[] = [
+      {
+        id: 'sc-verify',
+        type: 'school',
+        channel: 'note',
+        unreadCount: 0,
+        headline: 'Confirm with the district',
+        preview:
+          'Verify assigned campuses with the district before you write an offer. Attendance zones can change.',
+        timestamp: isoMinutesAgo(8),
+        source,
+      },
+      ...inventoryCatchUpCards(property.attomSchoolsProfile, source, 'school', 'sc'),
+    ]
+    return wrapResponse(property.id, `/api/properties/${property.id}/schools`, items)
+  }
+
   const assigned = property.schools || []
   const nearby = dedupeNearbySchools(assigned, property.nearbySchools || [])
   const district = property.schoolDistrict

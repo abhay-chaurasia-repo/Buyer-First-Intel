@@ -1480,6 +1480,120 @@ async function fetchAttomFactsCached(address: ResolvedAddress) {
   return live
 }
 
+const ATTOM_LAZY_PACKAGES: Record<
+  string,
+  { path: string; version: 'v1.0.0' | 'v4' }
+> = {
+  assessmenthistory: { path: 'assessmenthistory/detail', version: 'v1.0.0' },
+  saleshistory: { path: 'saleshistory/expandedhistory', version: 'v1.0.0' },
+  detailwithschools: { path: 'property/detailwithschools', version: 'v4' },
+}
+
+function packageCacheKey(packageName: string, address: ResolvedAddress, attomId?: number) {
+  if (attomId != null && Number.isFinite(attomId)) return `pkg:${packageName}|id|${attomId}`
+  return `pkg:${packageName}|${attomCacheKey(address)}`
+}
+
+async function readPackageCache(cacheKey: string): Promise<Record<string, unknown> | null> {
+  try {
+    const supabase = cacheAdminClient()
+    if (!supabase) return null
+    const { data, error } = await supabase
+      .from('attom_lookup_cache')
+      .select('property, expires_at')
+      .eq('cache_key', cacheKey)
+      .maybeSingle()
+    if (error || !data?.property || typeof data.property !== 'object') return null
+    if (new Date(String(data.expires_at)).getTime() <= Date.now()) return null
+    const row = data.property as Record<string, unknown>
+    if (row.attomPackagePayload && typeof row.attomPackagePayload === 'object') {
+      return row.attomPackagePayload as Record<string, unknown>
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+async function writePackageCache(cacheKey: string, payload: Record<string, unknown>) {
+  try {
+    const supabase = cacheAdminClient()
+    if (!supabase) return
+    await supabase.from('attom_lookup_cache').upsert({
+      cache_key: cacheKey,
+      property: { attomPackagePayload: payload },
+      fetched_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + ATTOM_CACHE_TTL_MS).toISOString(),
+    })
+  } catch {
+    // Fail open
+  }
+}
+
+async function fetchAttomRawPackage(
+  match: ResolvedAddress,
+  spec: { path: string; version: 'v1.0.0' | 'v4' },
+  attomId?: number,
+): Promise<{ payload: Record<string, unknown> | null; error?: string }> {
+  const key = Deno.env.get('ATTOM_API_KEY')
+  if (!key) return { payload: null, error: 'ATTOM_API_KEY not set' }
+  const url = new URL(`https://api.gateway.attomdata.com/propertyapi/${spec.version}/${spec.path}`)
+  if (attomId != null && Number.isFinite(attomId)) {
+    url.searchParams.set('attomid', String(attomId))
+  } else {
+    url.searchParams.set('address1', match.street)
+    url.searchParams.set(
+      'address2',
+      [match.city, match.state, match.zipCode].filter(Boolean).join(', '),
+    )
+  }
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json', apikey: key },
+    })
+    const raw = await res.json().catch(() => null)
+    const code = raw?.status?.code
+    const okEmpty =
+      raw?.status?.msg === 'SuccessWithoutResult' || code === 400 || code === '400'
+    if (!res.ok && !okEmpty) {
+      return { payload: null, error: raw?.status?.msg || `ATTOM HTTP ${res.status}` }
+    }
+    const payload = Array.isArray(raw?.property) ? raw.property[0] ?? null : null
+    if (!payload || typeof payload !== 'object') {
+      return { payload: null, error: raw?.status?.msg || 'No ATTOM rows for this package' }
+    }
+    return { payload }
+  } catch (error) {
+    return {
+      payload: null,
+      error: error instanceof Error ? error.message : 'ATTOM package request failed',
+    }
+  }
+}
+
+async function fetchAttomPackageCached(
+  match: ResolvedAddress,
+  packageName: string,
+  attomId?: number,
+) {
+  const spec = ATTOM_LAZY_PACKAGES[packageName]
+  if (!spec) return { payload: null as Record<string, unknown> | null, error: 'Unknown ATTOM package' }
+  const keys = [packageCacheKey(packageName, match, attomId)]
+  if (attomId != null) keys.push(packageCacheKey(packageName, match))
+  for (const cacheKey of keys) {
+    const cached = await readPackageCache(cacheKey)
+    if (cached) return { payload: cached }
+  }
+  const live = await fetchAttomRawPackage(match, spec, attomId)
+  if (live.payload) {
+    await writePackageCache(packageCacheKey(packageName, match, attomId), live.payload)
+    if (attomId != null) {
+      await writePackageCache(packageCacheKey(packageName, match), live.payload)
+    }
+  }
+  return live
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -1505,10 +1619,12 @@ Deno.serve(async (req) => {
 
     const body = (await req.json().catch(() => ({}))) as {
       query?: string
-      mode?: 'search' | 'resolve'
+      mode?: 'search' | 'resolve' | 'package'
+      attomPackage?: string
+      attomId?: number
     }
     const query = (body.query || '').trim()
-    const mode = body.mode === 'resolve' ? 'resolve' : 'search'
+    const mode = body.mode === 'resolve' || body.mode === 'package' ? body.mode : 'search'
 
     if (query.length < 3) {
       return new Response(JSON.stringify({ matches: [] }), {
@@ -1536,6 +1652,23 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ match: null, matches: [], factsStatus: 'pending' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    if (mode === 'package') {
+      const packageName = String(body.attomPackage || '')
+      const attomId =
+        typeof body.attomId === 'number' && Number.isFinite(body.attomId) ? body.attomId : undefined
+      const packed = await fetchAttomPackageCached(match, packageName, attomId)
+      return new Response(
+        JSON.stringify({
+          match,
+          matches,
+          packageId: packageName,
+          packagePayload: packed.payload,
+          attomError: packed.error ?? null,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     const attom = await fetchAttomFactsCached(match)

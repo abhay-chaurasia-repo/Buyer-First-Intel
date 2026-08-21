@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import {
   Crosshair,
@@ -58,7 +58,9 @@ import {
   watchNearbyProperty,
 } from '@/lib/gpsVerify'
 import { recordPresenceRemote } from '@/lib/communityApi'
+import { isAttomLazySurface } from '@/data/attomPackages'
 import {
+  loadAttomPackageForProperty,
   loadPropertyFromQuery,
   type PropertyLookupStatus,
 } from '@/lib/propertyLookup'
@@ -124,7 +126,10 @@ export function PropertyDetailScreen() {
   const [nearbyDistanceM, setNearbyDistanceM] = useState<number | null>(null)
   const [locationPrimerOpen, setLocationPrimerOpen] = useState(false)
   const [activeSurface, setActiveSurface] = useState<CatchUpSurface | null>(null)
+  const [packageBusy, setPackageBusy] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
+  const propertyRef = useRef(property)
+  propertyRef.current = property
 
   useEffect(() => {
     let cancelled = false
@@ -195,6 +200,36 @@ export function PropertyDetailScreen() {
     next.delete('catchup')
     setSearchParams(next, { replace: true })
   }, [searchParams, setSearchParams])
+
+  useEffect(() => {
+    if (!activeSurface || !isAttomLazySurface(activeSurface)) {
+      setPackageBusy(false)
+      return
+    }
+    if (property.factsStatus !== 'live') {
+      setPackageBusy(false)
+      return
+    }
+    const already =
+      (activeSurface === 'tax-history' && propertyRef.current.attomAssessmentHistory) ||
+      (activeSurface === 'sales-history' && propertyRef.current.attomSalesHistory) ||
+      (activeSurface === 'schools' && propertyRef.current.attomSchoolsProfile)
+    if (already) {
+      setPackageBusy(false)
+      return
+    }
+    let cancelled = false
+    const surface = activeSurface
+    setPackageBusy(true)
+    void loadAttomPackageForProperty(propertyRef.current, surface).then((extras) => {
+      if (cancelled) return
+      if (extras) setProperty((prev) => ({ ...prev, ...extras }))
+      setPackageBusy(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [activeSurface, property.id, property.factsStatus])
 
   const metrics = useMemo(() => getMetricCards(property), [property])
   const truncated = truncateAddress(property.address)
@@ -303,6 +338,7 @@ export function PropertyDetailScreen() {
           propertyId={property.id}
           property={property}
           onClose={() => setActiveSurface(null)}
+          packageBusy={packageBusy}
         />
       ) : (
         <>

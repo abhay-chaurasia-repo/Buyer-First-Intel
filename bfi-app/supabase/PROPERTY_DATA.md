@@ -17,7 +17,12 @@
 - County’s Fact shows **every field** from that payload (published or “Not published”) so we can trim the list next
 - Gross living area vote stays at the top
 - The raw payload is stored on the property as `attomBasicProfile` and in the 24h shared cache
-- Later packages (expandedprofile, tax history, sales history, permits, schools) are not called yet
+- Later packages load **when that tile opens** (not on search):
+  - Tax History → `GET /assessmenthistory/detail`
+  - Sales History → `GET /saleshistory/expandedhistory`
+  - Schools → `GET /property/detailwithschools` (v4) — no nearby `/school/search`
+- Those tiles show **every field** from the payload so we can trim next
+- Confirm-with-the-district note stays on Schools
 - Query: `address1` + `address2` (or `attomid`) — e.g. `address1=3147 SWALLOW DR&address2=Marietta, GA`
 - Headers: `apikey`, `Accept: application/json`
 - Dev proxy: Vite `POST /api/property-lookup` + `.env.local` `ATTOM_API_KEY`
