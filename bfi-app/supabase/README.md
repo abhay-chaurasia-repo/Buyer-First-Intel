@@ -27,8 +27,8 @@
 - Quick / Apple / Facebook still local until those IdPs are wired
 
 ## Property data (address → ATTOM → schools → GPS)
-1. Address search is live (Census + optional `/api/property-lookup` / Edge Function)
-2. ATTOM county facts: set `ATTOM_API_KEY` in `.env.local` (dev) or Supabase secrets (prod) — see **`PROPERTY_DATA.md`**. Search calls **`property/basicprofile`**. Tax / Sales / Schools each call their own package when that tile opens.
+1. Address search is Google Places (then Census / typed street). ATTOM is not used to find the address
+2. ATTOM county facts: set `ATTOM_API_KEY` in `.env.local` (dev) or Supabase secrets (prod) — see **`PROPERTY_DATA.md`**. Opening a property calls **`property/basicprofile`**. Tax / Sales / Schools each call their own package when that tile opens.
 3. SQL Editor → run `migrations/007_attom_lookup_cache.sql`, then redeploy `property-lookup`. Same address searched by another user within 24 hours reuses the cached snapshot (ATTOM terms max without a bulk license)
 4. Schools CatchUp: assigned via `/property/detailwithschools`, nearby via `/school/search` — confirm with the district
 5. Presence Confirmed is live (dated log is permanent; labeling window is 2 weeks; ~100m of pin — not a tour)
